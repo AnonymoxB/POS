@@ -1,158 +1,116 @@
-require("dotenv").config({ silent: true }); // Silent mode for dotenv
+require("dotenv").config();
 const express = require("express");
-const mongoose = require("mongoose");
+const connectDB = require("./config/database");
 const createHttpError = require("http-errors");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
-const helmet = require("helmet"); // Added for security headers
-const rateLimit = require("express-rate-limit"); // Added for rate limiting
 const app = express();
 
-// Enhanced MongoDB connection with retry and timeout
-const connectDB = async () => {
-  const maxRetries = 5;
-  let retryCount = 0;
+// Import routes
+const qrisRoute = require("./routes/qrisRoute");
+const reportRoutes = require('./routes/reportRoute');
+const listEndpoints = require('express-list-endpoints');
 
-  const connectWithRetry = async () => {
-    try {
-      await mongoose.connect(process.env.MONGODB_URI, {
-        serverSelectionTimeoutMS: 10000,
-        socketTimeoutMS: 30000,
-        retryWrites: true,
-        w: "majority"
-      });
-      console.log('✅ MongoDB connected successfully');
-    } catch (err) {
-      retryCount++;
-      console.error(`❌ MongoDB connection error (attempt ${retryCount}/${maxRetries}):`, err.message);
-      
-      if (retryCount < maxRetries) {
-        await new Promise(resolve => setTimeout(resolve, 5000));
-        return connectWithRetry();
-      } else {
-        console.error('🔥 Failed to connect to MongoDB after multiple attempts');
-        process.exit(1);
-      }
-    }
-  };
+// Database connection
+connectDB();
 
-  await connectWithRetry();
-};
+// Configuration
+const PORT = process.env.PORT || 8000; // Fallback port
 
-// Security middleware
-app.use(helmet());
-app.use(express.json({ limit: '10kb' }));
-app.use(express.urlencoded({ extended: true, limit: '10kb' }));
-app.use(cookieParser());
-
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
-  message: "Too many requests from this IP, please try again later"
-});
-app.use(limiter);
-
-// CORS configuration
 const allowedOrigins = [
   "http://localhost:5173",
   "https://pos-wine-two.vercel.app",
 ];
 
+// Enhanced CORS configuration
 const corsOptions = {
   origin: function (origin, callback) {
-    if (process.env.NODE_ENV === 'development') {
+    // Allow requests with no origin in development
+    if (!origin && process.env.NODE_ENV !== 'production') {
       return callback(null, true);
     }
+    
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      console.warn('🚫 CORS blocked for origin:', origin);
       callback(new Error('Not allowed by CORS'));
     }
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  exposedHeaders: ['Authorization'],
-  optionsSuccessStatus: 204
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  optionsSuccessStatus: 200 // For legacy browser support
 };
 
+// Middlewares
 app.use(cors(corsOptions));
-app.options('*', cors(corsOptions));
+app.options('*', cors(corsOptions)); // Enable preflight for all routes
 
-// Enhanced health check
-app.get('/health', async (req, res) => {
-  const dbStatus = mongoose.connection.readyState === 1;
-  const status = dbStatus ? 'OK' : 'Degraded';
-  
-  res.status(dbStatus ? 200 : 503).json({
-    status,
-    database: dbStatus ? 'Connected' : 'Disconnected',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-    memoryUsage: process.memoryUsage()
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Expose-Headers', 'Authorization'); // Important for JWT
+  next();
+});
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
+
+// Health check endpoint (required for Railway)
+app.get('/health', (req, res) => {
+  res.status(200).json({ 
+    status: 'OK',
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Root endpoint
+app.get("/", (req, res) => {
+  res.json({
+    message: "POS Server API",
+    version: "1.0.0",
+    docs: "https://github.com/AnonymoxB/POS"
   });
 });
 
 // API Routes
-app.use("/api/user", require("./routes/userRoute"));
-app.use("/api/order", require("./routes/orderRoute"));
-app.use("/api/table", require("./routes/tableRoute"));
-app.use("/api/payments", require("./routes/paymentRoute"));
-app.use("/api/category", require("./routes/categoryRoute"));
-app.use("/api/dish", require("./routes/dishesRoute"));
-app.use("/api/report", require("./routes/reportRoute"));
+app.use("/user", require("./routes/userRoute"));
+app.use("/order", require("./routes/orderRoute"));
+app.use("/table", require("./routes/tableRoute"));
+app.use("/payments", require("./routes/paymentRoute"));
+app.use("/category", require("./routes/categoryRoute"));
+app.use("/dish", require("./routes/dishesRoute"));
+app.use("/report", require("./routes/reportRoute"));
 
 // Error handling
 app.use((req, res, next) => {
-  next(createHttpError.NotFound('Endpoint not found'));
+  next(createHttpError.NotFound());
 });
 
 app.use((err, req, res, next) => {
-  const status = err.status || 500;
-  const message = process.env.NODE_ENV === 'production' && !err.expose 
-    ? 'An error occurred' 
-    : err.message;
-
-  res.status(status).json({
+  res.status(err.status || 500);
+  res.json({
     error: {
-      status,
-      message,
-      ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+      status: err.status || 500,
+      message: err.message,
+      stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
     }
   });
 });
 
 // Server initialization
-const server = app.listen(process.env.PORT || 8000, '0.0.0.0', () => {
-  console.log(`🚀 Server running on port ${process.env.PORT || 8000}`);
-  console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`🔗 Health check: /health`);
+const server = app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server running on port ${PORT}`);
+  console.log("Available routes:");
+  console.log(listEndpoints(app));
 });
 
-// Graceful shutdown
-const shutdown = (signal) => {
-  console.log(`🛑 Received ${signal}, shutting down gracefully...`);
-  
-  server.close(async () => {
-    console.log('🔒 HTTP server closed');
-    
-    if (mongoose.connection.readyState === 1) {
-      await mongoose.connection.close(false);
-      console.log('🔒 MongoDB connection closed');
-    }
-    
+// Handle shutdown gracefully
+process.on('SIGTERM', () => {
+  server.close(() => {
+    console.log('Server closed');
     process.exit(0);
   });
-
-  setTimeout(() => {
-    console.error('🕒 Force shutdown after timeout');
-    process.exit(1);
-  }, 10000);
-};
-
-process.on('SIGTERM', () => shutdown('SIGTERM'));
-process.on('SIGINT', () => shutdown('SIGINT'));
+});
 
 module.exports = app;
