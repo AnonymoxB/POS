@@ -11,6 +11,9 @@ const api = axios.create({
   }
 });
 
+console.log("API Base URL:", import.meta.env.VITE_BACKEND_URL);
+
+
 // API Endpoints
 export const login = (data) => api.post("/api/user/login", data);
 export const register = async (data) => {
