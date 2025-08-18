@@ -1,48 +1,67 @@
-require("dotenv").config();
+require("dotenv").config({ silent: true }); // Silent mode for dotenv
 const express = require("express");
 const mongoose = require("mongoose");
 const createHttpError = require("http-errors");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
+const helmet = require("helmet"); // Added for security headers
+const rateLimit = require("express-rate-limit"); // Added for rate limiting
 const app = express();
 
-// Remove deprecated MongoDB options and add proper error handling
+// Enhanced MongoDB connection with retry and timeout
 const connectDB = async () => {
-  try {
-    await mongoose.connect(process.env.MONGODB_URI, {
-      serverSelectionTimeoutMS: 5000,
-      socketTimeoutMS: 45000
-    });
-    console.log('✅ MongoDB connected successfully');
-  } catch (err) {
-    console.error('❌ MongoDB connection error:', err);
-    setTimeout(connectDB, 5000); // Retry after 5 seconds
-  }
+  const maxRetries = 5;
+  let retryCount = 0;
+
+  const connectWithRetry = async () => {
+    try {
+      await mongoose.connect(process.env.MONGODB_URI, {
+        serverSelectionTimeoutMS: 10000,
+        socketTimeoutMS: 30000,
+        retryWrites: true,
+        w: "majority"
+      });
+      console.log('✅ MongoDB connected successfully');
+    } catch (err) {
+      retryCount++;
+      console.error(`❌ MongoDB connection error (attempt ${retryCount}/${maxRetries}):`, err.message);
+      
+      if (retryCount < maxRetries) {
+        await new Promise(resolve => setTimeout(resolve, 5000));
+        return connectWithRetry();
+      } else {
+        console.error('🔥 Failed to connect to MongoDB after multiple attempts');
+        process.exit(1);
+      }
+    }
+  };
+
+  await connectWithRetry();
 };
 
-// Process-level error handling
-process.on('uncaughtException', (err) => {
-  console.error('💥 UNCAUGHT EXCEPTION! Shutting down...', err);
-  process.exit(1);
+// Security middleware
+app.use(helmet());
+app.use(express.json({ limit: '10kb' }));
+app.use(express.urlencoded({ extended: true, limit: '10kb' }));
+app.use(cookieParser());
+
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: "Too many requests from this IP, please try again later"
 });
+app.use(limiter);
 
-process.on('unhandledRejection', (err) => {
-  console.error('💥 UNHANDLED REJECTION! Shutting down...', err);
-  process.exit(1);
-});
-
-// Configuration
-const PORT = process.env.PORT || 8000;
-
+// CORS configuration
 const allowedOrigins = [
   "http://localhost:5173",
   "https://pos-wine-two.vercel.app",
 ];
 
-// CORS configuration
 const corsOptions = {
   origin: function (origin, callback) {
-    if (process.env.NODE_ENV === 'development' || !origin) {
+    if (process.env.NODE_ENV === 'development') {
       return callback(null, true);
     }
     if (allowedOrigins.includes(origin)) {
@@ -54,26 +73,25 @@ const corsOptions = {
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
   exposedHeaders: ['Authorization'],
-  optionsSuccessStatus: 200
+  optionsSuccessStatus: 204
 };
 
-// Middlewares
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
 
-app.use(express.json({ limit: '10kb' }));
-app.use(express.urlencoded({ extended: true, limit: '10kb' }));
-app.use(cookieParser());
-
-// Health check endpoint
+// Enhanced health check
 app.get('/health', async (req, res) => {
   const dbStatus = mongoose.connection.readyState === 1;
+  const status = dbStatus ? 'OK' : 'Degraded';
+  
   res.status(dbStatus ? 200 : 503).json({
-    status: dbStatus ? 'OK' : 'Degraded',
+    status,
     database: dbStatus ? 'Connected' : 'Disconnected',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    memoryUsage: process.memoryUsage()
   });
 });
 
@@ -88,36 +106,53 @@ app.use("/api/report", require("./routes/reportRoute"));
 
 // Error handling
 app.use((req, res, next) => {
-  next(createHttpError.NotFound());
+  next(createHttpError.NotFound('Endpoint not found'));
 });
 
 app.use((err, req, res, next) => {
-  res.status(err.status || 500).json({
+  const status = err.status || 500;
+  const message = process.env.NODE_ENV === 'production' && !err.expose 
+    ? 'An error occurred' 
+    : err.message;
+
+  res.status(status).json({
     error: {
-      status: err.status || 500,
-      message: err.message
+      status,
+      message,
+      ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
     }
   });
 });
 
 // Server initialization
-const server = app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  // Removed listEndpoints to prevent the ReferenceError
+const server = app.listen(process.env.PORT || 8000, '0.0.0.0', () => {
+  console.log(`🚀 Server running on port ${process.env.PORT || 8000}`);
+  console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`🔗 Health check: /health`);
 });
 
 // Graceful shutdown
-const shutdown = () => {
-  console.log('🛑 Received shutdown signal');
-  server.close(() => {
-    mongoose.connection.close(false, () => {
-      console.log('🔒 Server and database connections closed');
-      process.exit(0);
-    });
+const shutdown = (signal) => {
+  console.log(`🛑 Received ${signal}, shutting down gracefully...`);
+  
+  server.close(async () => {
+    console.log('🔒 HTTP server closed');
+    
+    if (mongoose.connection.readyState === 1) {
+      await mongoose.connection.close(false);
+      console.log('🔒 MongoDB connection closed');
+    }
+    
+    process.exit(0);
   });
+
+  setTimeout(() => {
+    console.error('🕒 Force shutdown after timeout');
+    process.exit(1);
+  }, 10000);
 };
 
-process.on('SIGTERM', shutdown);
-process.on('SIGINT', shutdown);
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));
 
 module.exports = app;
