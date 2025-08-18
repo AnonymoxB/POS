@@ -12,7 +12,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'https://pos-backend-ashy.vercel.app', // Ganti sesuai alamat backend-mu
+        target: 'http://localhost:8000',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, '/api'), // bisa disesuaikan
       },
