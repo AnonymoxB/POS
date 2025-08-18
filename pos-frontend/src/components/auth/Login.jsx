@@ -29,9 +29,14 @@ const Login = () => {
             mutationFn: (reqData) => login(reqData),
             onSuccess: (res) => {
                 const {data} = res;
-                console.log(data);
+
+                localStorage.setItem("token", data.token);
+
+                
                 const {_id, name, email, phone, role} = data.data;
                 dispatch(setUser({_id, name, email, phone, role}));
+
+                enqueueSnackbar("Login berhasil", { variant: "success" });
                 navigate("/");
             },
             onError:(error) => {
