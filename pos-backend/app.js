@@ -1,88 +1,116 @@
-    require("dotenv").config();
-    const express = require("express");
-    const connectDB = require("./config/database");
-    const globalErrorHandler = require("./middlewares/globalErrorHandler");
-    const createHttpError = require("http-errors");
-    const cookieParser = require("cookie-parser");
-    const cors = require("cors");
-    const app = express();
-    const qrisRoute = require("./routes/qrisRoute");
-    const reportRoutes = require('./routes/reportRoute');
-    const listEndpoints = require('express-list-endpoints');
+require("dotenv").config();
+const express = require("express");
+const connectDB = require("./config/database");
+const createHttpError = require("http-errors");
+const cookieParser = require("cookie-parser");
+const cors = require("cors");
+const app = express();
 
+// Import routes
+const qrisRoute = require("./routes/qrisRoute");
+const reportRoutes = require('./routes/reportRoute');
+const listEndpoints = require('express-list-endpoints');
 
+// Database connection
+connectDB();
 
-    const PORT = process.env.PORT;
-    connectDB();
+// Configuration
+const PORT = process.env.PORT || 3000; // Fallback port
 
-    // Middleware
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://pos-wine-two.vercel.app",
+];
 
-    const allowedOrigins = [
-    "http://localhost:5173",
-    "https://pos-wine-two.vercel.app",
-    ];
-
-    app.use(cors({
-    origin: function (origin, callback) {
-        if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-        } else {
-        callback(new Error("Not allowed by CORS"));
-        }
-    },
-    credentials: true,
-    }));
-
-    app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Credentials', true);
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    next();
-    });
-
-    // Jangan lupa ini juga
-    app.options("*", cors());
-
-    app.use(express.json());
-    app.use(cookieParser());
-
-
-
-    // Root
-    app.get("/", (req, res) => {
-
-        // const err = createHttpError(404, "Something went wrong !");
-        // throw err;
-
-        res.json({message: "Hello from POS Server !"});
-    })
-
-    // other endpoint
-
-    app.use("/user", require("./routes/userRoute"));
-    app.use("/order", require("./routes/orderRoute"));
-    app.use("/table", require("./routes/tableRoute")) ;
-    app.use("/payments", require("./routes/paymentRoute"));
-    app.use("/category", require("./routes/categoryRoute"));
-    app.use("/dish", require("./routes/dishesRoute"));
-
-    //QRIS
-    // app.use("/payment", qrisRoutes);
-
-    //report
+// Enhanced CORS configuration
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow requests with no origin in development
+    if (!origin && process.env.NODE_ENV !== 'production') {
+      return callback(null, true);
+    }
     
-    app.use('/report', require("./routes/reportRoute"));
-    // app.use('/reports', reportRoutes)
-    
-    
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  optionsSuccessStatus: 200 // For legacy browser support
+};
 
-    // Global error handle
-    app.use(globalErrorHandler);
+// Middlewares
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions)); // Enable preflight for all routes
 
-    // Server
-    // app.listen(PORT, () => {
-    //     console.log(`POS Server is listening on port ${PORT}`);
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Expose-Headers', 'Authorization'); // Important for JWT
+  next();
+});
 
-    
-    // })
-    console.log(listEndpoints(app));
-    module.exports = app;
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
+
+// Health check endpoint (required for Railway)
+app.get('/health', (req, res) => {
+  res.status(200).json({ 
+    status: 'OK',
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Root endpoint
+app.get("/", (req, res) => {
+  res.json({
+    message: "POS Server API",
+    version: "1.0.0",
+    docs: "https://github.com/AnonymoxB/POS"
+  });
+});
+
+// API Routes
+app.use("/user", require("./routes/userRoute"));
+app.use("/order", require("./routes/orderRoute"));
+app.use("/table", require("./routes/tableRoute"));
+app.use("/payments", require("./routes/paymentRoute"));
+app.use("/category", require("./routes/categoryRoute"));
+app.use("/dish", require("./routes/dishesRoute"));
+app.use("/report", require("./routes/reportRoute"));
+
+// Error handling
+app.use((req, res, next) => {
+  next(createHttpError.NotFound());
+});
+
+app.use((err, req, res, next) => {
+  res.status(err.status || 500);
+  res.json({
+    error: {
+      status: err.status || 500,
+      message: err.message,
+      stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    }
+  });
+});
+
+// Server initialization
+const server = app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server running on port ${PORT}`);
+  console.log("Available routes:");
+  console.log(listEndpoints(app));
+});
+
+// Handle shutdown gracefully
+process.on('SIGTERM', () => {
+  server.close(() => {
+    console.log('Server closed');
+    process.exit(0);
+  });
+});
+
+module.exports = app;
