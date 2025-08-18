@@ -16,14 +16,24 @@
 
     // Middleware
 
+    const allowedOrigins = [
+    "http://localhost:5173",
+    "https://pos-wine-two.vercel.app",
+    ];
+
     app.use(cors({
-        origin: [
-            "http://localhost:5173",
-            "https://pos-wine-two.vercel.app",
-            "https://pos-qkpv.vercel.app"
-        ],
-        credentials: true,
+    origin: function (origin, callback) {
+        if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+        } else {
+        callback(new Error("Not allowed by CORS"));
+        }
+    },
+    credentials: true,
     }));
+
+    // Jangan lupa ini juga
+    app.options("*", cors());
 
     app.use(express.json());
     app.use(cookieParser());
