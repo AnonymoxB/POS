@@ -6,38 +6,72 @@ const config = require("../config/config");
 
 const register = async (req, res, next) => {
     try {
+        console.log("=== REGISTER REQUEST ===");
+        console.log("Complete request:", {
+            headers: req.headers,
+            body: req.body
+        });
 
-        console.log("=== REGISTER BODY ===");
-        console.log("Headers:", req.headers["content-type"]);
-        console.log("Body:", req.body);
+        // Validate request body structure
+        if (!req.body || typeof req.body !== 'object') {
+            console.error('Invalid request body format');
+            throw createHttpError(400, "Invalid request format");
+        }
 
         const { name, phone, email, password, role } = req.body;
-        console.log("Extracted fields:", { name, phone, email, password, role });
+        console.log("Extracted fields:", { name, phone, email, role });
 
-        // Cek input
-        if (!name || !phone || !email || !password || !role) {
-            const error = createHttpError(400, "All fields are required !");
-            return next(error);
+        // Validate required fields
+        const requiredFields = ['name', 'phone', 'email', 'password', 'role'];
+        const missingFields = requiredFields.filter(field => !req.body[field]);
+        
+        if (missingFields.length > 0) {
+            console.error('Missing fields:', missingFields);
+            throw createHttpError(400, `Missing required fields: ${missingFields.join(', ')}`);
         }
 
-        // Cek email sudah digunakan
-        const isUserPresent = await User.findOne({ email });
-        if (isUserPresent) {
-            const error = createHttpError(400, "User already exists");
-            return next(error);
+        // Check for existing user
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+            console.error('User already exists:', email);
+            throw createHttpError(400, "User already exists");
         }
 
+        // Hash password
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
+        console.log('Password hashed successfully');
 
-        const user = { name, phone, email, password: hashedPassword, role };
-        const newUser = new User(user);
+        // Create new user
+        const newUser = new User({
+            name,
+            phone,
+            email,
+            password: hashedPassword,
+            role
+        });
+
         await newUser.save();
+        console.log('User created successfully:', newUser._id);
 
-        res.status(201).json({ success: true, message: "New user created!", data: newUser });
+        // Respond
+        res.status(201).json({ 
+            success: true, 
+            message: "User registered successfully",
+            data: {
+                id: newUser._id,
+                name: newUser.name,
+                email: newUser.email,
+                role: newUser.role
+            }
+        });
 
     } catch (error) {
-        console.error("Registration error stack:", error.stack);
+        console.error('Registration error:', {
+            message: error.message,
+            stack: error.stack,
+            ...(error.response && { response: error.response })
+        });
         next(error);
     }
 };
