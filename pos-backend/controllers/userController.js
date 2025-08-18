@@ -12,6 +12,7 @@ const register = async (req, res, next) => {
         console.log("Body:", req.body);
 
         const { name, phone, email, password, role } = req.body;
+        console.log("Extracted fields:", { name, phone, email, password, role });
 
         // Cek input
         if (!name || !phone || !email || !password || !role) {
@@ -36,6 +37,7 @@ const register = async (req, res, next) => {
         res.status(201).json({ success: true, message: "New user created!", data: newUser });
 
     } catch (error) {
+        console.error("Registration error stack:", error.stack);
         next(error);
     }
 };
