@@ -22,7 +22,7 @@
 
     app.use(cors({
         credentials: true,
-        origin: true
+        origin: ["https://pos-wine-two.vercel.app"]
     }))
 
     app.use(express.json());

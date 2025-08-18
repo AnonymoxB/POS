@@ -4,7 +4,7 @@ const config = Object.freeze({
     port: process.env.PORT || 3000,
     databaseURI: process.env.MONGODB_URI || "mongodb://localhost:27017/pos-DB",
     nodeEnv : process.env.NODE_ENV || "development",
-    accessTokenSecret:process.env.JWT_SECRET
+    accessTokenSecret:process.env.JWT_SECRET || "supersecretkey"
 })
 
 module.exports = config;
