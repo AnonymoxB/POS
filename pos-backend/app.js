@@ -33,6 +33,12 @@
     credentials: true,
     }));
 
+    app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Credentials', true);
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    next();
+    });
+
     // Jangan lupa ini juga
     app.options("*", cors());
 
@@ -52,20 +58,20 @@
 
     // other endpoint
 
-    app.use("/api/user", require("./routes/userRoute"));
-    app.use("/api/order", require("./routes/orderRoute"));
-    app.use("/api/table", require("./routes/tableRoute")) ;
-    app.use("/api/payments", require("./routes/paymentRoute"));
-    app.use("/api/category", require("./routes/categoryRoute"));
-    app.use("/api/dish", require("./routes/dishesRoute"));
+    app.use("/user", require("./routes/userRoute"));
+    app.use("/order", require("./routes/orderRoute"));
+    app.use("/table", require("./routes/tableRoute")) ;
+    app.use("/payments", require("./routes/paymentRoute"));
+    app.use("/category", require("./routes/categoryRoute"));
+    app.use("/dish", require("./routes/dishesRoute"));
 
     //QRIS
-    // app.use("/api/payment", qrisRoutes);
+    // app.use("/payment", qrisRoutes);
 
     //report
     
-    app.use('/api/report', require("./routes/reportRoute"));
-    // app.use('/api/reports', reportRoutes)
+    app.use('/report', require("./routes/reportRoute"));
+    // app.use('/reports', reportRoutes)
     
     
 
