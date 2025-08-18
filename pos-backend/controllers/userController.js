@@ -26,7 +26,10 @@ const register = async (req, res, next) => {
             return next(error);
         }
 
-        const user = { name, phone, email, password, role };
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+
+        const user = { name, phone, email, password: hashedPassword, role };
         const newUser = new User(user);
         await newUser.save();
 
@@ -66,6 +69,7 @@ const login = async (req, res, next) => {
         const accessToken = jwt.sign({_id: isUserPresent._id}, config.accessTokenSecret, {
             expiresIn: '1d'
         });
+        
 
         res.cookie('accessToken', accessToken, {
             maxAge: 1000 *60 *60 *24 *30,
@@ -83,6 +87,10 @@ const login = async (req, res, next) => {
     } catch (error) {
         return next(error);
     }
+
+    console.log("=== PASSWORD INPUT ===", password);
+console.log("=== PASSWORD DB ===", isUserPresent.password);
+
 
 };
 
