@@ -18,11 +18,13 @@ const allowedOrigins = [
 
 // Enhanced CORS configuration
 const corsOptions = {
-  origin: allowedOrigins,
+  origin: [
+    "https://pos-wine-two.vercel.app",
+    "http://localhost:5173" // for local development
+  ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-  exposedHeaders: ['Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
   optionsSuccessStatus: 200
 };
 
