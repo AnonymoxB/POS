@@ -1,15 +1,5 @@
-import axios from "axios";
-// import { axiosWrapper } from "./axiosWrapper";
+import api from "./axiosWrapper";
 
-
-const api = axios.create({
-  baseURL: import.meta.env.VITE_BACKEND_URL,
-  withCredentials: true,
-  headers: {
-    "Content-Type": "application/json",
-    Accept: "application/json"
-  }
-});
 
 // API Endpoints
 export const login = (data) => api.post("/api/user/login", data);
