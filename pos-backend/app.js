@@ -18,7 +18,7 @@
 
     app.use(cors({
         credentials: true,
-        origin: ['http://localhost:5173', 'https://pos-wine-two.vercel.app/']
+        origin: ['http://localhost:5173', 'https://pos-wine-two.vercel.app']
     }))
 
     app.use(express.json());
