@@ -58,8 +58,9 @@
     app.use(globalErrorHandler);
 
     // Server
-    app.listen(PORT, () => {
-        console.log(`POS Server is listening on port ${PORT}`);
+    // app.listen(PORT, () => {
+    //     console.log(`POS Server is listening on port ${PORT}`);
 
     
-    })
+    // })
+    module.exports = app;
