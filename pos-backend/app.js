@@ -59,7 +59,7 @@
     app.use("/api/dish", require("./routes/dishesRoute"));
 
     //QRIS
-    // app.use('/api/qris', qrisRoute);
+    // app.use("/api/payment", qrisRoutes);
 
     //report
     
