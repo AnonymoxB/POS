@@ -17,9 +17,12 @@
     // Middleware
 
     app.use(cors({
+        origin: [
+            "http://localhost:5173",
+            "https://pos-wine-two.vercel.app"
+        ],
         credentials: true,
-        origin: ['http://localhost:5173', 'https://pos-wine-two.vercel.app']
-    }))
+    }));
 
     app.use(express.json());
     app.use(cookieParser());
