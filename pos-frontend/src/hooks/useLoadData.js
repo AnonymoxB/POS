@@ -14,11 +14,17 @@ const useLoadData = () => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          setIsLoading(false);
+          return;
+        }
         const { data } = await getUserData();
         console.log(data);
         const { _id, name, email, phone, role } = data.data;
         dispatch(setUser({ _id, name, email, phone, role }));
         setUserState(data.data);
+        
       } catch (error) {
         dispatch(removeUser());
         navigate("/auth");
