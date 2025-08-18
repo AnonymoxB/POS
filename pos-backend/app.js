@@ -19,7 +19,8 @@
     app.use(cors({
         origin: [
             "http://localhost:5173",
-            "https://pos-wine-two.vercel.app"
+            "https://pos-wine-two.vercel.app",
+            "https://pos-qkpv.vercel.app"
         ],
         credentials: true,
     }));
