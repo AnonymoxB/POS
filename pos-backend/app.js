@@ -60,10 +60,3 @@
 
     // Global error handle
     app.use(globalErrorHandler);
-
-    // Server
-    app.listen(PORT, () => {
-        console.log(`POS Server is listening on port ${PORT}`);
-
-    
-    })
