@@ -42,6 +42,7 @@ const login = async (req, res, next) => {
     try {
 
         const {email, password} = req.body;
+        console.log("=== LOGIN BODY ===", req.body);
 
         if (!email || !password){
             const error = createHttpError(400, "All fields are required !");
@@ -49,17 +50,19 @@ const login = async (req, res, next) => {
         }
 
         const isUserPresent = await User.findOne({ email });
+         console.log("=== USER ===", isUserPresent);
         if (!isUserPresent) {
         const error = createHttpError(401, "Invalid Credentials");
         return next(error);
         }
 
-
+        
         const isMatch = await bcrypt.compare(password, isUserPresent.password);
         if (!isMatch) {
         const error = createHttpError(401, "Invalid Credentials");
         return next(error);
         }
+         console.log("=== CONFIG SECRET ===", config.accessTokenSecret);
         const accessToken = jwt.sign({_id: isUserPresent._id}, config.accessTokenSecret, {
             expiresIn: '1d'
         });
