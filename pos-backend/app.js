@@ -8,6 +8,7 @@
     const app = express();
     const qrisRoute = require("./routes/qrisRoute");
     const reportRoutes = require('./routes/reportRoute');
+    const listEndpoints = require('express-list-endpoints');
 
 
 
@@ -77,4 +78,5 @@
 
     
     // })
+    console.log(listEndpoints(app));
     module.exports = app;
