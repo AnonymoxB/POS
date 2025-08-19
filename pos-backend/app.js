@@ -6,59 +6,37 @@ const cookieParser = require("cookie-parser");
 const cors = require("cors");
 
 const app = express();
-
-// 🔗 Connect ke MongoDB
 connectDB();
 
 const PORT = process.env.PORT || 8080;
 
-// =======================
-// Middleware dasar
-// =======================
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
-
-// =======================
-// Konfigurasi CORS
-// =======================
 const allowedOrigins = [
   "https://pos-wine-two.vercel.app",
   "http://localhost:5173",
 ];
 
-const corsOptions = {
-  origin: function (origin, callback) {
-    // Allow requests with no origin (mobile apps, curl, etc)
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    } else {
-      return callback(new Error("Not allowed by CORS"), false);
-    }
-  },
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-};
-
-app.use(cors(corsOptions));
-
-// ✅ Fix tambahan untuk preflight supaya Railway nggak drop
+// ========= FIX CORS =========
 app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", req.headers.origin || "*");
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.header("Access-Control-Allow-Origin", origin);
+  }
   res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
   res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
   res.header("Access-Control-Allow-Credentials", "true");
+
   if (req.method === "OPTIONS") {
-    return res.sendStatus(200); // langsung bales preflight
+    return res.sendStatus(200);
   }
   next();
 });
 
-// =======================
-// Routes
-// =======================
+// Body parsers
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
+
+// ========== Routes ==========
 app.get("/", (req, res) => {
   res.json({ message: "Hello from POS Server!" });
 });
@@ -71,14 +49,9 @@ app.use("/api/category", require("./routes/categoryRoute"));
 app.use("/api/dish", require("./routes/dishesRoute"));
 app.use("/api/report", require("./routes/reportRoute"));
 
-// =======================
-// Global error handler
-// =======================
+// Error handler
 app.use(globalErrorHandler);
 
-// =======================
-// Start Server
-// =======================
 app.listen(PORT, () => {
-  console.log(`✅ POS Server is listening on port ${PORT}`);
+  console.log(`✅ POS Server running on port ${PORT}`);
 });
