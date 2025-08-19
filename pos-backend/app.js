@@ -29,15 +29,6 @@ app.use(cors({
 }));
 
 // Handle preflight requests
-app.options("*", cors({
-  credentials: true,
-  origin: [
-    "https://pos-wine-two.vercel.app",
-    "http://localhost:5173"
-  ],
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"]
-}));
 
 
 // Routes
