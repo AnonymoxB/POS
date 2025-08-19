@@ -19,14 +19,15 @@ app.use(cookieParser());
 
 // Enhanced CORS configuration
 app.use(cors({
-  credentials: true,
   origin: [
     "https://pos-wine-two.vercel.app",
-    "http://localhost:5173" // for local development
+    "http://localhost:5173"
   ],
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true,
   allowedHeaders: ["Content-Type", "Authorization"]
 }));
+
 
 // Handle preflight requests
 app.options("*", cors());
