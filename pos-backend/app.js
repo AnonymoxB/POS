@@ -17,11 +17,6 @@ const allowedOrigins = [
   "http://localhost:5173",
 ];
 
-// Middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
-
 // 🔑 Konfigurasi CORS sekali aja
 const corsOptions = {
   origin: (origin, callback) => {
@@ -49,6 +44,12 @@ app.use(cors(corsOptions));
 
 // Pastikan preflight OPTIONS dijawab
 app.options("*", cors(corsOptions));
+
+// Middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
+
 
 // Routes
 app.get("/", (req, res) => {
