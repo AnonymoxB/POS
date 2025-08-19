@@ -8,7 +8,7 @@ router.route("/register").post(register);
 router.route("/login").post(login);
 
 router.route("/").get(isVerifiedUser,getUserData);
-router.route("/logout").post(isVerifiedUser,logout);
+router.route("/logout").post(logout);
 
 
 module.exports = router;
