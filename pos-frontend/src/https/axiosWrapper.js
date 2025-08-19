@@ -11,11 +11,13 @@ const api = axios.create({
 
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
-  console.log("Request ke:", config.url, "pakai token:", token);
+  console.log("Request ke:", (config.baseURL || "") + config.url, "pakai token:", token);
+  console.log("👉 Base URL API:", import.meta.env.VITE_BACKEND_URL);
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
 });
+
 
 export default api;
