@@ -29,6 +29,14 @@ const corsOptions = {
 };
 
 
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "https://pos-wine-two.vercel.app");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  next();
+});
+
+
 // Handle preflight requests
 app.use(cors(corsOptions));
 app.options("*", cors(corsOptions));
