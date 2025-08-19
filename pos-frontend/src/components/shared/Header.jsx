@@ -32,15 +32,7 @@ const Header = () => {
     const queryClient = useQueryClient();
 
     const handleLogout = () => {
-        logoutMutation.mutate(undefined, {
-          onSuccess: () => {
-            localStorage.removeItem("token");
-            sessionStorage.removeItem("token");
-            dispatch(removeUser());
-            queryClient.clear();
-            navigate("/auth", {replace:true});
-          }
-        });
+        
     }
 
   return (
