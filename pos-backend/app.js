@@ -2,30 +2,34 @@ require("dotenv").config();
 const express = require("express");
 const connectDB = require("./config/database");
 const globalErrorHandler = require("./middlewares/globalErrorHandler");
-const createHttpError = require("http-errors");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
+
 const app = express();
 
 // Database connection
-connectDB(); // ACTUALLY CALL THE CONNECTION FUNCTION
+connectDB();
 
 const PORT = process.env.PORT || 8080;
 
-// Middleware - ORDER IS CRUCIAL!
-app.use(express.json()); // MUST come first to parse JSON bodies
-app.use(express.urlencoded({ extended: true })); // For form data
+// Middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// Enhanced CORS configuration
+// === CORS FIX ===
+const allowedOrigins = [
+  "https://pos-wine-two.vercel.app",
+  "http://localhost:5173"
+];
+
 const corsOptions = {
   origin: (origin, callback) => {
-    // allow requests with no origin (like mobile apps or curl)
-    if (!origin) return callback(null, true);
+    if (!origin) return callback(null, true); // allow requests with no origin (e.g. mobile apps, curl)
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      console.log("Blocked by CORS:", origin);
+      console.log("❌ Blocked by CORS:", origin);
       callback(new Error("Not allowed by CORS"));
     }
   },
@@ -34,11 +38,15 @@ const corsOptions = {
   credentials: true,
 };
 
-
-
-// Handle preflight requests
+// CORS middleware harus sebelum routes
 app.use(cors(corsOptions));
 app.options("*", cors(corsOptions));
+
+// Debug logger origin biar kelihatan di Railway log
+app.use((req, res, next) => {
+  console.log("👉 Origin:", req.headers.origin, "| Path:", req.path);
+  next();
+});
 
 // Routes
 app.get("/", (req, res) => {
@@ -54,10 +62,10 @@ app.use("/api/category", require("./routes/categoryRoute"));
 app.use("/api/dish", require("./routes/dishesRoute"));
 app.use("/api/report", require("./routes/reportRoute"));
 
-// Global error handler - MUST be last middleware
+// Global error handler
 app.use(globalErrorHandler);
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`POS Server is listening on port ${PORT}`);
+  console.log(`✅ POS Server is listening on port ${PORT}`);
 });
