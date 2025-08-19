@@ -6,6 +6,8 @@ const cookieParser = require("cookie-parser");
 const cors = require("cors");
 
 const app = express();
+
+// Database connection
 connectDB();
 
 const PORT = process.env.PORT || 8080;
@@ -15,28 +17,36 @@ const allowedOrigins = [
   "http://localhost:5173",
 ];
 
-// ========= FIX CORS =========
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  if (allowedOrigins.includes(origin)) {
-    res.header("Access-Control-Allow-Origin", origin);
-  }
-  res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
-  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  res.header("Access-Control-Allow-Credentials", "true");
-
-  if (req.method === "OPTIONS") {
-    return res.sendStatus(200);
-  }
-  next();
-});
-
-// Body parsers
+// Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// ========== Routes ==========
+// 🔑 Konfigurasi CORS sekali aja
+const corsOptions = {
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+};
+
+app.use((req, res, next) => {
+  console.log("👉 Origin:", req.headers.origin, " Method:", req.method);
+  next();
+});
+
+app.use(cors(corsOptions));
+
+// Pastikan preflight OPTIONS dijawab
+app.options("*", cors(corsOptions));
+
+// Routes
 app.get("/", (req, res) => {
   res.json({ message: "Hello from POS Server!" });
 });
@@ -53,5 +63,5 @@ app.use("/api/report", require("./routes/reportRoute"));
 app.use(globalErrorHandler);
 
 app.listen(PORT, () => {
-  console.log(`✅ POS Server running on port ${PORT}`);
+  console.log(`POS Server is listening on port ${PORT}`);
 });
