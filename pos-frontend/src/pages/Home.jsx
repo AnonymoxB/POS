@@ -29,14 +29,14 @@ const Home = () => {
       <MiniCard
         title="Total Pendapatan"
         icon={<FaMoneyBillTrendUp />}
-        number={data?.totalRevenue || 0}
-        footerNum={data?.revenueGrowth || 0}
+        number={data.totalRevenue || 0}
+        footerNum={data.revenueGrowth || 0}
       />
       <MiniCard
         title="Total Transaksi"
         icon={<FaReceipt />}
-        number={data?.totalTransactions || 0}
-        footerNum={data?.transactionGrowth || 0}
+        number={data.totalTransactions || 0}
+        footerNum={data.transactionGrowth || 0}
       />
     </div>
 
