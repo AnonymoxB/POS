@@ -19,13 +19,19 @@ app.use(cookieParser());
 
 // Enhanced CORS configuration
 const corsOptions = {
-  origin: [
-    "https://pos-wine-two.vercel.app",
-    "http://localhost:5173"
-  ],
+  origin: (origin, callback) => {
+    // allow requests with no origin (like mobile apps or curl)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.log("Blocked by CORS:", origin);
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
-  credentials: true
+  credentials: true,
 };
 
 
