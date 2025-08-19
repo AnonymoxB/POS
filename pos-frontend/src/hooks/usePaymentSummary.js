@@ -8,9 +8,6 @@ const fetchPaymentSummary = async (today) => {
       endDate: today,
       _: Date.now(),
     },
-    headers: {
-      'Cache-Control': 'no-store',
-    },
   })
 
   const raw = res.data
