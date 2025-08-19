@@ -30,7 +30,7 @@ app.use(cors({
 
 
 // Handle preflight requests
-app.options("*", cors());
+// app.options("*", cors());
 
 // Routes
 app.get("/", (req, res) => {
