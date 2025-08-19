@@ -1,8 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
-import axios from 'axios'
+import api from '../https/axiosWrapper'
 
 const fetchPaymentSummary = async (today) => {
-  const res = await axios.get('/api/report/payment-summary', {
+  const res = await api.get('/api/report/payment-summary', {
     params: {
       startDate: today,
       endDate: today,
