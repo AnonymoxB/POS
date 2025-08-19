@@ -5,7 +5,7 @@ import { FaBell } from 'react-icons/fa';
 import logo from "../../assets/images/logo.png";
 import { useDispatch, useSelector } from 'react-redux';
 import { IoLogOut } from 'react-icons/io5';
-import { useMutation } from '@tanstack/react-query';
+import { useQueryClient, useMutation } from '@tanstack/react-query';
 import { logout } from '../../https';
 import {  useNavigate } from 'react-router-dom';
 import { removeUser } from '../../redux/slices/userSlices';
@@ -29,8 +29,18 @@ const Header = () => {
         }
     })
     
+    const queryClient = useQueryClient();
+
     const handleLogout = () => {
-        logoutMutation.mutate();
+        logoutMutation.mutate(undefined, {
+          onSuccess: () => {
+            localStorage.removeItem("token");
+            sessionStorage.removeItem("token");
+            dispatch(removeUser());
+            queryClient.clear();
+            navigate("/auth", {replace:true});
+          }
+        });
     }
 
   return (
