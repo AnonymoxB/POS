@@ -12,12 +12,7 @@ connectDB();
 
 const PORT = process.env.PORT || 8080;
 
-// Middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
-
-// === CORS FIX ===
+// === CORS ===
 const allowedOrigins = [
   "https://pos-wine-two.vercel.app",
   "http://localhost:5173"
@@ -25,7 +20,7 @@ const allowedOrigins = [
 
 const corsOptions = {
   origin: (origin, callback) => {
-    if (!origin) return callback(null, true); // allow Postman, curl, etc
+    if (!origin) return callback(null, true); // Postman / curl
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
@@ -33,20 +28,24 @@ const corsOptions = {
       callback(new Error("Not allowed by CORS"));
     }
   },
+  credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
-  credentials: true,
 };
 
+// middleware harus paling atas (sebelum routes!)
 app.use(cors(corsOptions));
-app.options("*", cors(corsOptions)); // handle preflight
+app.options("*", cors(corsOptions));
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 // Routes
 app.get("/", (req, res) => {
   res.json({ message: "Hello from POS Server!" });
 });
 
-// API Routes
 app.use("/api/user", require("./routes/userRoute"));
 app.use("/api/order", require("./routes/orderRoute"));
 app.use("/api/table", require("./routes/tableRoute"));
