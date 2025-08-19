@@ -10,7 +10,6 @@ const fetchPaymentSummary = async (today) => {
     },
     headers: {
       'Cache-Control': 'no-store',
-      'If-None-Match': '',
     },
   })
 
