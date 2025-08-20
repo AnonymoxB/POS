@@ -18,20 +18,28 @@ app.use(express.urlencoded({ extended: true })); // For form data
 app.use(cookieParser());
 
 // Enhanced CORS configuration
-const corsOptions = {
-  origin: [
+app.use((req, res, next) => {
+  const allowedOrigins = [
     "https://pos-wine-two.vercel.app",
-    "http://localhost:5173"
-  ],
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
-  credentials: true
-};
+    "http://localhost:5173",
+  ];
+  const origin = req.headers.origin;
 
+  if (allowedOrigins.includes(origin)) {
+    res.header("Access-Control-Allow-Origin", origin);
+  }
 
-// Handle preflight requests
-app.use(cors(corsOptions));
-app.options("*", cors(corsOptions));
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.header("Access-Control-Allow-Credentials", "true");
+
+  // respond preflight request
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(204);
+  }
+
+  next();
+});
 
 // Routes
 app.get("/", (req, res) => {
