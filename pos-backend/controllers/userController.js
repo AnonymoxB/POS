@@ -77,10 +77,8 @@ const register = async (req, res, next) => {
 };
 
 const login = async (req, res, next) => {
-   
     try {
-
-        const {email, password} = req.body;
+        const { email, password } = req.body;
         console.log("=== LOGIN BODY ===", req.body);
 
         if (!email || !password){
@@ -89,46 +87,46 @@ const login = async (req, res, next) => {
         }
 
         const isUserPresent = await User.findOne({ email });
-         console.log("=== USER ===", isUserPresent);
+        console.log("=== USER ===", isUserPresent);
+
         if (!isUserPresent) {
-        const error = createHttpError(401, "Invalid Credentials");
-        return next(error);
+            const error = createHttpError(401, "Invalid Credentials");
+            return next(error);
         }
 
-        
         const isMatch = await bcrypt.compare(password, isUserPresent.password);
         if (!isMatch) {
-        const error = createHttpError(401, "Invalid Credentials");
-        return next(error);
+            const error = createHttpError(401, "Invalid Credentials");
+            return next(error);
         }
-         console.log("=== CONFIG SECRET ===", config.accessTokenSecret);
-        const accessToken = jwt.sign({_id: isUserPresent._id}, config.accessTokenSecret, {
+
+        console.log("=== PASSWORD INPUT ===", password);
+        console.log("=== PASSWORD DB ===", isUserPresent.password);
+        console.log("=== CONFIG SECRET ===", config.accessTokenSecret);
+
+        const accessToken = jwt.sign({ _id: isUserPresent._id }, config.accessTokenSecret, {
             expiresIn: '1d'
         });
-        
 
         res.cookie('accessToken', accessToken, {
-            maxAge: 1000 *60 *60 *24 *30,
+            maxAge: 1000 * 60 * 60 * 24 * 30,
             httpOnly: true,
             sameSite: 'none',
             secure: true
         });
 
-        res.status(200).json({success: true, message:"User login successfully !", 
+        res.status(200).json({
+            success: true,
+            message: "User login successfully !",
             data: isUserPresent,
             token: accessToken
         });
 
-        
     } catch (error) {
         return next(error);
     }
-
-    console.log("=== PASSWORD INPUT ===", password);
-console.log("=== PASSWORD DB ===", isUserPresent.password);
-
-
 };
+
 
 const getUserData = async(req, res, next) => {
     try {
