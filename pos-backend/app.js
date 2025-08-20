@@ -8,11 +8,11 @@ const cors = require("cors");
 const app = express();
 
 // Database connection
-connectDB(); // ACTUALLY CALL THE CONNECTION FUNCTION
+connectDB();
 
 const PORT = process.env.PORT || 8080;
 
-// Middleware - ORDER IS CRUCIAL!
+// Middleware
 app.use(express.json()); // MUST come first to parse JSON bodies
 app.use(express.urlencoded({ extended: true })); // For form data
 app.use(cookieParser());
