@@ -22,9 +22,10 @@ const Login = () => {
   const loginMutation = useMutation({
     mutationFn: (reqData) => login(reqData),
     onSuccess: (res) => {
-     
+
+      const { data } = res;        
+      const { data: user, token } = data;
       // simpan user ke redux
-      const { data, token } = data.data;
       localStorage.setItem("token", token);
       dispatch(setUser({ 
         _id: data._id, 
