@@ -44,7 +44,7 @@ const Header = () => {
       >
         <img src={logo} className="h-8 w-8" alt="coffelogo" />
         <h1 className="text-lg font-semibold text-[#f5f5f5] whitespace-nowrap">
-          Lokasi Street
+          POINT OF SALES
         </h1>
       </div>
 
