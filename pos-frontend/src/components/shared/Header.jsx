@@ -26,6 +26,8 @@ const Header = () => {
         },
         onError: (error) => {
             console.log(error);
+            dispatch(removeUser());
+            navigate("/auth");
         }
     })
     
