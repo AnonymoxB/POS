@@ -1,19 +1,15 @@
 import React, { useEffect, useState } from "react";
+import { FaCheckDouble, FaCircle } from "react-icons/fa";
 import { getOrders } from "../../https";
-
-const statusColors = {
-  Ready: "bg-green-500 text-white",
-  "In Progress": "bg-yellow-500 text-white",
-  Pending: "bg-red-500 text-white",
-};
 
 const OrderCard = ({ order }) => {
   if (!order) return null;
 
   const { customerDetails, orderStatus, items, bills, orderDate, orderId } = order;
+
   const formattedDate = new Date(orderDate).toLocaleString("id-ID", {
     day: "2-digit",
-    month: "short",
+    month: "long",
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
@@ -21,30 +17,45 @@ const OrderCard = ({ order }) => {
   });
 
   return (
-    <div className="flex-shrink-0 w-80 bg-[#1f1f1f] p-4 rounded-xl shadow-md hover:shadow-lg transition-shadow mr-4">
-      <div className="flex justify-between items-start mb-2">
-        <div>
-          <h2 className="text-white font-semibold">{customerDetails.name}</h2>
-          <p className="text-gray-400 text-sm">{orderId} • {customerDetails.type}</p>
-          <p className="text-gray-400 text-xs mt-1">{formattedDate}</p>
-        </div>
-        <div className={`px-3 py-1 rounded-full text-xs font-medium ${statusColors[orderStatus] || "bg-gray-500 text-white"}`}>
-          {orderStatus}
-        </div>
-      </div>
-
-      <div className="flex flex-col gap-1 border-t border-gray-700 pt-2">
-        {items.map(item => (
-          <div key={item.dishId} className="flex justify-between text-gray-300 text-sm">
-            <span>{item.name} x {item.qty}</span>
-            <span>Rp {item.totalPrice.toLocaleString("id-ID")}</span>
+    <div className="w-[500px] bg-[#262626] p-4 rounded-lg mb-4">
+      <div className="flex items-center gap-5">
+        <button className="bg-[#f6b100] p-3 text-xl font-bold rounded-lg">
+          {customerDetails.name
+            .split(" ")
+            .map((n) => n[0])
+            .join("")}
+        </button>
+        <div className="flex items-center justify-between w-full">
+          <div className="flex flex-col items-start gap-1">
+            <h1 className="text-[#f5f5f5] text-lg font-semibold tracking-wide">
+              {customerDetails.name}
+            </h1>
+            <p className="text-[#ababab] text-sm">
+              {orderId} / {customerDetails.type}
+            </p>
           </div>
-        ))}
+          <div className="flex flex-col items-end gap-2">
+            <p className="text-green-600 bg-[#2e4a40] px-2 py-1 rounded-lg flex items-center">
+              <FaCheckDouble className="inline mr-2" />
+              {orderStatus}
+            </p>
+            <p className="text-[#ababab] text-sm flex items-center">
+              <FaCircle className="text-green-600 inline mr-2" />
+              Siap Disajikan
+            </p>
+          </div>
+        </div>
       </div>
-
-      <div className="flex justify-between items-center mt-3 pt-2 border-t border-gray-700">
-        <span className="text-gray-400 text-sm">{items.length} Items</span>
-        <span className="text-white font-semibold">Rp {bills.total.toLocaleString("id-ID")}</span>
+      <div className="flex justify-between items-center mt-4 text-[#ababab]">
+        <p>{formattedDate}</p>
+        <p>{items.length} Items</p>
+      </div>
+      <hr className="w-full mt-4 border-t-1 border-gray-500" />
+      <div className="flex items-center justify-between mt-4">
+        <h1 className="text-[#f5f5f5] text-lg font-semibold">Total</h1>
+        <p className="text-[#f5f5f5] text-lg font-semibold">
+          Rp {bills.total.toLocaleString("id-ID")}
+        </p>
       </div>
     </div>
   );
@@ -58,7 +69,7 @@ const OrdersList = () => {
     const fetchOrders = async () => {
       try {
         const response = await getOrders();
-        setOrders(response.data.data || []);
+        setOrders(response.data.data); // sesuai response dari backend
       } catch (err) {
         console.error("Gagal fetch orders:", err);
       } finally {
@@ -68,16 +79,17 @@ const OrdersList = () => {
     fetchOrders();
   }, []);
 
-  if (loading) return <p className="text-white text-center mt-10">Loading orders...</p>;
-  if (orders.length === 0) return <p className="text-white text-center mt-10">Belum ada order.</p>;
+  if (loading) return <p className="text-white">Loading orders...</p>;
+  if (orders.length === 0) return <p className="text-white">Belum ada order.</p>;
 
   return (
-    <div className="flex overflow-x-auto space-x-4 px-4 py-6">
-      {orders.map(order => (
+    <div className="flex flex-col items-center mt-10">
+      {orders.map((order) => (
         <OrderCard key={order._id} order={order} />
       ))}
     </div>
   );
 };
+
 
 export default OrdersList;
