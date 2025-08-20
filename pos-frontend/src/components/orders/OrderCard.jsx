@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { FaCheckDouble, FaCircle } from "react-icons/fa";
-import { getOrders } from "../../api/axiosWrapper";
+import { getOrders } from "../../https";
 
 const OrderCard = ({ order }) => {
   if (!order) return null;
