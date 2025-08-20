@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+const mongoose = require("mongoose");
 
 const unitSchema = new mongoose.Schema(
   {
@@ -10,4 +10,4 @@ const unitSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-export default mongoose.model("Unit", unitSchema);
+module.exports = mongoose.model("Unit", unitSchema);
