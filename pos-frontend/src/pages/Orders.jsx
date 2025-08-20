@@ -23,17 +23,6 @@ const Orders = () => {
       </div>
       <div className='flex flex-wrap gap-6 items-center justify-center px-16 py-4 overflow-y-scroll scrollbar-hide h-[calc(100vh-5rem-5rem)]'>
         <OrderCard/>
-        <OrderCard/>
-        <OrderCard/>
-        <OrderCard/>
-        <OrderCard/>
-        <OrderCard/>
-        <OrderCard/>
-        <OrderCard/>
-        <OrderCard/>
-        <OrderCard/>
-        <OrderCard/>
-        <OrderCard/>
       </div>
       <BottomNav/>
     </section>
