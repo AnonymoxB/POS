@@ -22,19 +22,21 @@ const Login = () => {
   const loginMutation = useMutation({
     mutationFn: (reqData) => login(reqData),
     onSuccess: (res) => {
-
-      const { data } = res;        
-      const { data: user, token } = data;
-      // simpan user ke redux
+      const { data: user, token } = res.data; // ambil user & token
+    
+      // simpan token ke localStorage
       localStorage.setItem("token", token);
+    
+      // simpan user ke redux
       dispatch(setUser({ 
-        _id: data._id, 
-        name: data.name, 
-        email: data.email, 
-        phone: data.phone, 
-        role: data.role,
-        token }));
-
+        _id: user._id, 
+        name: user.name, 
+        email: user.email, 
+        phone: user.phone, 
+        role: user.role,
+        token
+      }));
+    
       enqueueSnackbar("Login berhasil", { variant: "success" });
       navigate("/");
     },
