@@ -1,11 +1,31 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import BottomNav from '../components/shared/BottomNav'
 import OrderCard from '../components/orders/OrderCard'
 import BckButton from '../components/shared/BckButton'
+import { getOrders } from '../https'
 
 const Orders = () => {
+  const [status, setStatus] = useState("all")
+  const [orders, setOrders] = useState([])
+  const [loading, setLoading] = useState(true)
 
-  const [status, setStatus] = useState("all");
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        const res = await getOrders()
+        setOrders(res.data.data || [])
+      } catch (err) {
+        console.error("Gagal fetch orders:", err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchOrders()
+  }, [])
+
+  const filteredOrders = orders.filter(order =>
+    status === "all" ? true : order.orderStatus.toLowerCase() === status
+  )
 
   return (
     <section className='bg-[#1f1f1f] h-[calc(100vh-5rem)] overflow-hidden'>
@@ -14,16 +34,31 @@ const Orders = () => {
           <BckButton/>
           <h1 className='text-[#f5f5f5] text-2xl font-bold tracking-wide'>Orders</h1>
         </div>
-        <div className=' flex items-center justify-around gap-4'>
-          <button onClick={()=> setStatus("all")} className={`text-[#ababab] text-lg ${status === "all" && "bg-[#383838]"} rounded-lg px-5 py-2 font-semibold`}>All</button>
-          <button onClick={()=> setStatus("progress")} className={`text-[#ababab] text-lg ${status === "progress" && "bg-[#383838]"} rounded-lg px-5 py-2 font-semibold`}>In Progress</button>
-          <button onClick={()=> setStatus("ready")} className={`text-[#ababab] text-lg ${status === "ready" && "bg-[#383838]"} rounded-lg px-5 py-2 font-semibold`}>Ready</button>
-          <button onClick={()=> setStatus("completed")} className={`text-[#ababab] text-lg ${status === "completed" && "bg-[#383838]"} rounded-lg px-5 py-2 font-semibold`}>Completed</button>
+        <div className='flex items-center justify-around gap-4'>
+          {["all","progress","ready","completed"].map((s) => (
+            <button
+              key={s}
+              onClick={()=> setStatus(s)}
+              className={`text-[#ababab] text-lg ${status === s && "bg-[#383838]"} rounded-lg px-5 py-2 font-semibold`}
+            >
+              {s === "progress" ? "In Progress" : s.charAt(0).toUpperCase() + s.slice(1)}
+            </button>
+          ))}
         </div>
       </div>
-      <div className='flex flex-wrap gap-6 items-center justify-center px-16 py-4 overflow-y-scroll scrollbar-hide h-[calc(100vh-5rem-5rem)]'>
-        <OrderCard/>
-      </div>
+
+      {loading ? (
+        <p className="text-white text-center mt-10">Loading orders...</p>
+      ) : filteredOrders.length === 0 ? (
+        <p className="text-white text-center mt-10">Belum ada order.</p>
+      ) : (
+        <div className='flex gap-6 px-8 py-4 overflow-x-auto scrollbar-hide'>
+          {filteredOrders.map(order => (
+            <OrderCard key={order._id} order={order} />
+          ))}
+        </div>
+      )}
+
       <BottomNav/>
     </section>
   )
