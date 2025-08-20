@@ -53,7 +53,7 @@ const Orders = () => {
         <p className="text-white text-center mt-10">Belum ada order.</p>
       ) : (
         <div className='flex gap-6 px-8 py-4 overflow-x-auto scrollbar-hide'>
-        {orders.map(order => (
+        {filteredOrders.map(order => (
           <OrderCard key={order._id} order={order} />
         ))}
       </div>
