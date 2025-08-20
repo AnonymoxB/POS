@@ -49,11 +49,11 @@ const Orders = () => {
 
       {loading ? (
         <p className="text-white text-center mt-10">Loading orders...</p>
-      ) : filteredOrders.length === 0 ? (
+      ) : orders.length === 0 ? (
         <p className="text-white text-center mt-10">Belum ada order.</p>
       ) : (
         <div className='flex gap-6 px-8 py-4 overflow-x-auto scrollbar-hide'>
-        {filteredOrders.map(order => (
+        {orders.map(order => (
           <OrderCard key={order._id} order={order} />
         ))}
       </div>
