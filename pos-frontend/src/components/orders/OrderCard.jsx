@@ -8,13 +8,14 @@ const OrderCard = ({ order }) => {
     const { customerDetails, orderStatus, items, bills, orderDate, orderId } = order;
   
     const formattedDate = new Date(orderDate).toLocaleString("id-ID", {
-      day: "long",
-      month: "long",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    });
+        weekday: "long", 
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      });
   
     const getStatusStyle = (status) => {
       switch (status.toLowerCase()) {
