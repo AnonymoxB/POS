@@ -42,8 +42,15 @@ const EditUnitModal = ({ isOpen, onClose, unit, onUpdated }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    mutate(form);
-  };
+
+    const payload = {
+        ...form,
+        baseUnit: form.baseUnit === "" ? null : form.baseUnit,
+        conversion: Number(form.conversion) || 1,
+    };
+
+    mutate(payload);
+    };
 
   if (!isOpen) return null;
 
@@ -74,7 +81,7 @@ const EditUnitModal = ({ isOpen, onClose, unit, onUpdated }) => {
             className="px-3 py-2 rounded bg-[#333] text-white"
           >
             <option value="">Unit Dasar</option>
-            {data?.data?.data?.map((u) => (
+            {data?.data?.map((u) => (
               <option key={u._id} value={u._id}>
                 {u.name}
               </option>

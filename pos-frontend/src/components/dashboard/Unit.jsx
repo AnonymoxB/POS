@@ -73,7 +73,8 @@ const Unit = () => {
   if (isLoading) return <p className="text-[#ababab]">Loading...</p>;
   if (isError) return <p className="text-red-500">Gagal memuat data unit</p>;
 
-  const units = data?.data?.data || [];
+  const units = data?.data || [];
+
 
   return (
     <div className="container mx-auto bg-[#262626] p-4 rounded-lg max-h-[700px]">
