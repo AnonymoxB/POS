@@ -8,6 +8,7 @@ import AddDishModal from "../components/dashboard/AddDishModal";
 import Payment from "../components/dashboard/Payment";
 import Category from "../components/dashboard/Category";
 import Table from "../components/dashboard/Table";
+import Unit from "../components/dashboard/Unit";
 
 import {
   LayoutDashboard,
@@ -19,7 +20,9 @@ import {
   Wallet,
   Receipt,
   Boxes,
+  Scale
 } from "lucide-react";
+
 
 // daftar tab
 const tabs = [
@@ -27,11 +30,13 @@ const tabs = [
   { name: "Table", icon: TableIcon },
   { name: "Category", icon: List },
   { name: "Dish", icon: UtensilsCrossed },
+  { name: "Unit", icon: Scale },
   { name: "Orders", icon: ShoppingCart },
   { name: "Purchase", icon: Package },
   { name: "Expenses", icon: Receipt },
   { name: "Stock", icon: Boxes },
   { name: "Payments", icon: Wallet },
+  
 ];
 
 const Dashboard = () => {
@@ -52,10 +57,10 @@ const Dashboard = () => {
 
         <nav className="flex flex-col gap-2">
           {tabs.map((tab) => {
-            const Icon = tab.icon; // simpan komponen icon
+            const Icon = tab.icon;
             return (
               <button
-                key={tab.name} // ✅ pakai string unik
+                key={tab.name}
                 className={`flex items-center gap-3 text-left px-4 py-2 rounded-md font-medium ${
                   activeTab === tab.name
                     ? "bg-[#262626] text-green-500"
@@ -63,8 +68,8 @@ const Dashboard = () => {
                 }`}
                 onClick={() => setActiveTab(tab.name)}
               >
-                <Icon size={18} /> {/* ✅ render icon */}
-                {tab.name}         {/* ✅ render text */}
+                <Icon size={18} />
+                {tab.name}        
               </button>
             );
           })}
@@ -79,6 +84,7 @@ const Dashboard = () => {
         {activeTab === "Dish" && <Dish />}
         {activeTab === "Category" && <Category />}
         {activeTab === "Table" && <Table />}
+        {activeTab === "Unit" && <Unit/>}
       </div>
 
       {/* Modal Add Table */}

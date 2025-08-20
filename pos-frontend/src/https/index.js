@@ -64,4 +64,10 @@ export const updateOrderStatus = ({ orderId, orderStatus }) =>
   api.put(`/api/order/${orderId}`, { orderStatus });
 export const getPopularDishes = () => api.get("/api/order/popular");
 
+//Unit Endpoints
+export const getUnits = () => api.get("/units");
+export const deleteUnit = (id) => api.delete(`/units/${id}`);
+export const createUnit = (data) => api.post("/units", data);
+export const updateUnit = (id, data) => api.put(`/units/${id}`, data);
+
 
