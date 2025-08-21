@@ -2,7 +2,11 @@ const Product = require("../models/productModel");
 
 exports.createProduct = async (req, res) => {
   try {
-    const product = await Product.create(req.body);
+    let product = await Product.create(req.body);
+    // populate biar langsung ada kategori & unit
+    product = await product.populate("category", "name");
+    product = await product.populate("defaultUnit", "name short");
+
     res.status(201).json({ success: true, data: product });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });

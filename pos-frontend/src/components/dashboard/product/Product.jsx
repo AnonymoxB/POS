@@ -32,7 +32,8 @@ const Product = () => {
   if (isLoading) return <p className="text-[#ababab]">Loading...</p>;
   if (isError) return <p className="text-red-500">Gagal memuat data produk</p>;
 
-  const products = data?.data?.data || [];
+  const products = data?.data || [];
+
 
   return (
     <div className="container mx-auto bg-[#262626] p-4 rounded-lg max-h-[700px]">
