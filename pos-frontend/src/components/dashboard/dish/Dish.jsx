@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { getDishes, deleteDish } from "../../https";
+import { getDishes, deleteDish } from "../../../https";
 import { useSnackbar } from "notistack";
 import ModalEditDish from "./ModalEditDish";
 import { Pencil, Trash2 } from "lucide-react";

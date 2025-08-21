@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { IoMdClose } from "react-icons/io";
 import { useMutation } from "@tanstack/react-query";
 import { enqueueSnackbar } from "notistack";
-import { addCategory } from "../../https"; // sesuaikan path
+import { addCategory } from "../../../https";
 
 const AddCategoryModal = ({ isOpen, onClose, onCreated }) => {
   const [categoryData, setCategoryData] = useState({ name: "", icon: "" });

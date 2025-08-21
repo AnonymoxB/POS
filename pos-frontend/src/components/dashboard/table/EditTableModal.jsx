@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Dialog } from "@headlessui/react";
 import { useSnackbar } from "notistack";
-import { updateTable } from "../../https";
+import { updateTable } from "../../../https";
 
 const EditTableModal = ({ isOpen, onClose, table, onUpdated }) => {
   const { enqueueSnackbar } = useSnackbar();

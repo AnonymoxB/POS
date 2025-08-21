@@ -3,7 +3,7 @@ import { Dialog } from "@headlessui/react";
 import { IoMdClose } from "react-icons/io";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSnackbar } from "notistack";
-import { addTable } from "../../https";
+import { addTable } from "../../../https";
 
 const AddTableModal = ({ isOpen, onClose, onAdded }) => {
   const { enqueueSnackbar } = useSnackbar();

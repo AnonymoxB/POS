@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from "react";
 import Metrics from "../components/dashboard/Metrics";
 import RecentOrders from "../components/dashboard/RecentOrders";
-import Dish from "../components/dashboard/Dish";
+import Dish from "../components/dashboard/dish/Dish";
 import Modal from "../components/dashboard/Modal";
-import AddCategoryModal from "../components/dashboard/AddCategoryModal";
-import AddDishModal from "../components/dashboard/AddDishModal";
+import AddCategoryModal from "../components/dashboard/category/AddCategoryModal";
+import AddDishModal from "../components/dashboard/dish/AddDishModal";
 import Payment from "../components/dashboard/Payment";
-import Category from "../components/dashboard/Category";
-import Table from "../components/dashboard/Table";
+import Category from "../components/dashboard/category/Category";
+import Table from "../components/dashboard/table/Table";
 import Unit from "../components/dashboard/unit/Unit";
 import Product from "../components/dashboard/product/Product";
-import Purchase from "../components/dashboard/Purchase";
+import Purchase from "../components/dashboard/purchase/Purchase";
 import ProductCategoryPage from "../components/dashboard/productcateg/ProductCategory";
 
 import {

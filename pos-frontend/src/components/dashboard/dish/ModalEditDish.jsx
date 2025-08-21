@@ -1,6 +1,6 @@
 import { Dialog } from "@headlessui/react";
 import React, { useState, useEffect } from "react";
-import { updateDish } from "../../https";
+import { updateDish } from "../../../https";
 
 
 const ModalEditDish = ({ isOpen, onClose, dish, onUpdated }) => {

@@ -2,7 +2,7 @@ import { Dialog } from "@headlessui/react";
 import React, { useState, useEffect } from "react";
 import { useSnackbar } from "notistack";
 import { useMutation } from "@tanstack/react-query";
-import { updateCategory } from "../../https";
+import { updateCategory } from "../../../https";
 
 const EditCategoryModal = ({ isOpen, onClose, category, onUpdated }) => {
   const { enqueueSnackbar } = useSnackbar();

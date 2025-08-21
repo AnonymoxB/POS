@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
-import { getUnits, getProducts, updatePurchase } from "../../https";
+import { getUnits, getProducts, updatePurchase } from "../../../https";
 import { useSnackbar } from "notistack";
 
 const EditPurchaseModal = ({ isOpen, onClose, purchase }) => {

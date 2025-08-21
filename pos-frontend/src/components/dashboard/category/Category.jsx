@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { getCategories, deleteCategory } from "../../https";
+import { getCategories, deleteCategory } from "../../../https";
 import { useSnackbar } from "notistack";
 import { Pencil, Trash2 } from "lucide-react";
 import AddCategoryModal from "./AddCategoryModal";

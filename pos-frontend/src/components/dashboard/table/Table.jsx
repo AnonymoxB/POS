@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSnackbar } from "notistack";
-import { getTables, deleteTable } from "../../https";
+import { getTables, deleteTable } from "../../../https";
 import AddTableModal from "./AddTableModal";
 import EditTableModal from "./EditTableModal";
 
