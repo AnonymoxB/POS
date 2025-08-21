@@ -473,7 +473,7 @@ exports.exportStock = async (req, res) => {
       return res.status(400).json({ success: false, message: "type tidak valid" });
     }
 
-    // Kirim file
+    
     res.setHeader(
       "Content-Type",
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
@@ -486,4 +486,16 @@ exports.exportStock = async (req, res) => {
     console.error("Export error:", err);
     res.status(500).json({ success: false, message: "Gagal export" });
   }
+};
+// stockController.js
+exports.exportStockSummaryByProduct = (req, res) => {
+  req.query.type = "summary";
+  req.query.productId = req.params.productId;
+  return exports.exportStock(req, res);
+};
+
+exports.exportStockHistory = (req, res) => {
+  req.query.type = "history";
+  req.query.productId = req.params.productId;
+  return exports.exportStock(req, res);
 };
