@@ -296,36 +296,84 @@ exports.getAllStockSummary = async (req, res) => {
           },
         },
       },
+      {
+        $lookup: {
+          from: "products", // nama collection Product di MongoDB
+          localField: "_id",
+          foreignField: "_id",
+          as: "product",
+        },
+      },
+      {
+        $unwind: {
+          path: "$product",
+          preserveNullAndEmptyArrays: true, // kalau product sudah dihapus/null tetap aman
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          product: {
+            _id: "$_id",
+            name: { $ifNull: ["$product.name", "Unknown"] },
+          },
+          totalIn: {
+            $ifNull: [
+              {
+                $first: {
+                  $map: {
+                    input: {
+                      $filter: {
+                        input: "$summary",
+                        cond: { $eq: ["$$this.type", "IN"] },
+                      },
+                    },
+                    as: "s",
+                    in: "$$s.totalQty",
+                  },
+                },
+              },
+              0,
+            ],
+          },
+          totalOut: {
+            $ifNull: [
+              {
+                $first: {
+                  $map: {
+                    input: {
+                      $filter: {
+                        input: "$summary",
+                        cond: { $eq: ["$$this.type", "OUT"] },
+                      },
+                    },
+                    as: "s",
+                    in: "$$s.totalQty",
+                  },
+                },
+              },
+              0,
+            ],
+          },
+        },
+      },
+      {
+        $addFields: {
+          balance: { $subtract: ["$totalIn", "$totalOut"] },
+        },
+      },
     ]);
 
-    
-    const results = [];
-    for (const s of summary) {
-      const product = await Product.findById(s._id).select("name");
-      const totals = { IN: 0, OUT: 0 };
-
-      s.summary.forEach((t) => {
-        totals[t.type] = t.totalQty;
-      });
-
-      results.push({
-        product: {
-          _id: s._id,
-          name: product?.name || "Unknown",
-        },
-        totalIn: totals.IN,
-        totalOut: totals.OUT,
-        balance: totals.IN - totals.OUT,
-      });
-    }
-
-    res.json({ success: true, data: results });
+    res.json({ success: true, data: summary });
   } catch (err) {
+    console.error("🔥 getAllStockSummary Error:", err);
     res.status(500).json({ success: false, message: err.message });
   }
 };
 
-// 📤 Export stok summary ke Excel
+
+
+//Export stok summary ke Excel
 exports.exportStockSummary = async (req, res) => {
   try {
     const { start, end } = req.query;

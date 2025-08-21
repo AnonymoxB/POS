@@ -101,6 +101,15 @@ export const deleteSupplier = (id) => api.delete(`api/suppliers/${id}`);
 //Stock Endpoints
 
 export const getStockTransactions = () => api.get("api/stock");
+export const getStockTransactionById = (id) => api.get(`api/stock/${id}`);
+export const getStockSummary = () => api.get("api/stock/summary/all");
+export const getStockSummaryByProduct = (productId) =>
+  api.get(`api/stock/summary/${productId}`);
+export const getStockHistoryByProduct = (productId) =>
+  api.get(`api/stock/history/${productId}`);
+export const getAllStockSummary = () => api.get("api/stock/summary");
+export const exportStockSummary = () =>
+  api.get("api/stock/export", { responseType: "blob" });
 
 
 
