@@ -12,6 +12,8 @@ router.get("/summary/all", controller.getStockSummary);
 router.get("/summary/:productId", controller.getStockSummaryByProduct);
 router.get("/history/:productId", controller.getStockHistoryByProduct);
 router.get("/summary", controller.getAllStockSummary);
+router.get("/summary/export", controller.exportStockSummary);
+
 
 
 

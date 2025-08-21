@@ -1,4 +1,6 @@
 const StockTransaction = require("../models/stockModel");
+const ExcelJS = require("exceljs");
+const Product = require("../models/productModel");
 
 // Ambil semua transaksi stok
 exports.getStockTransactions = async (req, res) => {
@@ -318,6 +320,102 @@ exports.getAllStockSummary = async (req, res) => {
     }
 
     res.json({ success: true, data: results });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// 📤 Export stok summary ke Excel
+exports.exportStockSummary = async (req, res) => {
+  try {
+    const { start, end } = req.query;
+
+    let match = {};
+    if (start && end) {
+      match.createdAt = {
+        $gte: new Date(start),
+        $lte: new Date(end),
+      };
+    }
+
+    const summary = await StockTransaction.aggregate([
+      { $match: match },
+      {
+        $group: {
+          _id: { product: "$product", type: "$type" },
+          totalQty: { $sum: "$qty" },
+        },
+      },
+      {
+        $group: {
+          _id: "$_id.product",
+          summary: {
+            $push: {
+              type: "$_id.type",
+              totalQty: "$totalQty",
+            },
+          },
+        },
+      },
+    ]);
+
+    // Format hasil rapi
+    const results = [];
+    for (const s of summary) {
+      const product = await Product.findById(s._id).select("name");
+      const totals = { IN: 0, OUT: 0 };
+
+      s.summary.forEach((t) => {
+        totals[t.type] = t.totalQty;
+      });
+
+      results.push({
+        productName: product?.name || "Unknown",
+        totalIn: totals.IN,
+        totalOut: totals.OUT,
+        balance: totals.IN - totals.OUT,
+      });
+    }
+
+    // Excel
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Stock Summary");
+
+    // Header
+    worksheet.columns = [
+      { header: "No", key: "no", width: 5 },
+      { header: "Produk", key: "productName", width: 30 },
+      { header: "Total Masuk", key: "totalIn", width: 15 },
+      { header: "Total Keluar", key: "totalOut", width: 15 },
+      { header: "Saldo", key: "balance", width: 15 },
+    ];
+
+    // Isi data
+    results.forEach((item, idx) => {
+      worksheet.addRow({
+        no: idx + 1,
+        ...item,
+      });
+    });
+
+    // Style header
+    worksheet.getRow(1).eachCell((cell) => {
+      cell.font = { bold: true };
+      cell.alignment = { horizontal: "center" };
+    });
+
+    // Kirim file
+    res.setHeader(
+      "Content-Disposition",
+      "attachment; filename=stock-summary.xlsx"
+    );
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+
+    await workbook.xlsx.write(res);
+    res.end();
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

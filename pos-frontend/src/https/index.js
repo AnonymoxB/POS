@@ -85,7 +85,7 @@ export const addProduct = (data) => api.post("/api/product", data);
 export const updateProduct = (id, data) => api.put(`/api/product/${id}`, data);
 export const deleteProduct = (id) => api.delete(`/api/product/${id}`);
 
-//Product Category
+
 // Product Category
 export const getProductCategories = () => api.get("api/product-category");
 export const createProductCategory = (data) => api.post("api/product-category", data);
@@ -97,6 +97,11 @@ export const getSuppliers = () => api.get("api/suppliers");
 export const createSupplier = (data) => api.post("api/suppliers", data);
 export const updateSupplier = (id, data) => api.put(`api/suppliers/${id}`, data);
 export const deleteSupplier = (id) => api.delete(`api/suppliers/${id}`);
+
+//Stock Endpoints
+
+export const getStockTransactions = () => api.get("api/stock");
+
 
 
 
