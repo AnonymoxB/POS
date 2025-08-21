@@ -44,6 +44,8 @@ app.use("/api/unit", require("./routes/unitRoute"));
 app.use("/api/purchase", require("./routes/purchaseRoute"));
 app.use("/api/product", require("./routes/productRoute"));
 app.use("/api/product-category", require("./routes/productCategoryRoute"));
+app.use("/api/suppliers", require("./routes/supplierRoute"));
+
 
 
 

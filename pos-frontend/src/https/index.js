@@ -92,6 +92,12 @@ export const createProductCategory = (data) => api.post("api/product-category", 
 export const updateProductCategory = (id, data) => api.put(`api/product-category/${id}`, data);
 export const deleteProductCategory = (id) => api.delete(`api/product-category/${id}`);
 
+//Supplier Endpoints
+export const getSuppliers = () => api.get("api/suppliers");
+export const createSupplier = (data) => api.post("api/suppliers", data);
+export const updateSupplier = (id, data) => api.put(`api/suppliers/${id}`, data);
+export const deleteSupplier = (id) => api.delete(`api/suppliers/${id}`);
+
 
 
 

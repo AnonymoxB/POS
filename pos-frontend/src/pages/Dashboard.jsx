@@ -27,8 +27,10 @@ import {
   ChevronDown,
   ChevronRight,
   PackagePlus,
-  LayoutList
+  LayoutList,
+  ContactRound
 } from "lucide-react";
+import Supplier from "../components/dashboard/supplier/Supplier";
 
 
 // Grup tab (Metrics pindah ke Dashboard group)
@@ -45,7 +47,8 @@ const tabGroups = [
       { name: "Dish", icon: UtensilsCrossed },
       { name: "Unit", icon: Scale },
       { name: "Product", icon: PackagePlus},
-      { name: "Product Category", icon: LayoutList}
+      { name: "Product Category", icon: LayoutList},
+      { name: "Supplier", icon: ContactRound}
     ],
   },
   {
@@ -150,6 +153,8 @@ const Dashboard = () => {
         {activeTab === "Unit" && <Unit />}
         {activeTab === "Product" && <Product />}
         {activeTab === "Product Category" && <ProductCategoryPage/>}
+        {activeTab === "Purchase" && <Purchase/>}
+        {activeTab === "Supplier" && <Supplier/>}
         
       </div>
 
