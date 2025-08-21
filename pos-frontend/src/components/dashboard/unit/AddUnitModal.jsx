@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
-import { createUnit, getUnits } from "../../https";
+import { createUnit, getUnits } from "../../../https";
 import { useSnackbar } from "notistack";
 
 const AddUnitModal = ({ isOpen, onClose, onAdded }) => {

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSnackbar } from "notistack";
-import { getUnits, deleteUnit } from "../../https";
+import { getUnits, deleteUnit } from "../../../https";
 import AddUnitModal from "./AddUnitModal";
 import EditUnitModal from "./EditUnitModal";
 

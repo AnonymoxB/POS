@@ -1,36 +1,44 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { useSnackbar } from "notistack";
-import { updateProduct, getCategories, getUnits } from "../../https";
+import { addProduct, getCategories, getUnits } from "../../../https";
 
-const EditProductModal = ({ isOpen, onClose, product }) => {
+const AddProductModal = ({ isOpen, onClose }) => {
   const { enqueueSnackbar } = useSnackbar();
   const queryClient = useQueryClient();
-  const [form, setForm] = useState(product);
 
-  useEffect(() => {
-    setForm(product);
-  }, [product]);
+  const [form, setForm] = useState({
+    name: "",
+    category: "",
+    defaultUnit: "",
+    price: 0,
+  });
 
-  const { data: categories } = useQuery({
+  // ambil data categories
+  const { data: categoriesRes } = useQuery({
     queryKey: ["categories"],
     queryFn: getCategories,
   });
 
-  const { data: units } = useQuery({
+  // ambil data units
+  const { data: unitsRes } = useQuery({
     queryKey: ["units"],
     queryFn: getUnits,
   });
 
+  // pastikan array
+  const categories = categoriesRes?.data || [];
+  const units = unitsRes?.data || [];
+
   const mutation = useMutation({
-    mutationFn: ({ id, data }) => updateProduct(id, data),
+    mutationFn: addProduct,
     onSuccess: () => {
-      enqueueSnackbar("Produk berhasil diperbarui", { variant: "success" });
+      enqueueSnackbar("Produk berhasil ditambahkan", { variant: "success" });
       queryClient.invalidateQueries(["products"]);
       onClose();
     },
     onError: (err) => {
-      enqueueSnackbar(err.message || "Gagal memperbarui produk", {
+      enqueueSnackbar(err.message || "Gagal menambahkan produk", {
         variant: "error",
       });
     },
@@ -38,7 +46,7 @@ const EditProductModal = ({ isOpen, onClose, product }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    mutation.mutate({ id: product._id, data: form });
+    mutation.mutate(form);
   };
 
   if (!isOpen) return null;
@@ -46,7 +54,7 @@ const EditProductModal = ({ isOpen, onClose, product }) => {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
       <div className="bg-[#262626] p-6 rounded-lg w-full max-w-md">
-        <h2 className="text-lg font-bold text-white mb-4">Edit Produk</h2>
+        <h2 className="text-lg font-bold text-white mb-4">Tambah Produk</h2>
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
           <input
             type="text"
@@ -59,11 +67,11 @@ const EditProductModal = ({ isOpen, onClose, product }) => {
 
           <select
             className="p-2 rounded bg-[#333] text-white"
-            value={form.category?._id || form.category || ""}
+            value={form.category}
             onChange={(e) => setForm({ ...form, category: e.target.value })}
           >
             <option value="">Pilih kategori</option>
-            {categories?.map((c) => (
+            {categories.map((c) => (
               <option key={c._id} value={c._id}>
                 {c.name}
               </option>
@@ -72,11 +80,13 @@ const EditProductModal = ({ isOpen, onClose, product }) => {
 
           <select
             className="p-2 rounded bg-[#333] text-white"
-            value={form.defaultUnit?._id || form.defaultUnit || ""}
-            onChange={(e) => setForm({ ...form, defaultUnit: e.target.value })}
+            value={form.defaultUnit}
+            onChange={(e) =>
+              setForm({ ...form, defaultUnit: e.target.value })
+            }
           >
             <option value="">Pilih unit</option>
-            {units?.map((u) => (
+            {units.map((u) => (
               <option key={u._id} value={u._id}>
                 {u.name} ({u.short})
               </option>
@@ -102,9 +112,9 @@ const EditProductModal = ({ isOpen, onClose, product }) => {
             </button>
             <button
               type="submit"
-              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
             >
-              Update
+              Simpan
             </button>
           </div>
         </form>
@@ -113,4 +123,4 @@ const EditProductModal = ({ isOpen, onClose, product }) => {
   );
 };
 
-export default EditProductModal;
+export default AddProductModal;

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
-import { updateUnit, getUnits } from "../../https";
+import { updateUnit, getUnits } from "../../../https";
 import { useSnackbar } from "notistack";
 
 const EditUnitModal = ({ isOpen, onClose, unit, onUpdated }) => {

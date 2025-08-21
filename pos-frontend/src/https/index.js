@@ -72,9 +72,9 @@ export const updateUnit = (id, data) => api.put(`api/unit/${id}`, data);
 
 //Purchase Endpoints
 export const getPurchases= () => api.get("api/purchase");
-export const deletePurchases = (id) => api.delete(`api/purchase/${id}`);
-export const createPurchases = (data) => api.post("api/purchase", data);
-export const updatePurchases = (id, data) => api.put(`api/purchase/${id}`, data);
+export const deletePurchase = (id) => api.delete(`api/purchase/${id}`);
+export const createPurchase = (data) => api.post("api/purchase", data);
+export const updatePurchase = (id, data) => api.put(`api/purchase/${id}`, data);
 
 // Product
 export const getProducts = async () => {
@@ -84,6 +84,14 @@ export const getProducts = async () => {
 export const addProduct = (data) => api.post("/api/product", data);
 export const updateProduct = (id, data) => api.put(`/api/product/${id}`, data);
 export const deleteProduct = (id) => api.delete(`/api/product/${id}`);
+
+//Product Category
+// Product Category
+export const getProductCategories = () => api.get("api/product-category");
+export const createProductCategory = (data) => api.post("api/product-category", data);
+export const updateProductCategory = (id, data) => api.put(`api/product-category/${id}`, data);
+export const deleteProductCategory = (id) => api.delete(`api/product-category/${id}`);
+
 
 
 

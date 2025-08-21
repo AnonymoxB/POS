@@ -1,17 +1,16 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { useSnackbar } from "notistack";
-import { addProduct, getCategories, getUnits } from "../../https";
+import { updateProduct, getCategories, getUnits } from "../../../https";
 
-const AddProductModal = ({ isOpen, onClose }) => {
+const EditProductModal = ({ isOpen, onClose, product }) => {
   const { enqueueSnackbar } = useSnackbar();
   const queryClient = useQueryClient();
-  const [form, setForm] = useState({
-    name: "",
-    category: "",
-    defaultUnit: "",
-    price: 0,
-  });
+  const [form, setForm] = useState(product);
+
+  useEffect(() => {
+    setForm(product);
+  }, [product]);
 
   const { data: categories } = useQuery({
     queryKey: ["categories"],
@@ -24,14 +23,14 @@ const AddProductModal = ({ isOpen, onClose }) => {
   });
 
   const mutation = useMutation({
-    mutationFn: addProduct,
+    mutationFn: ({ id, data }) => updateProduct(id, data),
     onSuccess: () => {
-      enqueueSnackbar("Produk berhasil ditambahkan", { variant: "success" });
+      enqueueSnackbar("Produk berhasil diperbarui", { variant: "success" });
       queryClient.invalidateQueries(["products"]);
       onClose();
     },
     onError: (err) => {
-      enqueueSnackbar(err.message || "Gagal menambahkan produk", {
+      enqueueSnackbar(err.message || "Gagal memperbarui produk", {
         variant: "error",
       });
     },
@@ -39,7 +38,7 @@ const AddProductModal = ({ isOpen, onClose }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    mutation.mutate(form);
+    mutation.mutate({ id: product._id, data: form });
   };
 
   if (!isOpen) return null;
@@ -47,7 +46,7 @@ const AddProductModal = ({ isOpen, onClose }) => {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
       <div className="bg-[#262626] p-6 rounded-lg w-full max-w-md">
-        <h2 className="text-lg font-bold text-white mb-4">Tambah Produk</h2>
+        <h2 className="text-lg font-bold text-white mb-4">Edit Produk</h2>
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
           <input
             type="text"
@@ -60,7 +59,7 @@ const AddProductModal = ({ isOpen, onClose }) => {
 
           <select
             className="p-2 rounded bg-[#333] text-white"
-            value={form.category}
+            value={form.category?._id || form.category || ""}
             onChange={(e) => setForm({ ...form, category: e.target.value })}
           >
             <option value="">Pilih kategori</option>
@@ -73,7 +72,7 @@ const AddProductModal = ({ isOpen, onClose }) => {
 
           <select
             className="p-2 rounded bg-[#333] text-white"
-            value={form.defaultUnit}
+            value={form.defaultUnit?._id || form.defaultUnit || ""}
             onChange={(e) => setForm({ ...form, defaultUnit: e.target.value })}
           >
             <option value="">Pilih unit</option>
@@ -103,9 +102,9 @@ const AddProductModal = ({ isOpen, onClose }) => {
             </button>
             <button
               type="submit"
-              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
             >
-              Simpan
+              Update
             </button>
           </div>
         </form>
@@ -114,4 +113,4 @@ const AddProductModal = ({ isOpen, onClose }) => {
   );
 };
 
-export default AddProductModal;
+export default EditProductModal;

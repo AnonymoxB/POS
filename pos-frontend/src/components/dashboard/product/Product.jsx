@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSnackbar } from "notistack";
-import { getProducts, deleteProduct } from "../../https";
+import { getProducts, deleteProduct } from "../../../https";
 import AddProductModal from "./AddProductModal";
 import EditProductModal from "./EditProductModal";
 
