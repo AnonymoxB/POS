@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const controller = require("../controllers/stockTransactionController");
+const controller = require("../controllers/stockController");
 
 router.get("/", controller.getStockTransactions);
 router.get("/:id", controller.getStockTransactionById);
