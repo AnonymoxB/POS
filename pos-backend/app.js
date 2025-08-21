@@ -45,6 +45,7 @@ app.use("/api/purchase", require("./routes/purchaseRoute"));
 app.use("/api/product", require("./routes/productRoute"));
 app.use("/api/product-category", require("./routes/productCategoryRoute"));
 app.use("/api/suppliers", require("./routes/supplierRoute"));
+app.use("/api/stock", require("./routes/stockRoute"));
 
 
 

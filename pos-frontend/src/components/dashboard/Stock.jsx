@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { getStockTransactions } from "../https";
+import { getStockTransactions } from "../../https";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
@@ -16,14 +16,16 @@ const Stock = () => {
 
   if (isLoading) return <p className="text-white">Loading...</p>;
 
-  let filteredData = data?.data || [];
+  // kalau backend return array langsung:
+  let stockData = Array.isArray(data) ? data : data?.data || [];
 
-  // filter berdasarkan tipe IN/OUT
+  // filter
+  let filteredData = [...stockData];
+
   if (filterType) {
     filteredData = filteredData.filter((s) => s.type === filterType);
   }
 
-  // filter berdasarkan date range
   if (startDate && endDate) {
     const start = new Date(startDate);
     const end = new Date(endDate);
@@ -44,15 +46,12 @@ const Stock = () => {
               asChild
               className="bg-green-600 hover:bg-green-700 rounded-lg"
             >
-              <a href="/api/stock/export">
-                Export Excel
-              </a>
+              <a href="/api/stock/export">Export Excel</a>
             </Button>
           </div>
 
           {/* Filter */}
           <div className="flex flex-wrap items-center gap-3 mb-6">
-            {/* Dropdown tipe */}
             <select
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
@@ -63,7 +62,6 @@ const Stock = () => {
               <option value="OUT">OUT</option>
             </select>
 
-            {/* Date range */}
             <input
               type="date"
               value={startDate}
@@ -78,7 +76,6 @@ const Stock = () => {
               className="bg-[#333] text-white px-3 py-2 rounded-lg"
             />
 
-            {/* Reset button */}
             <Button
               onClick={() => {
                 setFilterType("");
