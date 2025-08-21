@@ -7,4 +7,8 @@ const productCategorySchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("ProductCategory", productCategorySchema);
+mmodule.exports = mongoose.model(
+  "ProductCategory",  
+  productCategorySchema,
+  "productcategories"     
+);

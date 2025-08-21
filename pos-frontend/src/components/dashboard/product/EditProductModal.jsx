@@ -9,18 +9,35 @@ const EditProductModal = ({ isOpen, onClose, product }) => {
   const [form, setForm] = useState(product);
 
   useEffect(() => {
-    setForm(product);
+    if (product) {
+      setForm({
+        ...product,
+        category:
+          product?.category?._id || product?.category || "",
+        defaultUnit:
+          product?.defaultUnit?._id || product?.defaultUnit || "",
+        price: product?.price || 0,
+      });
+    }
   }, [product]);
 
-  const { data: categories } = useQuery({
+
+
+
+  
+  const { data: categoriesRes } = useQuery({
     queryKey: ["categories"],
     queryFn: getCategories,
   });
+  const categories = categoriesRes?.data?.data || [];
 
-  const { data: units } = useQuery({
+
+  const { data: unitsRes } = useQuery({
     queryKey: ["units"],
     queryFn: getUnits,
   });
+  const units = unitsRes?.data || [];
+
 
   const mutation = useMutation({
     mutationFn: ({ id, data }) => updateProduct(id, data),
@@ -59,11 +76,11 @@ const EditProductModal = ({ isOpen, onClose, product }) => {
 
           <select
             className="p-2 rounded bg-[#333] text-white"
-            value={form.category?._id || form.category || ""}
+            value={form.category || ""}
             onChange={(e) => setForm({ ...form, category: e.target.value })}
           >
             <option value="">Pilih kategori</option>
-            {categories?.map((c) => (
+            {categories.map((c) => (
               <option key={c._id} value={c._id}>
                 {c.name}
               </option>
@@ -72,11 +89,11 @@ const EditProductModal = ({ isOpen, onClose, product }) => {
 
           <select
             className="p-2 rounded bg-[#333] text-white"
-            value={form.defaultUnit?._id || form.defaultUnit || ""}
+            value={form.defaultUnit || ""} 
             onChange={(e) => setForm({ ...form, defaultUnit: e.target.value })}
           >
             <option value="">Pilih unit</option>
-            {units?.map((u) => (
+            {units.map((u) => (
               <option key={u._id} value={u._id}>
                 {u.name} ({u.short})
               </option>

@@ -26,19 +26,24 @@ exports.getProducts = async (req, res) => {
 
 exports.updateProduct = async (req, res) => {
   try {
-    const product = await Product.findByIdAndUpdate(
+    let product = await Product.findByIdAndUpdate(
       req.params.id,
       req.body,
       { new: true }
-    );
+    )
+      .populate("category", "name")
+      .populate("defaultUnit", "name short");
+
     if (!product) {
       return res.status(404).json({ success: false, message: "Product not found" });
     }
+
     res.json({ success: true, data: product });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
   }
 };
+
 
 exports.deleteProduct = async (req, res) => {
   try {

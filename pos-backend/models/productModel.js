@@ -8,19 +8,19 @@ const productSchema = new mongoose.Schema(
     },
     category: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Category",
+      ref: "ProductCategory",
     },
     defaultUnit: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Unit", // unit utama
+      ref: "Unit",
     },
     stockBase: {
       type: Number,
-      default: 0, // stok disimpan dalam unit dasar
+      default: 0,
     },
     stockDisplay: {
       type: String,
-      default: "0", // contoh: "5 Kg"
+      default: "0",
     },
     price: {
       type: Number,
