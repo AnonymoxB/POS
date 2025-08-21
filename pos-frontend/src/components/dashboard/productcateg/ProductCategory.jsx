@@ -31,7 +31,8 @@ const ProductCategoryPage = () => {
   if (isLoading) return <p className="text-white">Loading...</p>;
   if (isError) return <p className="text-red-500">Gagal memuat data</p>;
 
-  const categories = data?.data || [];
+  const categories = data?.data?.data || [];
+
 
   return (
     <div className="p-4">
@@ -45,47 +46,53 @@ const ProductCategoryPage = () => {
         </button>
       </div>
 
-      <div className="bg-[#262626] rounded-lg overflow-hidden">
-        <table className="w-full text-left">
-          <thead className="bg-[#333] text-white">
-            <tr>
-              <th className="px-4 py-2">Nama</th>
-              <th className="px-4 py-2 w-40">Aksi</th>
-            </tr>
-          </thead>
-          <tbody>
-            {categories.length === 0 ? (
-              <tr>
-                <td colSpan="2" className="text-center py-4 text-gray-400">
-                  Belum ada kategori
-                </td>
-              </tr>
-            ) : (
-              categories.map((c) => (
-                <tr key={c._id} className="border-t border-gray-700 text-white">
-                  <td className="px-4 py-2">{c.name}</td>
-                  <td className="px-4 py-2 flex gap-2">
-                    <button
-                      onClick={() => {
-                        setSelectedCategory(c);
-                        setIsEditOpen(true);
-                      }}
-                      className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => deleteMutation.mutate(c._id)}
-                      className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700"
-                    >
-                      Hapus
-                    </button>
-                  </td>
+      <div className="overflow-x-auto">
+        <div className="overflow-y-auto max-h-[500px] scrollbar-thin scrollbar-thumb-gray-600 scrollbar-hide rounded-md">
+            <table className="w-full text-left text-[#f5f5f5]">
+            <thead className="bg-[#333] text-[#ababab] sticky top-0 z-10">
+                <tr>
+                <th className="px-4 py-2">Nama</th>
+                <th className="px-4 py-2 w-40">Aksi</th>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+                {categories.length === 0 ? (
+                <tr>
+                    <td colSpan="2" className="text-center py-4 text-gray-400">
+                    Belum ada kategori
+                    </td>
+                </tr>
+                ) : (
+                categories.map((c) => (
+                    <tr key={c._id} className="border-t border-gray-700 text-white">
+                    <td className="px-4 py-2">{c.name}</td>
+                    <td className="px-4 py-2 flex gap-2">
+                        <button
+                        onClick={() => {
+                            setSelectedCategory(c);
+                            setIsEditOpen(true);
+                        }}
+                        className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
+                        >
+                        Edit
+                        </button>
+                        <button
+                        onClick={() => {
+                            if (window.confirm("Yakin mau hapus kategori ini?")) {
+                            deleteMutation.mutate(c._id);
+                            }
+                        }}
+                        className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700"
+                        >
+                        Hapus
+                        </button>
+                    </td>
+                    </tr>
+                ))
+                )}
+            </tbody>
+            </table>
+        </div>
       </div>
 
       {/* Modal Tambah */}
