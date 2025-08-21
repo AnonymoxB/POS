@@ -13,18 +13,19 @@ router.delete("/transactions/:id", controller.deleteStockTransaction);
 // =====================
 // Summary routes
 // =====================
+router.get("/summary/export", controller.exportStockSummary);
+router.get("/summary/export/:productId", controller.exportStockSummaryByProduct);
+
 // Semua produk
 router.get("/summary", controller.getStockSummary);
-router.get("/summary/export", controller.exportStockSummary);
 
 // Per produk
 router.get("/summary/:productId", controller.getStockSummaryByProduct);
-router.get("/summary/export/:productId", controller.exportStockSummaryByProduct);
 
 // =====================
 // History routes
 // =====================
-router.get("/history/:productId", controller.getStockHistoryByProduct);
 router.get("/history/export/:productId", controller.exportStockHistory);
+router.get("/history/:productId", controller.getStockHistoryByProduct);
 
 module.exports = router;
