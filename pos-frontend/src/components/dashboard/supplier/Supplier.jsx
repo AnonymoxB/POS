@@ -55,7 +55,6 @@ const Supplier = () => {
               <tr>
                 <th className="p-3">Nama</th>
                 <th className="p-3">Telepon</th>
-                <th className="p-3">Email</th>
                 <th className="p-3">Alamat</th>
                 <th className="p-3">Aksi</th>
               </tr>
@@ -68,7 +67,6 @@ const Supplier = () => {
                 >
                   <td className="p-3">{s.name}</td>
                   <td className="p-3">{s.phone || "-"}</td>
-                  <td className="p-3">{s.email || "-"}</td>
                   <td className="p-3">{s.address || "-"}</td>
                   <td className="p-3 flex gap-2">
                     <button

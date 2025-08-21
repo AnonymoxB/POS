@@ -54,13 +54,6 @@ const AddSupplierModal = ({ isOpen, onClose }) => {
             onChange={(e) => setForm({ ...form, phone: e.target.value })}
             className="w-full p-2 rounded bg-[#333] text-white"
           />
-          <input
-            type="email"
-            placeholder="Email"
-            value={form.email}
-            onChange={(e) => setForm({ ...form, email: e.target.value })}
-            className="w-full p-2 rounded bg-[#333] text-white"
-          />
           <textarea
             placeholder="Alamat"
             value={form.address}

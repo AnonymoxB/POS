@@ -32,8 +32,11 @@ exports.createPurchase = async (req, res) => {
 exports.getPurchases = async (req, res) => {
   try {
     const purchases = await Purchase.find()
-      .populate("items.product", "name stock") // tampilkan juga stok
-      .populate("items.unit", "name short");
+      .populate("items.product", "name stock")
+      .populate("items.unit", "name short")
+      .populate("supplier", "name")
+      .populate("items.product", "name")
+      .populate("items.unit", "short");
 
     res.json({ success: true, data: purchases });
   } catch (error) {

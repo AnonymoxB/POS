@@ -46,9 +46,24 @@ const AddProductModal = ({ isOpen, onClose }) => {
   });
 
   const handleSubmit = (e) => {
-    e.preventDefault();
-    mutation.mutate(form);
+  e.preventDefault();
+
+  if (!form.name || !form.category || !form.defaultUnit) {
+    enqueueSnackbar("Nama, kategori, dan unit wajib diisi", { variant: "error" });
+    return;
+  }
+
+  const payload = {
+    name: form.name,
+    category: form.category,
+    defaultUnit: form.defaultUnit,
+    price: Number(form.price),
   };
+
+  mutation.mutate(payload);
+};
+
+
 
   if (!isOpen) return null;
 

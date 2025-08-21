@@ -9,7 +9,6 @@ const EditSupplierModal = ({ isOpen, onClose, supplier }) => {
   const [form, setForm] = useState({
     name: "",
     phone: "",
-    email: "",
     address: "",
   });
 
@@ -18,7 +17,6 @@ const EditSupplierModal = ({ isOpen, onClose, supplier }) => {
       setForm({
         name: supplier.name || "",
         phone: supplier.phone || "",
-        email: supplier.email || "",
         address: supplier.address || "",
       });
     }
@@ -63,13 +61,6 @@ const EditSupplierModal = ({ isOpen, onClose, supplier }) => {
             placeholder="Nomor Telepon"
             value={form.phone}
             onChange={(e) => setForm({ ...form, phone: e.target.value })}
-            className="w-full p-2 rounded bg-[#333] text-white"
-          />
-          <input
-            type="email"
-            placeholder="Email"
-            value={form.email}
-            onChange={(e) => setForm({ ...form, email: e.target.value })}
             className="w-full p-2 rounded bg-[#333] text-white"
           />
           <textarea

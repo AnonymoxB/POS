@@ -1,7 +1,41 @@
 import React, { useState } from "react";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
-import { getUnits, getProducts, createPurchase } from "../../../https";
+import { getUnits, getProducts, getSuppliers, createPurchase } from "../../../https";
 import { useSnackbar } from "notistack";
+import Select from "react-select";
+
+const customSelectStyles = {
+  control: (provided) => ({
+    ...provided,
+    backgroundColor: "#333",
+    borderColor: "#555",
+    color: "#fff",
+    minHeight: "42px",
+  }),
+  menu: (provided) => ({
+    ...provided,
+    backgroundColor: "#262626",
+    color: "#fff",
+  }),
+  option: (provided, state) => ({
+    ...provided,
+    backgroundColor: state.isFocused ? "#444" : "#262626",
+    color: "#fff",
+    cursor: "pointer",
+  }),
+  singleValue: (provided) => ({
+    ...provided,
+    color: "#fff",
+  }),
+  input: (provided) => ({
+    ...provided,
+    color: "#fff",
+  }),
+  placeholder: (provided) => ({
+    ...provided,
+    color: "#aaa",
+  }),
+};
 
 const AddPurchaseModal = ({ isOpen, onClose }) => {
   const { enqueueSnackbar } = useSnackbar();
@@ -9,10 +43,11 @@ const AddPurchaseModal = ({ isOpen, onClose }) => {
 
   const { data: units } = useQuery({ queryKey: ["units"], queryFn: getUnits });
   const { data: products } = useQuery({ queryKey: ["products"], queryFn: getProducts });
+  const { data: suppliers } = useQuery({ queryKey: ["suppliers"], queryFn: getSuppliers });
 
-  const [supplier, setSupplier] = useState("");
+  const [supplier, setSupplier] = useState(null);
   const [items, setItems] = useState([
-    { product: "", quantity: 1, unit: "", price: 0, total: 0 },
+    { product: null, quantity: 1, unit: "", price: 0, total: 0 },
   ]);
 
   const { mutate } = useMutation({
@@ -42,42 +77,56 @@ const AddPurchaseModal = ({ isOpen, onClose }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    mutate({ supplier, items });
+    mutate({
+      supplier: supplier?.value,
+      items: items.map((i) => ({
+        product: i.product?.value,
+        quantity: i.quantity,
+        unit: i.unit,
+        price: i.price,
+        total: i.total,
+      })),
+    });
   };
 
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-[#262626] p-6 rounded-lg w-[600px]">
+      <div className="bg-[#262626] p-6 rounded-lg w-[650px]">
         <h2 className="text-lg font-bold mb-4 text-white">Tambah Purchase</h2>
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-          <input
-            type="text"
-            placeholder="Supplier"
+          
+          {/* Supplier dengan Search */}
+          <Select
             value={supplier}
-            onChange={(e) => setSupplier(e.target.value)}
-            className="px-3 py-2 rounded bg-[#333] text-white"
-            required
+            onChange={setSupplier}
+            options={suppliers?.data?.data?.map((s) => ({
+              value: s._id,
+              label: s.name,
+            }))}
+            placeholder="Cari Supplier..."
+            styles={customSelectStyles}
+            isSearchable
           />
 
           {items.map((item, idx) => (
             <div key={idx} className="flex gap-2">
-              <select
-                value={item.product}
-                onChange={(e) =>
-                  handleItemChange(idx, "product", e.target.value)
-                }
-                className="px-3 py-2 rounded bg-[#333] text-white flex-1"
-                required
-              >
-                <option value="">Pilih Produk</option>
-                {products?.data?.data?.map((p) => (
-                  <option key={p._id} value={p._id}>
-                    {p.name}
-                  </option>
-                ))}
-              </select>
+              {/* Produk dengan Search */}
+              <div className="flex-1">
+                <Select
+                  value={item.product}
+                  onChange={(val) => handleItemChange(idx, "product", val)}
+                  options={products?.data?.data?.map((p) => ({
+                    value: p._id,
+                    label: p.name,
+                  }))}
+                  placeholder="Cari Produk..."
+                  className="text-black"
+                  isSearchable
+                />
+              </div>
+
               <input
                 type="number"
                 placeholder="Qty"
@@ -87,6 +136,7 @@ const AddPurchaseModal = ({ isOpen, onClose }) => {
                 }
                 className="w-20 px-3 py-2 rounded bg-[#333] text-white"
               />
+
               <select
                 value={item.unit}
                 onChange={(e) => handleItemChange(idx, "unit", e.target.value)}
@@ -100,6 +150,7 @@ const AddPurchaseModal = ({ isOpen, onClose }) => {
                   </option>
                 ))}
               </select>
+
               <input
                 type="number"
                 placeholder="Harga"
@@ -109,18 +160,28 @@ const AddPurchaseModal = ({ isOpen, onClose }) => {
                 }
                 className="w-24 px-3 py-2 rounded bg-[#333] text-white"
               />
+
               <span className="w-24 text-white text-right self-center">
-                {item.total}
+                Rp {item.total.toLocaleString("id-ID")}
               </span>
             </div>
           ))}
 
-          <button
-            type="submit"
-            className="px-4 py-2 bg-green-600 text-white rounded-md"
-          >
-            Simpan
-          </button>
+            <div className="flex justify-end gap-2">
+              <button
+              type="button"
+              onClick={onClose}
+              className="bg-gray-600 px-4 py-2 rounded text-white hover:bg-gray-700"
+            >
+              Batal
+            </button>
+              <button
+                type="submit"
+                className="px-4 py-2 bg-green-600 text-white rounded-md"
+              >
+                Simpan
+              </button>
+            </div>
         </form>
       </div>
     </div>
