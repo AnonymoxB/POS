@@ -97,15 +97,15 @@ const Stock = () => {
               <p>Loading...</p>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full border-collapse">
+                <table className="w-full border-collapse border border-gray-600 text-sm">
                   <thead>
                     <tr className="bg-[#333] text-gray-300">
-                      <th className="px-3 py-2">Tanggal</th>
-                      <th className="px-3 py-2">Produk</th>
-                      <th className="px-3 py-2">Tipe</th>
-                      <th className="px-3 py-2">Qty</th>
-                      <th className="px-3 py-2">Unit</th>
-                      <th className="px-3 py-2">Note</th>
+                      <th className="border border-gray-600 px-3 py-2 text-left">Tanggal</th>
+                      <th className="border border-gray-600 px-3 py-2 text-left">Produk</th>
+                      <th className="border border-gray-600 px-3 py-2 text-left">Tipe</th>
+                      <th className="border border-gray-600 px-3 py-2 text-right">Qty</th>
+                      <th className="border border-gray-600 px-3 py-2 text-left">Base Unit</th>
+                      <th className="border border-gray-600 px-3 py-2 text-left">Note</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -114,20 +114,20 @@ const Stock = () => {
                         key={s._id}
                         className="border-t border-gray-700 hover:bg-[#333]/50"
                       >
-                        <td className="px-3 py-2">
+                        <td className="border border-gray-600 px-3 py-2 text-left">
                           {new Date(s.createdAt).toLocaleString("id-ID")}
                         </td>
-                        <td className="px-3 py-2">{s.product?.name}</td>
+                        <td className="border border-gray-600 px-3 py-2 text-left">{s.product?.name}</td>
                         <td
-                          className={`px-3 py-2 font-semibold ${
+                          className={`border border-gray-600 px-3 py-2 text-left font-semibold ${
                             s.type === "IN" ? "text-green-400" : "text-red-400"
                           }`}
                         >
                           {s.type}
                         </td>
-                        <td className="px-3 py-2">{s.qty}</td>
-                        <td className="px-3 py-2">{s.unit?.short}</td>
-                        <td className="px-3 py-2">{s.note || "-"}</td>
+                        <td className="border border-gray-600 px-3 py-2 text-right">{s.qty}</td>
+                        <td className="border border-gray-600 px-3 py-2 text-left">{s.unit?.short}</td>
+                        <td className="border border-gray-600 px-3 py-2 text-left">{s.note || "-"}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -148,8 +148,8 @@ const Stock = () => {
               <p>Loading...</p>
             ) : (
               <table className="w-full border-collapse border border-gray-600 text-sm">
-                <thead className="bg-gray-800">
-                  <tr>
+                <thead>
+                  <tr className="bg-[#333] text-gray-300">
                     <th className="border border-gray-600 px-3 py-2 text-left">#</th>
                     <th className="border border-gray-600 px-3 py-2 text-left">Produk</th>
                     <th className="border border-gray-600 px-3 py-2 text-right">Masuk</th>

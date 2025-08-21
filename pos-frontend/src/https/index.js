@@ -1,4 +1,5 @@
 import api from "./axiosWrapper";
+import { downloadFile } from "../utils/download";
 
 
 // API Endpoints
@@ -99,17 +100,37 @@ export const updateSupplier = (id, data) => api.put(`api/suppliers/${id}`, data)
 export const deleteSupplier = (id) => api.delete(`api/suppliers/${id}`);
 
 //Stock Endpoints
+export const getStockTransactions = () => api.get("api/stock/transactions");
+export const createStockTransaction = (data) =>
+  api.post("api/stock/transactions", data);
+export const getStockTransactionById = (id) =>
+  api.get(`api/stock/transactions/${id}`);
+export const deleteStockTransaction = (id) =>
+  api.delete(`api/stock/transactions/${id}`);
 
-export const getStockTransactions = () => api.get("/api/stock");
-export const getStockTransactionById = (id) => api.get(`/api/stock/${id}`);
 export const getStockSummary = () => api.get("/api/stock/summary/all");
 export const getStockSummaryByProduct = (productId) =>
-  api.get(`/api/stock/summary/${productId}`);
-export const getStockHistoryByProduct = (productId) =>
-  api.get(`/api/stock/history/${productId}`);
+  api.get(`api/stock/summary/${productId}`);
 export const getAllStockSummary = () => api.get("/api/stock/summary");
-export const exportStockSummary = () =>
-  api.get("/api/stock/summary/export", { responseType: "blob" });
+
+
+export const getStockHistoryByProduct = (productId) =>
+  api.get(`api/stock/history/${productId}`);
+
+  // Export Excel
+export const exportStock = async (type, productId) => {
+  const res = await api.get("api/stock/export", {
+    params: { type, productId },
+    responseType: "blob",
+  });
+
+  let filename = `stock-${type}`;
+  if (productId) filename += `-${productId}`;
+  filename += ".xlsx";
+
+  downloadFile(res.data, filename);
+};
+
 
 
 

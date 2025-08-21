@@ -15,24 +15,36 @@ const stockTransactionSchema = new Schema(
     },
     qty: {
       type: Number,
-      required: true,
+      required: true, 
     },
     unit: {
       type: Schema.Types.ObjectId,
       ref: "Unit",
       required: true,
     },
+
+    
+    qtyBase: {
+      type: Number,
+      required: true,
+    },
+    unitBase: {
+      type: Schema.Types.ObjectId,
+      ref: "Unit",
+      required: true,
+    },
+
     note: {
       type: String,
     },
     relatedOrder: {
       type: Schema.Types.ObjectId,
-      ref: "Order", //order dish
+      ref: "Order",
       default: null,
     },
     relatedDish: {
       type: Schema.Types.ObjectId,
-      ref: "Dish", //BOM dish
+      ref: "Dish",
       default: null,
     },
   },
