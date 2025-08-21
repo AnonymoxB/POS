@@ -108,7 +108,7 @@ export const getStockTransactionById = (id) =>
 export const deleteStockTransaction = (id) =>
   api.delete(`api/stock/transactions/${id}`);
 
-export const getStockSummary = () => api.get("/api/stock/summary/all");
+export const getStockSummary = () => api.get("/api/stock/summary");
 export const getStockSummaryByProduct = (productId) =>
   api.get(`api/stock/summary/${productId}`);
 export const getAllStockSummary = () => api.get("/api/stock/summary");

@@ -57,8 +57,12 @@ const AddPurchaseModal = ({ isOpen, onClose }) => {
       queryClient.invalidateQueries(["purchases"]);
       onClose();
     },
-    onError: () => {
-      enqueueSnackbar("Gagal menambahkan purchase", { variant: "error" });
+    onError: (err) => {
+      console.error("Error createPurchase:", err.response?.data || err.message);
+      enqueueSnackbar(
+        err.response?.data?.message || "Gagal menambahkan purchase",
+        { variant: "error" }
+      );
     },
   });
 
@@ -77,16 +81,30 @@ const AddPurchaseModal = ({ isOpen, onClose }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    mutate({
+
+    const payload = {
       supplier: supplier?.value,
       items: items.map((i) => ({
         product: i.product?.value,
-        quantity: i.quantity,
+        quantity: Number(i.quantity) || 0,
         unit: i.unit,
-        price: i.price,
-        total: i.total,
+        price: Number(i.price) || 0,
+        total: Number(i.total) || 0,
       })),
-    });
+    };
+
+    console.log("Payload dikirim ke backend:", payload);
+
+    if (!payload.supplier) {
+      enqueueSnackbar("Supplier wajib dipilih", { variant: "warning" });
+      return;
+    }
+    if (payload.items.some((i) => !i.product || !i.unit)) {
+      enqueueSnackbar("Produk & Unit wajib dipilih", { variant: "warning" });
+      return;
+    }
+
+    mutate(payload);
   };
 
   if (!isOpen) return null;
@@ -96,8 +114,7 @@ const AddPurchaseModal = ({ isOpen, onClose }) => {
       <div className="bg-[#262626] p-6 rounded-lg w-[650px]">
         <h2 className="text-lg font-bold mb-4 text-white">Tambah Purchase</h2>
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-          
-          {/* Supplier dengan Search */}
+          {/* Supplier */}
           <Select
             value={supplier}
             onChange={setSupplier}
@@ -112,7 +129,7 @@ const AddPurchaseModal = ({ isOpen, onClose }) => {
 
           {items.map((item, idx) => (
             <div key={idx} className="flex gap-2">
-              {/* Produk dengan Search */}
+              {/* Produk */}
               <div className="flex-1">
                 <Select
                   value={item.product}
@@ -167,21 +184,21 @@ const AddPurchaseModal = ({ isOpen, onClose }) => {
             </div>
           ))}
 
-            <div className="flex justify-end gap-2">
-              <button
+          <div className="flex justify-end gap-2">
+            <button
               type="button"
               onClick={onClose}
               className="bg-gray-600 px-4 py-2 rounded text-white hover:bg-gray-700"
             >
               Batal
             </button>
-              <button
-                type="submit"
-                className="px-4 py-2 bg-green-600 text-white rounded-md"
-              >
-                Simpan
-              </button>
-            </div>
+            <button
+              type="submit"
+              className="px-4 py-2 bg-green-600 text-white rounded-md"
+            >
+              Simpan
+            </button>
+          </div>
         </form>
       </div>
     </div>
