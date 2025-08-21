@@ -70,4 +70,11 @@ export const deleteUnit = (id) => api.delete(`api/unit/${id}`);
 export const createUnit = (data) => api.post("api/unit", data);
 export const updateUnit = (id, data) => api.put(`api/unit/${id}`, data);
 
+//Purchase Endpoints
+export const getPurchases= () => api.get("api/purchase");
+export const deletePurchases = (id) => api.delete(`api/purchase/${id}`);
+export const createPurchases = (data) => api.post("api/purchase", data);
+export const updatePurchases = (id, data) => api.put(`api/purchase/${id}`, data);
+
+
 

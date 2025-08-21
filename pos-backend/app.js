@@ -41,6 +41,7 @@ app.use("/api/category", require("./routes/categoryRoute"));
 app.use("/api/dish", require("./routes/dishesRoute"));
 app.use("/api/report", require("./routes/reportRoute"));
 app.use("/api/unit", require("./routes/unitRoute"));
+app.use("/api/purchase", require("./routes/purchaseRoute"));
 
 // Global error handler - MUST be last middleware
 app.use(globalErrorHandler);
