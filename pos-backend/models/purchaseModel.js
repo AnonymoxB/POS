@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+const mongoose = require("mongoose");
 
 const purchaseSchema = new mongoose.Schema(
   {
@@ -11,6 +11,7 @@ const purchaseSchema = new mongoose.Schema(
         product: { type: mongoose.Schema.Types.ObjectId, ref: "Product", required: true },
         quantity: { type: Number, required: true },
         unit: { type: mongoose.Schema.Types.ObjectId, ref: "Unit", required: true },
+        stock: { type: Number, default: 0 },
         price: { type: Number, required: true },
         total: { type: Number, required: true },
       },
@@ -27,5 +28,4 @@ const purchaseSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const Purchase = mongoose.model("Purchase", purchaseSchema);
-export default Purchase;
+module.exports = mongoose.model("Purchase", purchaseSchema);

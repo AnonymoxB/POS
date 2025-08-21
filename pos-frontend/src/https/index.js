@@ -76,5 +76,14 @@ export const deletePurchases = (id) => api.delete(`api/purchase/${id}`);
 export const createPurchases = (data) => api.post("api/purchase", data);
 export const updatePurchases = (id, data) => api.put(`api/purchase/${id}`, data);
 
+// Product
+export const getProducts = async () => {
+  const res = await api.get("/api/product");
+  return res.data;
+};
+export const addProduct = (data) => api.post("/api/product", data);
+export const updateProduct = (id, data) => api.put(`/api/product/${id}`, data);
+export const deleteProduct = (id) => api.delete(`/api/product/${id}`);
+
 
 
