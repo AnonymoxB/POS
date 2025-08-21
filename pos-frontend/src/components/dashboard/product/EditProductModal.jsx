@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { useSnackbar } from "notistack";
-import { updateProduct, getCategories, getUnits } from "../../../https";
+import { updateProduct, getProductCategories, getUnits } from "../../../https";
 
 const EditProductModal = ({ isOpen, onClose, product }) => {
   const { enqueueSnackbar } = useSnackbar();
@@ -27,7 +27,7 @@ const EditProductModal = ({ isOpen, onClose, product }) => {
   
   const { data: categoriesRes } = useQuery({
     queryKey: ["categories"],
-    queryFn: getCategories,
+    queryFn: getProductCategories,
   });
   const categories = categoriesRes?.data?.data || [];
 

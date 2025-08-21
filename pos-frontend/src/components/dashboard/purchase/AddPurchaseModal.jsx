@@ -117,12 +117,12 @@ const AddPurchaseModal = ({ isOpen, onClose }) => {
                 <Select
                   value={item.product}
                   onChange={(val) => handleItemChange(idx, "product", val)}
-                  options={products?.data?.data?.map((p) => ({
+                  options={products?.data?.map((p) => ({
                     value: p._id,
                     label: p.name,
                   }))}
                   placeholder="Cari Produk..."
-                  className="text-black"
+                  styles={customSelectStyles}
                   isSearchable
                 />
               </div>
@@ -144,7 +144,7 @@ const AddPurchaseModal = ({ isOpen, onClose }) => {
                 required
               >
                 <option value="">Unit</option>
-                {units?.data?.data?.map((u) => (
+                {units?.data?.map((u) => (
                   <option key={u._id} value={u._id}>
                     {u.short}
                   </option>

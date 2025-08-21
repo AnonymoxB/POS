@@ -23,16 +23,16 @@ const stockTransactionSchema = new Schema(
       required: true,
     },
     note: {
-      type: String, // keterangan tambahan
+      type: String,
     },
     relatedOrder: {
       type: Schema.Types.ObjectId,
-      ref: "Order", // keluar stok karena order dish
+      ref: "Order", //order dish
       default: null,
     },
     relatedDish: {
       type: Schema.Types.ObjectId,
-      ref: "Dish", // keluar stok karena BOM dish
+      ref: "Dish", //BOM dish
       default: null,
     },
   },
