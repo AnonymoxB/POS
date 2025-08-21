@@ -27,8 +27,4 @@ router.get("/summary/export/:productId", controller.exportStockSummaryByProduct)
 router.get("/history/:productId", controller.getStockHistoryByProduct);
 router.get("/history/export/:productId", controller.exportStockHistory);
 
-
-router.get("/summary/export", controller.exportStockSummary);
-
-
 module.exports = router;
