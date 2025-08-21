@@ -12,6 +12,8 @@ import Unit from "../components/dashboard/unit/Unit";
 import Product from "../components/dashboard/product/Product";
 import Purchase from "../components/dashboard/purchase/Purchase";
 import ProductCategoryPage from "../components/dashboard/productcateg/ProductCategory";
+import Supplier from "../components/dashboard/supplier/Supplier";
+import Stock from "../components/dashboard/Stock";
 
 import {
   LayoutDashboard,
@@ -30,7 +32,7 @@ import {
   LayoutList,
   ContactRound
 } from "lucide-react";
-import Supplier from "../components/dashboard/supplier/Supplier";
+
 
 
 // Grup tab (Metrics pindah ke Dashboard group)
@@ -155,6 +157,7 @@ const Dashboard = () => {
         {activeTab === "Product Category" && <ProductCategoryPage/>}
         {activeTab === "Purchase" && <Purchase/>}
         {activeTab === "Supplier" && <Supplier/>}
+        {activeTab === "Stock" && <Stock/>}
         
       </div>
 

@@ -72,6 +72,8 @@ const Purchase = () => {
     queryClient.invalidateQueries(["purchases"]);
   };
 
+  
+
   if (isLoading) return <p className="text-[#ababab]">Loading...</p>;
   if (isError)
     return <p className="text-red-500">Gagal memuat data purchase</p>;
@@ -117,12 +119,12 @@ const Purchase = () => {
                     <td className="p-4">
                       {new Date(purchase.purchaseDate).toLocaleDateString()}
                     </td>
-                    <td className="p-4">{purchase.supplier}</td>
+                    <td className="p-4">{purchase.supplier?.name || purchase.supplier}</td>
                     <td className="p-4">
                       <ul>
                         {purchase.items.map((i) => (
                           <li key={i._id}>
-                            {i.product?.name} ({i.unit?.short})
+                            {i.product?.name} ({i.unit?.short || i.unit?.name || ""})
                           </li>
                         ))}
                       </ul>

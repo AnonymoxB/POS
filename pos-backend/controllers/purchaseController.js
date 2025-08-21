@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const Purchase = require("../models/purchaseModel");
 const Product = require("../models/productModel");
+const StockTransaction = require("../models/stockModel");
 
 // Create Purchase (pakai transaction)
 exports.createPurchase = async (req, res) => {
@@ -32,6 +33,17 @@ exports.createPurchase = async (req, res) => {
       product.price = newStock > 0 ? (oldValue + newValue) / newStock : item.price;
 
       await product.save({ session });
+
+      await StockTransaction.create(
+        [{
+          product: product._id,
+          type: "IN",
+          qty: item.quantity,
+          unit: item.unit,
+          note: "Purchase",
+        }],
+        { session }
+      );
     }
 
     await session.commitTransaction();
