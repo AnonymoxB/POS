@@ -40,12 +40,20 @@ exports.createStockTransaction = async (req, res) => {
 // Ambil detail transaksi stok
 exports.getStockTransactionById = async (req, res) => {
   try {
-    const trx = await StockTransaction.findById(req.params.id)
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, message: "Invalid transaction ID" });
+    }
+
+    const trx = await StockTransaction.findById(id)
       .populate("product", "name")
       .populate("unit", "name short");
+
     if (!trx) {
       return res.status(404).json({ success: false, message: "Not found" });
     }
+
     res.json({ success: true, data: trx });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
