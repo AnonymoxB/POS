@@ -1,4 +1,5 @@
 const express = require("express");
+const router = express.Router();
 const {
   createPurchase,
   getPurchases,
@@ -6,7 +7,6 @@ const {
   deletePurchase,
 } = require("../controllers/purchaseController");
 
-const router = express.Router();
 
 router.post("/", createPurchase);
 router.get("/", getPurchases);

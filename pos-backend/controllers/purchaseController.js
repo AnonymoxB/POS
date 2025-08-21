@@ -45,6 +45,22 @@ exports.createPurchase = async (req, res) => {
   }
 };
 
+
+// Get All Purchases
+exports.getPurchases = async (req, res) => {
+  try {
+    const purchases = await Purchase.find()
+      .populate("items.product", "name stock price")
+      .populate("items.unit", "name short")
+      .populate("supplier", "name");
+
+    res.json({ success: true, data: purchases });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+
 // Update Purchase
 exports.updatePurchase = async (req, res) => {
   const session = await mongoose.startSession();
