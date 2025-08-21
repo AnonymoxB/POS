@@ -1,4 +1,4 @@
-const Supplier = require("../models/Supplier");
+const Supplier = require("../models/supplierModel");
 
 // GET all suppliers
 exports.getSuppliers = async (req, res) => {
