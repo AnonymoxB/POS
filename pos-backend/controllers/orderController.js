@@ -4,7 +4,7 @@ const Order = require("../models/orderModel");
 const Dish = require("../models/dishesModel");
 const DishBOM = require("../models/dishBOMModel");
 const Product = require("../models/productModel");
-const StockTransaction = require("../models/stockTransactionModel");
+const StockTransaction = require("../models/stockModel");
 const { default: mongoose } = require("mongoose");
 
 
