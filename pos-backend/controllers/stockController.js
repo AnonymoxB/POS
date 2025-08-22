@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const StockTransaction = require("../models/stockModel");
 const ExcelJS = require("exceljs");
 const Product = require("../models/productModel");
-const Unit = require("../models/unitModels");
+const Unit = require("../models/unitModel");
 
 /* ===========================
    CRUD TRANSAKSI

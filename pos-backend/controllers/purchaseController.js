@@ -29,6 +29,20 @@ async function getBaseUnitAndQty(unitId, qty, session) {
 }
 
 
+exports.getPurchases = async (req, res) => {
+  try {
+    const purchases = await Purchase.find()
+      .populate("supplier")
+      .populate("items.product")
+      .populate("items.unit");
+
+    res.json({ success: true, data: purchases });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+
 // ================= CREATE PURCHASE =================
 exports.createPurchase = async (req, res) => {
   const session = await mongoose.startSession();

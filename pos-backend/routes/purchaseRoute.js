@@ -11,6 +11,6 @@ const {
 router.post("/", createPurchase);
 router.get("/", getPurchases);
 router.put("/:id", updatePurchase);
-router.delete("/:id", deletePurchase);
+router.delete("/:id", deletePurchase);  
 
 module.exports = router;
