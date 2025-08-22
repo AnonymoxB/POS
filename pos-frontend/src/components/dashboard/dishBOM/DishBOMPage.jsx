@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import DishBOM from "./DishBOM";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { getDishes } from "../../../https";
 
 export default function DishBOMPage() {
   const [dishes, setDishes] = useState([]);
@@ -17,11 +18,19 @@ export default function DishBOMPage() {
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
-    fetch("/api/dish")
-      .then((res) => res.json())
-      .then((data) => setDishes(data.data || []))
-      .finally(() => setLoading(false));
-  }, []);
+  const fetchDishes = async () => {
+    try {
+      const data = await getDishes(); // langsung array
+      setDishes(data);
+    } catch (err) {
+      console.error("Gagal fetch dishes:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+  fetchDishes();
+}, []);
+
 
   // Filter berdasarkan search
   const filteredDishes = dishes.filter(

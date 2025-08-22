@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import AddDishBOMModal from "./AddDishBOMModal";
 import EditDishBOMModal from "./EditDishBOMModal";
+import { getDishBOMs, deleteDishBOM } from "../../../https"
 
 export default function DishBOM({ dish, open, onClose }) {
   const [bom, setBOM] = useState([]);
@@ -10,13 +11,18 @@ export default function DishBOM({ dish, open, onClose }) {
   const [editItem, setEditItem] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
 
-  const loadBOM = useCallback(() => {
+  const loadBOM = useCallback(async () => {
     if (!dish?._id) return;
     setLoading(true);
-    fetch(`/api/dish-bom/${dish._id}`)
-      .then((res) => res.json())
-      .then((data) => setBOM(data.data || []))
-      .finally(() => setLoading(false));
+    try {
+      const res = await getDishBOMs(dish._id);
+      setBOM(res.data?.data || []);
+    } catch (err) {
+      console.error("Gagal load BOM:", err);
+      setBOM([]);
+    } finally {
+      setLoading(false);
+    }
   }, [dish?._id]);
 
   useEffect(() => {
@@ -25,12 +31,14 @@ export default function DishBOM({ dish, open, onClose }) {
     }
   }, [open, dish, loadBOM]);
 
-  const deleteItem = async (id) => {
+  const handleDelete = async (id) => {
     if (!confirm("Yakin hapus bahan ini?")) return;
     setDeletingId(id);
     try {
-      await fetch(`/api/dish-bom/${id}`, { method: "DELETE" });
-      loadBOM();
+      await deleteDishBOM(id);
+      await loadBOM();
+    } catch (err) {
+      console.error("Gagal hapus BOM:", err);
     } finally {
       setDeletingId(null);
     }
@@ -88,7 +96,7 @@ export default function DishBOM({ dish, open, onClose }) {
                         size="sm"
                         disabled={deletingId === item._id}
                         className="bg-red-600 hover:bg-red-700"
-                        onClick={() => deleteItem(item._id)}
+                        onClick={() => handleDelete(item._id)}
                       >
                         {deletingId === item._id ? "Menghapus..." : "Hapus"}
                       </Button>
