@@ -23,6 +23,7 @@ exports.getStockTransactions = async (req, res) => {
     const transactions = await StockTransaction.find(filter)
       .populate("product", "name")
       .populate("unit", "name short")
+      .populate("unitBase", "name short")
       .populate("relatedOrder", "orderNumber")
       .populate("relatedDish", "name")
       .sort({ createdAt: -1 });
