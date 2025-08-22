@@ -7,7 +7,8 @@ const {
   deleteBOMItem,
 } = require("../controllers/dishBOMController");
 
-router.post("/", addBOMItem);
+
+router.post("/:dishId", addBOMItem);
 router.get("/:dishId", getBOMByDish);
 router.put("/:id", updateBOMItem);    
 router.delete("/:id", deleteBOMItem);  

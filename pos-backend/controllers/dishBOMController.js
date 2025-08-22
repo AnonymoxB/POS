@@ -4,21 +4,22 @@ const Product = require("../models/productModel");
 
 // Tambah BOM untuk dish
 exports.addBOMItem = async (req, res) => {
-  try {
-    const { dish, product, qty, unit } = req.body;
-
-    if (!dish || !product || !qty || !unit) {
-      return res.status(400).json({ success: false, message: "All fields are required" });
+    try {
+      const { product, qty, unit } = req.body;
+      const { dishId } = req.params;
+  
+      if (!dishId || !product || !qty || !unit) {
+        return res.status(400).json({ success: false, message: "All fields are required" });
+      }
+  
+      const newItem = await DishBOM.create({ dish: dishId, product, qty, unit });
+      res.status(201).json({ success: true, data: newItem });
+    } catch (err) {
+      console.error("🔥 addBOMItem Error:", err);
+      res.status(500).json({ success: false, message: err.message });
     }
-
-    const newItem = await DishBOM.create({ dish, product, qty, unit });
-
-    res.status(201).json({ success: true, data: newItem });
-  } catch (err) {
-    console.error("🔥 addBOMItem Error:", err);
-    res.status(500).json({ success: false, message: err.message });
-  }
-};
+  };
+  
 
 // Ambil semua BOM untuk dish tertentu
 exports.getBOMByDish = async (req, res) => {

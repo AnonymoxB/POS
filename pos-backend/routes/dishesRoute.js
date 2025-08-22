@@ -10,9 +10,9 @@ const {
 
 
 
-router.get("/", getAllDishes);      // GET /api/dish
-router.post("/", createDish);       // POST /api/dish
-router.put("/:id", updateDish);     // PUT /api/dish/:id 
-router.delete("/:id", deleteDish);  // DELETE /api/dish/:id 
+router.get("/", getAllDishes);
+router.post("/", createDish);
+router.put("/:id", updateDish);
+router.delete("/:id", deleteDish);
 
 module.exports = router;

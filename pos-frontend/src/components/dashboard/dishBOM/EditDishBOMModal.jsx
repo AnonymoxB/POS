@@ -1,50 +1,108 @@
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import React, { useEffect, useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useSnackbar } from "notistack";
 
-export default function EditDishBOMModal({ item, onClose }) {
-  const [form, setForm] = useState({
-    product: item.product?._id || "",
-    qty: item.qty || 1,
-    unit: item.unit?.short || item.unit || "",
+const EditDishBOMModal = ({ item, isOpen, onClose }) => {
+  const { enqueueSnackbar } = useSnackbar();
+  const queryClient = useQueryClient();
+
+  const [form, setForm] = useState({ product: "", qty: 1, unit: "" });
+  const [units, setUnits] = useState([]);
+
+  useEffect(() => {
+    if (isOpen && item) {
+      setForm({
+        product: item.product?._id || "",
+        qty: item.qty || 1,
+        unit: item.unit?._id || item.unit || "",
+      });
+
+      fetch("/api/unit")
+        .then((res) => res.json())
+        .then((data) => setUnits(data.data || []));
+    }
+  }, [isOpen, item]);
+
+  const { mutate, isLoading } = useMutation({
+    mutationFn: async () => {
+      return await fetch(`/api/dish-bom/${item._id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      }).then((res) => {
+        if (!res.ok) throw new Error("Gagal mengedit bahan");
+        return res.json();
+      });
+    },
+    onSuccess: () => {
+      enqueueSnackbar("Bahan berhasil diperbarui", { variant: "success" });
+      queryClient.invalidateQueries(["dish-bom", item.dish]);
+      onClose();
+    },
+    onError: (err) => {
+      enqueueSnackbar(err?.message || "Gagal mengedit bahan", {
+        variant: "error",
+      });
+    },
   });
 
-  const updateItem = async () => {
-    await fetch(`/api/dish-bom/${item._id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
-    });
-    onClose();
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    mutate();
   };
 
+  if (!isOpen) return null;
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
-      <div className="bg-[#262626] text-white rounded-lg p-6 w-full max-w-md">
-        <h2 className="text-lg font-bold mb-4">Edit Bahan</h2>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-[#262626] p-6 rounded-lg w-full max-w-md">
+        <h2 className="text-lg font-semibold text-white mb-4">Edit Bahan</h2>
 
-        <input
-          type="number"
-          className="bg-[#333] text-white border border-gray-600 rounded p-2 mb-2 w-full"
-          value={form.qty}
-          onChange={(e) => setForm({ ...form, qty: e.target.value })}
-        />
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Qty */}
+          <input
+            type="number"
+            value={form.qty}
+            onChange={(e) => setForm({ ...form, qty: e.target.value })}
+            className="w-full p-2 rounded bg-[#333] text-white"
+            required
+          />
 
-        <input
-          type="text"
-          className="bg-[#333] text-white border border-gray-600 rounded p-2 mb-4 w-full"
-          value={form.unit}
-          onChange={(e) => setForm({ ...form, unit: e.target.value })}
-        />
+          {/* Unit */}
+          <select
+            value={form.unit}
+            onChange={(e) => setForm({ ...form, unit: e.target.value })}
+            className="w-full p-2 rounded bg-[#333] text-white"
+            required
+          >
+            <option value="">-- pilih unit --</option>
+            {units.map((u) => (
+              <option key={u._id} value={u._id}>
+                {u.name} ({u.short})
+              </option>
+            ))}
+          </select>
 
-        <div className="flex justify-end gap-2">
-          <Button className="bg-gray-600 hover:bg-gray-700" onClick={onClose}>
-            Batal
-          </Button>
-          <Button className="bg-yellow-600 hover:bg-yellow-700" onClick={updateItem}>
-            Update
-          </Button>
-        </div>
+          <div className="flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="bg-gray-600 px-4 py-2 rounded text-white hover:bg-gray-700"
+            >
+              Batal
+            </button>
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="bg-yellow-600 px-4 py-2 rounded text-white hover:bg-yellow-700"
+            >
+              {isLoading ? "Menyimpan..." : "Simpan"}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );
-}
+};
+
+export default EditDishBOMModal;

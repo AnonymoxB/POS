@@ -14,7 +14,6 @@ import Purchase from "../components/dashboard/purchase/Purchase";
 import ProductCategoryPage from "../components/dashboard/productcateg/ProductCategory";
 import Supplier from "../components/dashboard/supplier/Supplier";
 import Stock from "../components/dashboard/Stock";
-import DishBOMList from "../components/dashboard/dishBOM/DishBOM";
 
 import {
   LayoutDashboard,
@@ -34,6 +33,8 @@ import {
   ContactRound,
   Wheat
 } from "lucide-react";
+import DishBOM from "../components/dashboard/dishBOM/DishBOM";
+import DishBOMPage from "../components/dashboard/dishBOM/DishBOMPage";
 
 
 
@@ -161,7 +162,7 @@ const Dashboard = () => {
         {activeTab === "Purchase" && <Purchase/>}
         {activeTab === "Supplier" && <Supplier/>}
         {activeTab === "Stock" && <Stock/>}
-        {activeTab === "Dish BOM" && <DishBOMList/>}
+        {activeTab === "Dish BOM" && <DishBOMPage/>}
         
       </div>
 
