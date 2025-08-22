@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSnackbar } from "notistack";
+import { addDishBOM, getProducts, getUnits } from "../../../https";
 
 const AddDishBOMModal = ({ dish, isOpen, onClose }) => {
   const { enqueueSnackbar } = useSnackbar();
@@ -10,31 +11,29 @@ const AddDishBOMModal = ({ dish, isOpen, onClose }) => {
   const [units, setUnits] = useState([]);
   const [form, setForm] = useState({ product: "", qty: 1, unit: "" });
 
+  // 🔹 load product & unit
   useEffect(() => {
     if (isOpen) {
-      fetch("/api/product")
-        .then((res) => res.json())
-        .then((data) => setProducts(data.data || []));
+      getProducts()
+        .then((res) => {
+          console.log("Products API result:", res);
+          setProducts(res.data || res || []);
+        })
+        .catch((err) => console.error("Error load products:", err));
 
-      fetch("/api/unit")
-        .then((res) => res.json())
-        .then((data) => {
-            console.log("Units API result:", data);
-            setUnits(data.data || data || []);
-          });
+      getUnits()
+        .then((res) => {
+          console.log("Units API result:", res);
+          setUnits(res.data?.data || res.data || []);
+        })
+        .catch((err) => console.error("Error load units:", err));
     }
   }, [isOpen]);
 
+  // 🔹 mutation pakai API wrapper
   const { mutate, isLoading } = useMutation({
     mutationFn: async () => {
-      return await fetch(`/api/dish-bom/${dish._id}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      }).then((res) => {
-        if (!res.ok) throw new Error("Gagal menambah bahan");
-        return res.json();
-      });
+      return await addDishBOM(dish._id, form);
     },
     onSuccess: () => {
       enqueueSnackbar("Bahan berhasil ditambahkan", { variant: "success" });
@@ -88,20 +87,19 @@ const AddDishBOMModal = ({ dish, isOpen, onClose }) => {
           />
 
           {/* Unit */}
-            <select
-                value={form.unit}
-                onChange={(e) => setForm({ ...form, unit: e.target.value })}
-                className="w-full p-2 rounded bg-[#333] text-white"
-                required
-                >
-                <option value="">-- pilih unit --</option>
-                {units.map((u) => (
-                    <option key={u._id || u.id} value={u._id || u.id}>
-                    {u.name || u.unitName} ({u.short || u.symbol})
-                    </option>
-                ))}
-            </select>
-
+          <select
+            value={form.unit}
+            onChange={(e) => setForm({ ...form, unit: e.target.value })}
+            className="w-full p-2 rounded bg-[#333] text-white"
+            required
+          >
+            <option value="">-- pilih unit --</option>
+            {units.map((u) => (
+              <option key={u._id || u.id} value={u._id || u.id}>
+                {u.name || u.unitName} ({u.short || u.symbol})
+              </option>
+            ))}
+          </select>
 
           <div className="flex justify-end gap-2">
             <button

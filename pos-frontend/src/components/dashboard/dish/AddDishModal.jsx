@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { IoMdClose } from "react-icons/io";
 import { useMutation } from "@tanstack/react-query";
 import { enqueueSnackbar } from "notistack";
-import { addDish } from "../../../https"; // pastikan fungsi ini tersedia
+import { addDish } from "../../../https";
 
 const AddDishModal = ({ setIsAddModalOpen, onClose, onAdded }) => {
   const [dishData, setDishData] = useState({
@@ -25,7 +25,7 @@ const AddDishModal = ({ setIsAddModalOpen, onClose, onAdded }) => {
     ...prev,
     price: {
       ...prev.price,
-      [name]: value,
+      [name]: value === "" ? "" : Number(value),
     },
   }));
 };
@@ -36,7 +36,7 @@ const handleHPPPriceChange = (e) => {
     ...prev,
     hpp: {
       ...prev.hpp,
-      [name]: value,
+      [name]: value === "" ? "" : Number(value),
     },
   }));
 };
