@@ -81,20 +81,30 @@ const AddPurchaseModal = ({ isOpen, onClose }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
+  
+    const unitList = units?.data?.data || units?.data || [];
+  
     const payload = {
       supplier: supplier?.value,
-      items: items.map((i) => ({
-        product: i.product?.value,
-        quantity: Number(i.quantity) || 0,
-        unit: i.unit,
-        price: Number(i.price) || 0,
-        total: Number(i.total) || 0,
-      })),
+      items: items.map((i) => {
+        const selectedUnit = unitList.find((u) => u._id === i.unit);
+  
+        return {
+          product: i.product?.value,
+          quantity: Number(i.quantity) || 0,
+          unit: i.unit,
+          price: Number(i.price) || 0,
+          total: Number(i.total) || 0,
+  
+          // fallback biar gak pernah undefined
+          unitBase: selectedUnit?._id || i.unit,
+          qtyBase: Number(i.quantity) || 0,
+        };
+      }),
     };
-
-    console.log("Payload dikirim ke backend:", payload);
-
+  
+    console.log("Payload dikirim ke backend:", JSON.stringify(payload, null, 2));
+  
     if (!payload.supplier) {
       enqueueSnackbar("Supplier wajib dipilih", { variant: "warning" });
       return;
@@ -103,9 +113,11 @@ const AddPurchaseModal = ({ isOpen, onClose }) => {
       enqueueSnackbar("Produk & Unit wajib dipilih", { variant: "warning" });
       return;
     }
-
+  
     mutate(payload);
   };
+  
+  
 
   if (!isOpen) return null;
 

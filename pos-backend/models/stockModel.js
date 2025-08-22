@@ -23,17 +23,18 @@ const stockTransactionSchema = new Schema(
       required: true,
     },
 
-    
-    qtyBase: {
-      type: Number,
-      required: true,
-    },
     unitBase: {
       type: Schema.Types.ObjectId,
       ref: "Unit",
       required: true,
     },
 
+    
+    qtyBase: {
+      type: Number,
+      required: true,
+    },
+    
     note: {
       type: String,
     },
