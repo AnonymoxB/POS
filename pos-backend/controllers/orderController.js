@@ -57,34 +57,45 @@ const addOrder = async (req, res, next) => {
      * 🔹 Update stok berdasarkan BOM
      */
     for (const item of detailedItems) {
-      const bomList = await DishBOM.find({ dish: item.dishId }); // pakai "dish"
+      const bomList = await DishBOM.find({ dish: item.dishId }).populate("product unit");
 
       for (const bom of bomList) {
         const qtyToDeduct = bom.qty * item.qty;
 
-        // Simpan transaksi stok
+        // ambil data product buat unitBase
+        const product = await Product.findById(bom.product).populate("defaultUnit");
+        if (!product) {
+          throw createHttpError(404, `Product tidak ditemukan untuk BOM ${bom.product}`);
+        }
+
+        // simpan transaksi stok
         await StockTransaction.create(
           [
             {
-              product: bom.product,
-              qtyOut: qtyToDeduct,
-              unitBase: bom.unit, // kalau di model nama fieldnya beda, sesuaikan
-              description: `Dipakai untuk order ${order.orderId}`,
+              product: product._id,
+              type: "OUT",
+              qty: bom.qty, // jumlah sesuai BOM
+              unit: bom.unit, // unit dari BOM
+              qtyBase: qtyToDeduct, // total kebutuhan dalam unit dasar
+              unitBase: product.defaultUnit, // unit dasar product
+              note: `Dipakai untuk order ${order.orderId}`,
+              relatedOrder: order._id,
+              relatedDish: item.dishId,
             },
           ],
           { session }
         );
 
-        // Update stok di Product
+        // update stok product
         await Product.updateOne(
-          { _id: bom.product },
+          { _id: product._id },
           { $inc: { stockBase: -qtyToDeduct } },
           { session }
         );
       }
     }
 
-    // Simpan payment
+    // simpan payment
     await savePaymentFromOrder(order, req.body);
 
     await session.commitTransaction();
@@ -102,6 +113,7 @@ const addOrder = async (req, res, next) => {
     return next(error);
   }
 };
+
 
 
 const getOrderById = async (req, res, next) => {
