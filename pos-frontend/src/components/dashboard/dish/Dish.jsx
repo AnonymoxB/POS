@@ -7,6 +7,7 @@ import { Pencil, Trash2, Search } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
+
 const Dish = () => {
   const [dishes, setDishes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -22,7 +23,7 @@ const Dish = () => {
 
   // pagination
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
+  const [itemsPerPage, setItemsPerPage] = useState(5); // default 5
 
   // search & filter
   const [searchQuery, setSearchQuery] = useState("");
@@ -64,7 +65,8 @@ const Dish = () => {
   );
 
   // pagination logic
-  const totalPages = Math.ceil(filteredDishes.length / itemsPerPage);
+  const totalItems = filteredDishes.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedData = filteredDishes.slice(
     startIndex,
@@ -252,36 +254,82 @@ const Dish = () => {
             </div>
 
             {/* Pagination */}
-            <div className="flex justify-center items-center mt-4 gap-2">
-              <Button
-                disabled={currentPage === 1}
-                onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-                className="bg-gray-600 hover:bg-gray-700 disabled:opacity-50"
-              >
-                Prev
-              </Button>
+            <div className="flex flex-col md:flex-row justify-between items-center mt-4 gap-3">
+              {/* Info jumlah data */}
+              <p className="text-gray-400 text-sm">
+                Menampilkan{" "}
+                <span className="font-semibold">
+                  {totalItems === 0 ? 0 : startIndex + 1}
+                </span>{" "}
+                -{" "}
+                <span className="font-semibold">
+                  {Math.min(startIndex + itemsPerPage, totalItems)}
+                </span>{" "}
+                dari <span className="font-semibold">{totalItems}</span> data
+              </p>
 
-              {[...Array(totalPages)].map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setCurrentPage(i + 1)}
-                  className={`px-3 py-1 rounded ${
-                    currentPage === i + 1
-                      ? "bg-green-600 text-white"
-                      : "bg-[#333] text-gray-300 hover:bg-gray-700"
-                  }`}
+              {/* Controls */}
+              <div className="flex items-center gap-2">
+                <label className="text-gray-300 text-sm">Tampilkan</label>
+                <select
+                  value={itemsPerPage}
+                  onChange={(e) => {
+                    setItemsPerPage(Number(e.target.value));
+                    setCurrentPage(1);
+                  }}
+                  className="p-1 rounded bg-[#333] text-white text-sm"
                 >
-                  {i + 1}
-                </button>
-              ))}
+                  {[5, 10, 20, 50].map((num) => (
+                    <option key={num} value={num}>
+                      {num}
+                    </option>
+                  ))}
+                </select>
+                <span className="text-gray-300 text-sm">/ halaman</span>
+              </div>
 
-              <Button
-                disabled={currentPage === totalPages}
-                onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
-                className="bg-gray-600 hover:bg-gray-700 disabled:opacity-50"
-              >
-                Next
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                  
+                >
+                  Prev
+                </Button>
+
+                {[...Array(totalPages)].map((_, i) => {
+                  const page = i + 1;
+                  return (
+                    <Button
+                      key={page}
+                      size="sm"
+                      variant={currentPage === page ? "default" : "outline"}
+                      className={`${
+                        currentPage === page
+                          ? "bg-green-600 text-white"
+                          : "bg-[#333] text-gray-300 hover:bg-gray-700"
+                      }`}
+                      onClick={() => setCurrentPage(page)}
+                    >
+                      {page}
+                    </Button>
+                  );
+                })}
+
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={currentPage === totalPages}
+                  onClick={() =>
+                    setCurrentPage((p) => Math.min(p + 1, totalPages))
+                  }
+                  
+                >
+                  Next
+                </Button>
+              </div>
             </div>
           </div>
         )}
@@ -310,3 +358,5 @@ const Dish = () => {
 };
 
 export default Dish;
+
+

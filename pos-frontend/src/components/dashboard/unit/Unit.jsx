@@ -267,8 +267,8 @@ const Unit = () => {
                       variant={currentPage === page ? "default" : "outline"}
                       className={`${
                         currentPage === page
-                          ? "bg-green-600 hover:bg-green-700 text-white"
-                          : "text-gray-300"
+                          ? "bg-green-600 text-white"
+                          : "bg-[#333] text-gray-300 hover:bg-gray-700"
                       }`}
                       onClick={() => setCurrentPage(page)}
                     >

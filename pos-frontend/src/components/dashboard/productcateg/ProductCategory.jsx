@@ -4,6 +4,9 @@ import { getProductCategories, deleteProductCategory } from "../../../https";
 import { useSnackbar } from "notistack";
 import AddProductCategoryModal from "./AddProductCategoryModal";
 import EditProductCategoryModal from "./EditProductCategory";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
 
 const ProductCategoryPage = () => {
   const { enqueueSnackbar } = useSnackbar();
@@ -83,20 +86,21 @@ const ProductCategoryPage = () => {
   };
 
   return (
-    <div className="p-4">
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-xl font-bold text-white">Kategori Produk</h1>
-        <button
-          onClick={() => setIsAddOpen(true)}
-          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-        >
-          + Tambah
-        </button>
-      </div>
+    <Card className="bg-[#262626] text-white">
+        <CardContent className="p-6">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
+            <h1 className="text-xl font-bold text-white">Kategori Produk</h1>
+            <button
+              onClick={() => setIsAddOpen(true)}
+              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+            >
+              + Tambah Kategori
+            </button>
+          </div>
 
       {/* Search */}
       <div className="mb-4">
-        <input
+        <Input
           type="text"
           placeholder="Cari kategori..."
           value={searchTerm}
@@ -104,17 +108,16 @@ const ProductCategoryPage = () => {
             setSearchTerm(e.target.value);
             setCurrentPage(1);
           }}
-          className="px-3 py-2 rounded bg-[#333] text-white border border-gray-600 w-full md:w-1/3"
+          className="rounded-md border border-gray-600 bg-[#333] px-3 py-2 text-sm text-white focus:outline-none"
         />
       </div>
 
       <div className="overflow-x-auto">
-        <div className="overflow-y-auto max-h-[500px] scrollbar-thin scrollbar-thumb-gray-600 scrollbar-hide rounded-md">
-          <table className="w-full text-left text-[#f5f5f5]">
-            <thead className="bg-[#333] text-[#ababab] sticky top-0 z-10">
-              <tr>
-                <th className="px-4 py-2">Nama</th>
-                <th className="px-4 py-2 w-40">Aksi</th>
+          <table className="w-full border-collapse border border-gray-600 text-sm">
+            <thead>
+              <tr className="bg-[#333] text-gray-300">
+                <th className="border border-gray-600 px-3 py-2 text-left">Nama</th>
+                <th className="border border-gray-600 px-3 py-2 text-center">Aksi</th>
               </tr>
             </thead>
             <tbody>
@@ -133,8 +136,8 @@ const ProductCategoryPage = () => {
                     key={c._id}
                     className="border-t border-gray-700 text-white"
                   >
-                    <td className="px-4 py-2">{c.name}</td>
-                    <td className="px-4 py-2 flex gap-2">
+                    <td className="border border-gray-600 px-3 py-2 text-left">{c.name}</td>
+                    <td className="px-4 py-2 flex justify-center gap-2">
                       <button
                         onClick={() => {
                           setSelectedCategory(c);
@@ -162,7 +165,7 @@ const ProductCategoryPage = () => {
               )}
             </tbody>
           </table>
-        </div>
+        
       </div>
 
       {/* Pagination */}
@@ -198,13 +201,14 @@ const ProductCategoryPage = () => {
         </div>
 
         <div className="flex items-center gap-1">
-          <button
+          <Button
+            size="sm"
+            variant="outline"
             disabled={currentPage === 1}
             onClick={() => setCurrentPage((prev) => prev - 1)}
-            className="px-3 py-1 rounded bg-[#333] text-gray-300 disabled:opacity-50"
           >
             Prev
-          </button>
+          </Button>
 
           {getPagination().map((page, idx) =>
             page === "..." ? (
@@ -212,27 +216,29 @@ const ProductCategoryPage = () => {
                 ...
               </span>
             ) : (
-              <button
+              <Button
                 key={page}
-                onClick={() => setCurrentPage(page)}
-                className={`px-3 py-1 rounded ${
-                  currentPage === page
-                    ? "bg-green-600 text-white"
-                    : "bg-[#333] text-gray-300"
+                size="sm"
+                      variant={currentPage === page ? "default" : "outline"}
+                      className={`${
+                        currentPage === page
+                          ? "bg-green-600 text-white"
+                          : "bg-[#333] text-gray-300 hover:bg-gray-700"
                 }`}
               >
                 {page}
-              </button>
+              </Button>
             )
           )}
 
-          <button
+          <Button
+            size="sm"
+            variant="outline"
             disabled={currentPage === totalPages}
             onClick={() => setCurrentPage((prev) => prev + 1)}
-            className="px-3 py-1 rounded bg-[#333] text-gray-300 disabled:opacity-50"
           >
             Next
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -248,7 +254,8 @@ const ProductCategoryPage = () => {
         onClose={() => setIsEditOpen(false)}
         category={selectedCategory}
       />
-    </div>
+     </CardContent>
+      </Card>
   );
 };
 
