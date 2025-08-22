@@ -6,7 +6,7 @@ const DishBOM = require("../models/dishBOMModel");
 const Product = require("../models/productModel");
 const StockTransaction = require("../models/stockModel");
 const { default: mongoose } = require("mongoose");
-
+const { convertQty } = require("../utils/unitConverter");
 
 const addOrder = async (req, res, next) => {
   const session = await mongoose.startSession();
@@ -20,6 +20,9 @@ const addOrder = async (req, res, next) => {
       throw createHttpError(400, "Items tidak boleh kosong.");
     }
 
+    /**
+     * 🔹 Detailkan item order
+     */
     const detailedItems = await Promise.all(
       items.map(async (item) => {
         if (!item.dishId || !mongoose.Types.ObjectId.isValid(item.dishId)) {
@@ -45,28 +48,46 @@ const addOrder = async (req, res, next) => {
       })
     );
 
+    /**
+     * 🔹 Simpan order utama
+     */
     const order = new Order({
       ...rest,
       orderId,
       items: detailedItems,
     });
-
     await order.save({ session });
 
     /**
      * 🔹 Update stok berdasarkan BOM
      */
     for (const item of detailedItems) {
-      const bomList = await DishBOM.find({ dish: item.dishId }).populate("product unit");
+      const bomList = await DishBOM.find({ dish: item.dishId })
+        .populate({ path: "product", populate: "defaultUnit" })
+        .populate("unit");
 
       for (const bom of bomList) {
-        const qtyToDeduct = bom.qty * item.qty;
+        const totalBomQty = bom.qty * item.qty;
+        const product = bom.product;
 
-        // ambil data product buat unitBase
-        const product = await Product.findById(bom.product).populate("defaultUnit");
         if (!product) {
-          throw createHttpError(404, `Product tidak ditemukan untuk BOM ${bom.product}`);
+          throw createHttpError(404, `Product tidak ditemukan untuk BOM ${bom._id}`);
         }
+        if (!product.defaultUnit) {
+          throw createHttpError(400, `Produk ${product.name} belum punya default unit`);
+        }
+
+        // konversi qty BOM → unit default product
+        const qtyBase = await convertQty(totalBomQty, bom.unit._id, product.defaultUnit._id);
+
+        if (qtyBase <= 0) {
+          throw createHttpError(400, `Konversi unit invalid untuk produk ${product.name}`);
+        }
+
+        // DEBUG (opsional, bisa hapus nanti)
+        console.log(
+          `[STOCK] ${product.name}: ${totalBomQty} ${bom.unit.short} → ${qtyBase} ${product.defaultUnit.short}`
+        );
 
         // simpan transaksi stok
         await StockTransaction.create(
@@ -74,10 +95,10 @@ const addOrder = async (req, res, next) => {
             {
               product: product._id,
               type: "OUT",
-              qty: bom.qty, // jumlah sesuai BOM
-              unit: bom.unit, // unit dari BOM
-              qtyBase: qtyToDeduct, // total kebutuhan dalam unit dasar
-              unitBase: product.defaultUnit, // unit dasar product
+              qty: totalBomQty, // jumlah sesuai BOM
+              unit: bom.unit._id, // unit dari BOM
+              qtyBase, // konversi ke unit dasar
+              unitBase: product.defaultUnit._id,
               note: `Dipakai untuk order ${order.orderId}`,
               relatedOrder: order._id,
               relatedDish: item.dishId,
@@ -89,13 +110,15 @@ const addOrder = async (req, res, next) => {
         // update stok product
         await Product.updateOne(
           { _id: product._id },
-          { $inc: { stockBase: -qtyToDeduct } },
+          { $inc: { stockBase: -qtyBase } },
           { session }
         );
       }
     }
 
-    // simpan payment
+    /**
+     * 🔹 Simpan payment
+     */
     await savePaymentFromOrder(order, req.body);
 
     await session.commitTransaction();
@@ -113,6 +136,7 @@ const addOrder = async (req, res, next) => {
     return next(error);
   }
 };
+
 
 
 
