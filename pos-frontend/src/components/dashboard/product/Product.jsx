@@ -45,8 +45,9 @@ const Product = () => {
 
   
   const filteredProducts = products.filter((p) =>
-  p.name.toLowerCase().includes(searchTerm.toLowerCase())
+ ( p?.name|| "").toLowerCase().includes((searchTerm || "").toLowerCase())
 );
+
 
 
   // Pagination

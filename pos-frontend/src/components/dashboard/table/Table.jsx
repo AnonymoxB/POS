@@ -85,9 +85,10 @@ const Table = () => {
   const tables = data?.data?.data || [];
 
   
-  const filteredTables = tables.filter((p) =>
-  p.name.toLowerCase().includes(searchTerm.toLowerCase())
+ const filteredTables = tables.filter((p) =>
+  (p?.name || "").toLowerCase().includes((searchTerm || "").toLowerCase())
 );
+
 
 
   // pagination calculation
