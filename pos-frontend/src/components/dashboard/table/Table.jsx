@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSnackbar } from "notistack";
 import { getTables, deleteTable } from "../../../https";
@@ -81,17 +81,14 @@ const Table = () => {
   if (isLoading) return <p className="text-[#ababab]">Loading...</p>;
   if (isError) return <p className="text-red-500">Gagal memuat data meja</p>;
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  
   const tables = data?.data?.data || [];
 
-  // filter by search
-  // eslint-disable-next-line react-hooks/rules-of-hooks
-  const filteredTables = useMemo(() => {
-    if(!tables) return[];
-    return tables.filter((t) =>
-      t.tableNo.toString().toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [tables, searchTerm]);
+  
+  const filteredTables = tables.filter((p) =>
+  p.name.toLowerCase().includes(searchTerm.toLowerCase())
+);
+
 
   // pagination calculation
   const totalPages = Math.ceil(filteredTables.length / itemsPerPage);

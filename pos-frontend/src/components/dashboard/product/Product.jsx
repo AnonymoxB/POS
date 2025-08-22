@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSnackbar } from "notistack";
 import { getProducts, deleteProduct } from "../../../https";
@@ -41,17 +41,13 @@ const Product = () => {
   if (isLoading) return <p className="text-[#ababab]">Loading...</p>;
   if (isError) return <p className="text-red-500">Gagal memuat data produk</p>;
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   const products = data?.data || [];
 
-  // Filter produk berdasarkan search
-  // eslint-disable-next-line react-hooks/rules-of-hooks
-  const filteredProducts = useMemo(() => {
-  if (!products) return [];
-  return products.filter((p) =>
-    p.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-}, [products, searchTerm]);
+  
+  const filteredProducts = products.filter((p) =>
+  p.name.toLowerCase().includes(searchTerm.toLowerCase())
+);
+
 
   // Pagination
   const totalItems = filteredProducts.length;
