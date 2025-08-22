@@ -2,39 +2,82 @@ import React, { useEffect, useState } from "react";
 import { getDishes, deleteDish } from "../../../https";
 import { useSnackbar } from "notistack";
 import ModalEditDish from "./ModalEditDish";
-import { Pencil, Trash2 } from "lucide-react";
 import AddDishModal from "./AddDishModal";
+import { Pencil, Trash2, Search } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 const Dish = () => {
   const [dishes, setDishes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // modal
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [selectedDish, setSelectedDish] = useState(null);
-  const { enqueueSnackbar, closeSnackbar } = useSnackbar();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [selectedDish, setSelectedDish] = useState(null);
 
+  // snackbar
+  const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
+  // pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+
+  // search & filter
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
+
+  // fetch dishes
   const fetchDishes = async () => {
-  try {
-    const response = await getDishes();
-    setDishes(Array.isArray(response) ? response : response?.data ?? []);
-  } catch (err) {
-    console.error("Gagal memuat data menu:", err);
-    enqueueSnackbar("Gagal memuat data menu: " + (err?.response?.data?.message || err.message || ""), {
-      variant: "error",
-    });
-    setError("Gagal memuat data menu");
-  } finally {
-    setLoading(false);
-  }
-};
+    try {
+      const response = await getDishes();
+      setDishes(Array.isArray(response) ? response : response?.data ?? []);
+    } catch (err) {
+      console.error("Gagal memuat data menu:", err);
+      enqueueSnackbar(
+        "Gagal memuat data menu: " +
+          (err?.response?.data?.message || err.message || ""),
+        { variant: "error" }
+      );
+      setError("Gagal memuat data menu");
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
+    fetchDishes();
+  }, []);
+
+  // kategori unik
+  const categories = [
+    ...new Set(dishes.map((dish) => dish.category).filter(Boolean)),
+  ];
+
+  // filter
+  const filteredDishes = dishes.filter(
+    (dish) =>
+      (dish.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        dish.category?.toLowerCase().includes(searchQuery.toLowerCase())) &&
+      (selectedCategory ? dish.category === selectedCategory : true)
+  );
+
+  // pagination logic
+  const totalPages = Math.ceil(filteredDishes.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedData = filteredDishes.slice(
+    startIndex,
+    startIndex + itemsPerPage
+  );
+
+  // handle edit
   const handleEdit = (dish) => {
     setSelectedDish(dish);
     setIsEditModalOpen(true);
   };
 
+  // handle delete
   const handleDelete = (id) => {
     enqueueSnackbar("Yakin ingin menghapus menu ini?", {
       variant: "warning",
@@ -67,129 +110,202 @@ const Dish = () => {
     });
   };
 
+  // setelah update / tambah
   const handleUpdateSuccess = () => {
     fetchDishes();
     enqueueSnackbar("Menu berhasil diperbarui", { variant: "success" });
   };
 
-
-
-  useEffect(() => {
-    fetchDishes();
-  }, []);
-
   return (
-    <div className="container mx-auto bg-[#262626] p-4 rounded-lg max-h-[700px]">
-      <div className="mb-4 flex flex-col items-start justify-between gap-2 md:flex-row md:items-center">
-        <h2 className="text-xl font-semibold text-[#f5f5f5]">
-          Daftar Menu
-        </h2>
-        <button
-          onClick={() => setIsAddModalOpen(true)}
-          className="rounded-md bg-green-600 px-4 py-2 text-sm text-white hover:bg-green-700"
-        >
-          + Tambah Menu
-        </button>
-      </div>
-
-
-
-      {error ? (
-        <p className="text-red-500">{error}</p>
-      ) : loading ? (
-        <p className="text-[#ababab]">Loading...</p>
-      ) : dishes.length === 0 ? (
-        <p className="text-[#ababab]">Tidak ada menu yang tersedia.</p>
-      ) : (
-        <div className="overflow-x-auto">
-          <div className="overflow-y-auto max-h-[500px] scrollbar-thin scrollbar-thumb-gray-600 scrollbar-hide rounded-md">
-            <table className="w-full text-left text-[#f5f5f5]">
-              <thead className="bg-[#333] text-[#ababab] sticky top-0 z-10">
-                <tr>
-                  <th className="p-3">#</th>
-                  <th className="p-3">Nama</th>
-                  <th className="p-3">Kategori</th>
-                  <th className="p-3">HPP Hot</th>
-                  <th className="p-3">HPP Ice</th>
-                  <th className="p-3">Harga Hot</th>
-                  <th className="p-3">Harga Ice</th>
-                  <th className="p-3">Create</th>
-                  <th className="p-3">Update</th>
-                  <th className="p-3">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {dishes.map((dish, index) => (
-                  <tr
-                    key={dish._id}
-                    className="border-b border-gray-700 hover:bg-[#333]"
-                  >
-                    <td className="p-4 text-center">{index + 1}</td>
-                    <td className="p-4">{dish.name}</td>
-                    <td className="p-4">{dish.category}</td>
-                    <td className="p-4">
-                      {dish.hpp?.hpphot ? `Rp ${dish.hpp.hpphot}` : "-"}
-                    </td>
-                    <td className="p-4">
-                      {dish.hpp?.hppice ? `Rp ${dish.hpp.hppice}` : "-"}
-                    </td>
-                    <td className="p-4">
-                      {dish.price?.hot ? `Rp ${dish.price.hot}` : "-"}
-                    </td>
-                    <td className="p-4">
-                      {dish.price?.ice ? `Rp ${dish.price.ice}` : "-"}
-                    </td>
-                    <td className="p-4">
-                      {dish.createdAt
-                        ? new Date(dish.createdAt).toLocaleString("id-ID")
-                        : "-"}
-                    </td>
-                    <td className="p-4">
-                      {dish.updatedAt
-                        ? new Date(dish.updatedAt).toLocaleString("id-ID")
-                        : "-"}
-                    </td>
-                    <td className="p-4 flex gap-2">
-                      <button
-                        onClick={() => handleEdit(dish)}
-                        className="flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-md text-sm"
-                      >
-                        <Pencil size={16} />
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDelete(dish._id)}
-                        className="flex items-center gap-1 bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-md text-sm"
-                      >
-                        <Trash2 size={16} />
-                        Hapus
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+    <Card className="bg-[#262626] text-white">
+      <CardContent className="p-6">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row justify-between items-center mb-4 gap-2">
+          <h1 className="text-xl font-bold">Daftar Menu</h1>
+          <Button
+            onClick={() => setIsAddModalOpen(true)}
+            className="bg-green-600 hover:bg-green-700"
+          >
+            + Tambah Menu
+          </Button>
         </div>
-      )}
 
-      {isEditModalOpen && selectedDish && (
-        <ModalEditDish
-          isOpen={isEditModalOpen}
-          onClose={() => setIsEditModalOpen(false)}
-          dish={selectedDish}
-          onUpdated={handleUpdateSuccess}
-        />
-      )}
-      {isAddModalOpen && (
-        <AddDishModal
-          isOpen={isAddModalOpen}
-          onClose={() =>setIsAddModalOpen(false)}
-          onCreated={handleUpdateSuccess}
-        />
-      )}
+        {/* Search + Filter */}
+        <div className="flex flex-col md:flex-row gap-4 mb-4">
+          <div className="relative w-full md:w-1/3">
+            <Search
+              className="absolute left-3 top-2.5 text-gray-400"
+              size={18}
+            />
+            <input
+              type="text"
+              placeholder="Cari nama / kategori..."
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="w-full pl-10 pr-3 py-2 rounded bg-[#333] text-white focus:outline-none focus:ring-2 focus:ring-green-600"
+            />
+          </div>
 
-    </div>
+          <select
+            value={selectedCategory}
+            onChange={(e) => {
+              setSelectedCategory(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="w-full md:w-1/4 p-2 rounded bg-[#333] text-white"
+          >
+            <option value="">Semua Kategori</option>
+            {categories.map((cat) => (
+              <option key={cat} value={cat}>
+                {cat}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Status */}
+        {error ? (
+          <p className="text-red-500">{error}</p>
+        ) : loading ? (
+          <p className="text-gray-400">Loading...</p>
+        ) : filteredDishes.length === 0 ? (
+          <p className="text-gray-400">Tidak ada menu yang cocok.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <div className="overflow-y-auto max-h-[500px] scrollbar-thin scrollbar-thumb-gray-600 scrollbar-hide rounded-md">
+              <table className="w-full border-collapse border border-gray-600 text-sm">
+                <thead>
+                  <tr className="bg-[#333] text-gray-300 sticky top-0 z-10">
+                    <th className="border border-gray-600 px-3 py-2">#</th>
+                    <th className="border border-gray-600 px-3 py-2">Nama</th>
+                    <th className="border border-gray-600 px-3 py-2">Kategori</th>
+                    <th className="border border-gray-600 px-3 py-2">HPP Hot</th>
+                    <th className="border border-gray-600 px-3 py-2">HPP Ice</th>
+                    <th className="border border-gray-600 px-3 py-2">Harga Hot</th>
+                    <th className="border border-gray-600 px-3 py-2">Harga Ice</th>
+                    <th className="border border-gray-600 px-3 py-2">Create</th>
+                    <th className="border border-gray-600 px-3 py-2">Update</th>
+                    <th className="border border-gray-600 px-3 py-2 text-center w-40">
+                      Aksi
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedData.map((dish, index) => (
+                    <tr
+                      key={dish._id}
+                      className="border-t border-gray-700 hover:bg-[#333]/50"
+                    >
+                      <td className="border border-gray-600 px-3 py-2 text-center">
+                        {startIndex + index + 1}
+                      </td>
+                      <td className="border border-gray-600 px-3 py-2">{dish.name}</td>
+                      <td className="border border-gray-600 px-3 py-2">{dish.category}</td>
+                      <td className="border border-gray-600 px-3 py-2">
+                        {dish.hpp?.hpphot ? `Rp ${dish.hpp.hpphot}` : "-"}
+                      </td>
+                      <td className="border border-gray-600 px-3 py-2">
+                        {dish.hpp?.hppice ? `Rp ${dish.hpp.hppice}` : "-"}
+                      </td>
+                      <td className="border border-gray-600 px-3 py-2">
+                        {dish.price?.hot ? `Rp ${dish.price.hot}` : "-"}
+                      </td>
+                      <td className="border border-gray-600 px-3 py-2">
+                        {dish.price?.ice ? `Rp ${dish.price.ice}` : "-"}
+                      </td>
+                      <td className="border border-gray-600 px-3 py-2">
+                        {dish.createdAt
+                          ? new Date(dish.createdAt).toLocaleString("id-ID")
+                          : "-"}
+                      </td>
+                      <td className="border border-gray-600 px-3 py-2">
+                        {dish.updatedAt
+                          ? new Date(dish.updatedAt).toLocaleString("id-ID")
+                          : "-"}
+                      </td>
+                      <td className="border border-gray-600 px-3 py-2 text-center">
+                        <div className="flex justify-center gap-2">
+                          <Button
+                            size="sm"
+                            className="bg-blue-600 hover:bg-blue-700"
+                            onClick={() => handleEdit(dish)}
+                          >
+                            <Pencil size={14} /> Edit
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            className="bg-red-600 hover:bg-red-700"
+                            onClick={() => handleDelete(dish._id)}
+                          >
+                            <Trash2 size={14} /> Hapus
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination */}
+            <div className="flex justify-center items-center mt-4 gap-2">
+              <Button
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                className="bg-gray-600 hover:bg-gray-700 disabled:opacity-50"
+              >
+                Prev
+              </Button>
+
+              {[...Array(totalPages)].map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setCurrentPage(i + 1)}
+                  className={`px-3 py-1 rounded ${
+                    currentPage === i + 1
+                      ? "bg-green-600 text-white"
+                      : "bg-[#333] text-gray-300 hover:bg-gray-700"
+                  }`}
+                >
+                  {i + 1}
+                </button>
+              ))}
+
+              <Button
+                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+                className="bg-gray-600 hover:bg-gray-700 disabled:opacity-50"
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Modal Edit */}
+        {isEditModalOpen && selectedDish && (
+          <ModalEditDish
+            isOpen={isEditModalOpen}
+            onClose={() => setIsEditModalOpen(false)}
+            dish={selectedDish}
+            onUpdated={handleUpdateSuccess}
+          />
+        )}
+
+        {/* Modal Tambah */}
+        {isAddModalOpen && (
+          <AddDishModal
+            isOpen={isAddModalOpen}
+            onClose={() => setIsAddModalOpen(false)}
+            onCreated={handleUpdateSuccess}
+          />
+        )}
+      </CardContent>
+    </Card>
   );
 };
 

@@ -5,6 +5,10 @@ import { getUnits, deleteUnit } from "../../../https";
 import AddUnitModal from "./AddUnitModal";
 import EditUnitModal from "./EditUnitModal";
 
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+
 const Unit = () => {
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
   const queryClient = useQueryClient();
@@ -12,6 +16,11 @@ const Unit = () => {
   const [openAddModal, setOpenAddModal] = useState(false);
   const [openEditModal, setOpenEditModal] = useState(false);
   const [selectedUnit, setSelectedUnit] = useState(null);
+
+  // Search & Pagination
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(5);
 
   // Fetch units
   const { data, isLoading, isError } = useQuery({
@@ -75,83 +84,231 @@ const Unit = () => {
 
   const units = data?.data || [];
 
+  // Filter berdasarkan search
+  const filteredUnits = units.filter(
+    (unit) =>
+      unit.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      unit.short?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Pagination
+  const totalPages = Math.ceil(filteredUnits.length / itemsPerPage);
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentUnits = filteredUnits.slice(indexOfFirstItem, indexOfLastItem);
+
+  const getPagination = () => {
+    const pages = [];
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      pages.push(1);
+      if (currentPage > 3) pages.push("...");
+      const startPage = Math.max(2, currentPage - 1);
+      const endPage = Math.min(totalPages - 1, currentPage + 1);
+      for (let i = startPage; i <= endPage; i++) {
+        pages.push(i);
+      }
+      if (currentPage < totalPages - 2) pages.push("...");
+      pages.push(totalPages);
+    }
+    return pages;
+  };
 
   return (
-    <div className="container mx-auto bg-[#262626] p-4 rounded-lg max-h-[700px]">
-      <div className="mb-4 flex flex-col items-start justify-between gap-2 md:flex-row md:items-center">
-        <h2 className="text-xl font-semibold text-[#f5f5f5]">Daftar Unit</h2>
-        <button
-          onClick={() => setOpenAddModal(true)}
-          className="rounded-md bg-green-600 px-4 py-2 text-sm text-white hover:bg-green-700"
-        >
-          + Tambah Unit
-        </button>
-      </div>
+    <Card className="bg-[#262626] text-white">
+      <CardContent className="p-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
+          <h2 className="text-xl font-bold">Daftar Unit</h2>
+          <Button
+            onClick={() => setOpenAddModal(true)}
+            className="bg-green-600 hover:bg-green-700"
+          >
+            + Tambah Unit
+          </Button>
+        </div>
 
-      {units.length === 0 ? (
-        <p className="text-[#ababab]">Tidak ada unit yang tersedia.</p>
-      ) : (
-        <div className="overflow-x-auto">
-          <div className="overflow-y-auto max-h-[500px] scrollbar-thin scrollbar-thumb-gray-600 scrollbar-hide rounded-md">
-            <table className="w-full text-left text-[#f5f5f5]">
-              <thead className="bg-[#333] text-[#ababab] sticky top-0 z-10">
-                <tr>
-                  <th className="p-3">Nama</th>
-                  <th className="p-3">Singkatan</th>
-                  <th className="p-3">Base Unit</th>
-                  <th className="p-3">Konversi</th>
-                  <th className="p-3">Aksi</th>
+        {/* Search */}
+        <div className="mb-4">
+          <Input
+            placeholder="Cari berdasarkan nama atau singkatan..."
+            value={searchTerm}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="bg-[#333] text-white border-gray-600"
+          />
+        </div>
+
+        {currentUnits.length === 0 ? (
+          <p className="text-gray-400">Tidak ada unit yang tersedia.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse border border-gray-600 text-sm">
+              <thead>
+                <tr className="bg-[#333] text-gray-300">
+                  <th className="border border-gray-600 px-3 py-2 text-left">
+                    Nama
+                  </th>
+                  <th className="border border-gray-600 px-3 py-2 text-left">
+                    Singkatan
+                  </th>
+                  <th className="border border-gray-600 px-3 py-2 text-left">
+                    Base Unit
+                  </th>
+                  <th className="border border-gray-600 px-3 py-2 text-left">
+                    Konversi
+                  </th>
+                  <th className="border border-gray-600 px-3 py-2 text-center">
+                    Aksi
+                  </th>
                 </tr>
               </thead>
               <tbody>
-                {units.map((unit) => (
+                {currentUnits.map((unit) => (
                   <tr
                     key={unit._id}
-                    className="border-b border-gray-700 hover:bg-[#333]"
+                    className="border-t border-gray-700 hover:bg-[#333]/50"
                   >
-                    <td className="p-4">{unit.name}</td>
-                    <td className="p-4">{unit.short}</td>
-                    <td className="p-4">{unit.baseUnit?.name || "-"}</td>
-                    <td className="p-4">{unit.conversion}</td>
-                    <td className="p-4 flex gap-2">
-                      <button
+                    <td className="border border-gray-600 px-3 py-2">
+                      {unit.name}
+                    </td>
+                    <td className="border border-gray-600 px-3 py-2">
+                      {unit.short}
+                    </td>
+                    <td className="border border-gray-600 px-3 py-2">
+                      {unit.baseUnit?.name || "-"}
+                    </td>
+                    <td className="border border-gray-600 px-3 py-2">
+                      {unit.conversion}
+                    </td>
+                    <td className="border border-gray-600 px-3 py-2 text-center flex gap-2 justify-center">
+                      <Button
+                        size="sm"
+                        className="bg-blue-600 hover:bg-blue-700"
                         onClick={() => handleEdit(unit)}
-                        className="flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-md text-sm"
                       >
                         Edit
-                      </button>
-                      <button
+                      </Button>
+                      <Button
+                        size="sm"
+                        className="bg-red-600 hover:bg-red-700"
                         onClick={() => handleDelete(unit._id)}
-                        className="flex items-center gap-1 bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-md text-sm"
                       >
                         Hapus
-                      </button>
+                      </Button>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+
+            {/* Pagination */}
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-3 mt-4">
+              {/* Info jumlah data */}
+              <div className="text-gray-400 text-sm">
+                {filteredUnits.length > 0 && (
+                  <span>
+                    Menampilkan{" "}
+                    <b>{indexOfFirstItem + 1}</b>–
+                    <b>
+                      {indexOfLastItem > filteredUnits.length
+                        ? filteredUnits.length
+                        : indexOfLastItem}
+                    </b>{" "}
+                    dari <b>{filteredUnits.length}</b> unit
+                  </span>
+                )}
+              </div>
+
+              {/* Items per page */}
+              <div className="flex items-center gap-2 text-gray-300">
+                <label htmlFor="itemsPerPage">Tampilkan</label>
+                <select
+                  id="itemsPerPage"
+                  value={itemsPerPage}
+                  onChange={(e) => {
+                    setItemsPerPage(Number(e.target.value));
+                    setCurrentPage(1);
+                  }}
+                  className="bg-[#333] text-white border border-gray-600 rounded px-2 py-1"
+                >
+                  <option value={5}>5</option>
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                </select>
+                <span>per halaman</span>
+              </div>
+
+              {/* Numbered Pagination */}
+              <div className="flex items-center gap-1">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage((prev) => prev - 1)}
+                >
+                  Prev
+                </Button>
+
+                {getPagination().map((page, idx) =>
+                  page === "..." ? (
+                    <span key={idx} className="px-2 text-gray-400">
+                      ...
+                    </span>
+                  ) : (
+                    <Button
+                      key={page}
+                      size="sm"
+                      variant={currentPage === page ? "default" : "outline"}
+                      className={`${
+                        currentPage === page
+                          ? "bg-green-600 hover:bg-green-700 text-white"
+                          : "text-gray-300"
+                      }`}
+                      onClick={() => setCurrentPage(page)}
+                    >
+                      {page}
+                    </Button>
+                  )
+                )}
+
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={currentPage === totalPages}
+                  onClick={() => setCurrentPage((prev) => prev + 1)}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {openAddModal && (
-        <AddUnitModal
-          isOpen={openAddModal}
-          onClose={() => setOpenAddModal(false)}
-          onAdded={handleUpdateSuccess}
-        />
-      )}
+        {/* Modals */}
+        {openAddModal && (
+          <AddUnitModal
+            isOpen={openAddModal}
+            onClose={() => setOpenAddModal(false)}
+            onAdded={handleUpdateSuccess}
+          />
+        )}
 
-      {openEditModal && selectedUnit && (
-        <EditUnitModal
-          isOpen={openEditModal}
-          unit={selectedUnit}
-          onClose={() => setOpenEditModal(false)}
-          onUpdated={handleUpdateSuccess}
-        />
-      )}
-    </div>
+        {openEditModal && selectedUnit && (
+          <EditUnitModal
+            isOpen={openEditModal}
+            unit={selectedUnit}
+            onClose={() => setOpenEditModal(false)}
+            onUpdated={handleUpdateSuccess}
+          />
+        )}
+      </CardContent>
+    </Card>
   );
 };
 
