@@ -2,24 +2,26 @@ const createHttpError = require("http-errors");
 const { savePaymentFromOrder } = require("./paymentController");
 const Order = require("../models/orderModel");
 const Dish = require("../models/dishesModel");
+const DishBOM = require("../models/dishBOMModel");
+const Product = require("../models/productModel");
+const StockTransaction = require("../models/stockTransactionModel");
 const { default: mongoose } = require("mongoose");
 
 
 const addOrder = async (req, res, next) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
-    const orderId = `#${Date.now()}${Math.floor(Math.random() * 1000)}`; // bikin unik
+    const orderId = `#${Date.now()}${Math.floor(Math.random() * 1000)}`;
     const { items, ...rest } = req.body;
 
-    // Validasi awal
     if (!Array.isArray(items) || items.length === 0) {
       throw createHttpError(400, "Items tidak boleh kosong.");
     }
 
-    // Buat daftar item dengan detail menu
     const detailedItems = await Promise.all(
-      items.map(async (item, index) => {
-        console.log(`ITEM [${index}] YANG DIKIRIM:`, item);
-
+      items.map(async (item) => {
         if (!item.dishId || !mongoose.Types.ObjectId.isValid(item.dishId)) {
           throw createHttpError(400, `dishId tidak valid: ${item.dishId}`);
         }
@@ -30,42 +32,72 @@ const addOrder = async (req, res, next) => {
         }
 
         const price = typeof dish.price === "object" ? 0 : dish.price;
-
-        
         const qty = item.qty || item.quantity || 1;
 
         return {
           dishId: dish._id,
           name: dish.name,
-          unitPrice: typeof dish.price === "object" ? 0 : dish.price,
+          unitPrice: price,
           qty,
           variant: item.variant || "",
           totalPrice: price * qty,
-
         };
-
       })
     );
 
-    // Simpan order baru
     const order = new Order({
       ...rest,
       orderId,
       items: detailedItems,
     });
 
-    await order.save();
+    await order.save({ session });
 
-    // Simpan juga sebagai payment
+    /**
+     * 🔹 Update stok berdasarkan BOM
+     */
+    for (const item of detailedItems) {
+      const bomList = await DishBOM.find({ dish: item.dishId }); // pakai "dish"
+
+      for (const bom of bomList) {
+        const qtyToDeduct = bom.qty * item.qty;
+
+        // Simpan transaksi stok
+        await StockTransaction.create(
+          [
+            {
+              product: bom.product,
+              qtyOut: qtyToDeduct,
+              unitBase: bom.unit, // kalau di model nama fieldnya beda, sesuaikan
+              description: `Dipakai untuk order ${order.orderId}`,
+            },
+          ],
+          { session }
+        );
+
+        // Update stok di Product
+        await Product.updateOne(
+          { _id: bom.product },
+          { $inc: { stockBase: -qtyToDeduct } },
+          { session }
+        );
+      }
+    }
+
+    // Simpan payment
     await savePaymentFromOrder(order, req.body);
+
+    await session.commitTransaction();
+    session.endSession();
 
     res.status(201).json({
       success: true,
-      message: "Order berhasil dibuat!",
+      message: "Order berhasil dibuat & stok bahan dipotong!",
       data: order,
     });
-
   } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
     console.error("ORDER CREATE ERROR:", error);
     return next(error);
   }
