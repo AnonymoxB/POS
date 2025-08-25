@@ -53,7 +53,13 @@ exports.createPurchase = async (req, res) => {
     const { supplier, items } = req.body;
     const grandTotal = items.reduce((sum, item) => sum + item.total, 0);
 
-    const purchase = await Purchase.create([{ supplier, items, grandTotal }], { session });
+    // 🔹 generate purchaseId
+    const purchaseId = `PUR-${Date.now()}`;
+
+    const purchase = await Purchase.create(
+      [{ purchaseId, supplier, items, grandTotal, createdBy: req.user?._id }],
+      { session }
+    );
 
     for (const item of items) {
       const product = await Product.findById(item.product).session(session);
@@ -70,39 +76,51 @@ exports.createPurchase = async (req, res) => {
       await product.save({ session });
 
       // hitung unitBase & qtyBase
-      const { unitBase, qtyBase } = await getBaseUnitAndQty(item.unit, item.quantity, session);
+      const { unitBase, qtyBase } = await getBaseUnitAndQty(
+        item.unit,
+        item.quantity,
+        session
+      );
 
       await StockTransaction.create(
-        [{
-          product: product._id,
-          type: "IN",
-          qty: item.quantity,
-          unit: item.unit,
-          unitBase,
-          qtyBase,
-          note: "Purchase",
-        }],
+        [
+          {
+            product: product._id,
+            type: "IN",
+            qty: item.quantity,
+            unit: item.unit,
+            unitBase,
+            qtyBase,
+            note: "Purchase",
+          },
+        ],
         { session }
       );
     }
 
     // ✅ commit transaksi database
     await session.commitTransaction();
+    session.endSession();
 
     const savedPurchase = purchase[0];
-    
+
+    // 🔹 simpan Payment otomatis
     await savePaymentFromPurchase(savedPurchase, req.user?._id);
 
-    res.status(201).json({ success: true, data: savedPurchase });
+    res.status(201).json({
+      success: true,
+      message: "Purchase & Payment berhasil dibuat",
+      data: savedPurchase,
+    });
   } catch (error) {
     if (session.inTransaction()) {
       await session.abortTransaction();
     }
-    res.status(400).json({ success: false, message: error.message });
-  } finally {
     session.endSession();
+    res.status(400).json({ success: false, message: error.message });
   }
 };
+
 
 
 

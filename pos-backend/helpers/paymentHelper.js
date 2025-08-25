@@ -1,18 +1,22 @@
 const Payment = require("../models/paymentModel");
 
+const Payment = require("../models/paymentModel");
+
 exports.savePaymentFromPurchase = async (purchase, userId, session = null) => {
-  
   const totalAmount =
     purchase.grandTotal ||
     purchase.items?.reduce((sum, i) => sum + (i.total || 0), 0) ||
     0;
 
   const payment = new Payment({
-    source: "PURCHASE",
-    sourceId: purchase._id,
+    paymentId: `PAY-${Date.now()}`,
+    sourceType: "purchase",         // konsisten dengan createPayment
+    sourceId: purchase.purchaseId || purchase._id, // simpan ID / kode PUR
     amount: totalAmount,
-    method: "CASH",
-    date: new Date(),
+    method: "cash",                 // default cash
+    status: "success",              // default sukses
+    direction: "out",               // purchase = keluar uang
+    note: `Payment for Purchase ${purchase.purchaseId || purchase._id}`,
     createdBy: userId,
   });
 
@@ -24,3 +28,4 @@ exports.savePaymentFromPurchase = async (purchase, userId, session = null) => {
 
   return payment;
 };
+
