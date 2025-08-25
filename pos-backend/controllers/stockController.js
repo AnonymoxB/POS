@@ -1,3 +1,4 @@
+// controllers/stockController.js
 const mongoose = require("mongoose");
 const StockTransaction = require("../models/stockModel");
 const ExcelJS = require("exceljs");
@@ -122,9 +123,7 @@ exports.getStockSummary = async (req, res) => {
           totalOut: { $sum: { $cond: [{ $eq: ["$type", "OUT"] }, "$qtyBase", 0] } },
         },
       },
-      {
-        $addFields: { balance: { $subtract: ["$totalIn", "$totalOut"] } },
-      },
+      { $addFields: { balance: { $subtract: ["$totalIn", "$totalOut"] } } },
       {
         $lookup: { from: "products", localField: "_id.product", foreignField: "_id", as: "product" },
       },
@@ -192,7 +191,7 @@ exports.getStockSummaryByProduct = async (req, res) => {
   }
 };
 
-// Riwayat transaksi stok per produk (dengan filter tanggal opsional)
+// Riwayat transaksi stok per produk
 exports.getStockHistoryByProduct = async (req, res) => {
   try {
     const { productId } = req.params;
@@ -222,222 +221,64 @@ exports.getStockHistoryByProduct = async (req, res) => {
   }
 };
 
-// Rekap semua produk dalam periode
-exports.getAllStockSummary = async (req, res) => {
-  try {
-    const { start, end } = req.query;
-    const match = {};
-
-    if (start && end) {
-      match.createdAt = { $gte: new Date(start), $lte: new Date(end) };
-    }
-
-    const summary = await StockTransaction.aggregate([
-      { $match: match },
-      {
-        $group: {
-          _id: { product: "$product", type: "$type" },
-          totalQty: { $sum: "$qtyBase" },
-        },
-      },
-      {
-        $group: {
-          _id: "$_id.product",
-          summary: { $push: { type: "$_id.type", totalQty: "$totalQty" } },
-        },
-      },
-      {
-        $lookup: { from: "products", localField: "_id", foreignField: "_id", as: "product" },
-      },
-      { $unwind: { path: "$product", preserveNullAndEmptyArrays: true } },
-      {
-        $project: {
-          _id: 0,
-          product: { _id: "$_id", name: { $ifNull: ["$product.name", "Unknown"] } },
-          totalIn: {
-            $ifNull: [
-              { $first: { $map: { input: { $filter: { input: "$summary", cond: { $eq: ["$$this.type", "IN"] } } }, as: "s", in: "$$s.totalQty" } } },
-              0,
-            ],
-          },
-          totalOut: {
-            $ifNull: [
-              { $first: { $map: { input: { $filter: { input: "$summary", cond: { $eq: ["$$this.type", "OUT"] } } }, as: "s", in: "$$s.totalQty" } } },
-              0,
-            ],
-          },
-        },
-      },
-      { $addFields: { balance: { $subtract: ["$totalIn", "$totalOut"] } } },
-    ]);
-
-    res.json({ success: true, data: summary });
-  } catch (err) {
-    console.error("🔥 getAllStockSummary Error:", err);
-    res.status(500).json({ success: false, message: err.message });
-  }
-};
-
 /* ===========================
    EXPORT EXCEL
 =========================== */
-exports.exportStockSummary = async (req, res) => {
-  try {
-    const { start, end } = req.query;
-    const match = {};
 
-    if (start && end) {
-      match.createdAt = { $gte: new Date(start), $lte: new Date(end) };
-    }
-
-    const summary = await StockTransaction.aggregate([
-      { $match: match },
-      {
-        $group: {
-          _id: { product: "$product", type: "$type" },
-          totalQty: { $sum: "$qtyBase" },
-        },
-      },
-      {
-        $group: {
-          _id: "$_id.product",
-          summary: { $push: { type: "$_id.type", totalQty: "$totalQty" } },
-        },
-      },
-    ]);
-
-    // Format hasil
-    const results = [];
-    for (const s of summary) {
-      const product = await Product.findById(s._id).select("name");
-      const totals = { IN: 0, OUT: 0 };
-      s.summary.forEach((t) => { totals[t.type] = t.totalQty; });
-
-      results.push({
-        productName: product?.name || "Unknown",
-        totalIn: totals.IN,
-        totalOut: totals.OUT,
-        balance: totals.IN - totals.OUT,
-      });
-    }
-
-    // Buat Excel
-    const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet("Stock Summary");
-
-    worksheet.columns = [
-      { header: "No", key: "no", width: 5 },
-      { header: "Produk", key: "productName", width: 30 },
-      { header: "Total Masuk", key: "totalIn", width: 15 },
-      { header: "Total Keluar", key: "totalOut", width: 15 },
-      { header: "Saldo", key: "balance", width: 15 },
-    ];
-
-    results.forEach((item, idx) => {
-      worksheet.addRow({ no: idx + 1, ...item });
-    });
-
-    worksheet.getRow(1).eachCell((cell) => {
-      cell.font = { bold: true };
-      cell.alignment = { horizontal: "center" };
-    });
-
-    res.setHeader("Content-Disposition", "attachment; filename=stock-summary.xlsx");
-    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-
-    await workbook.xlsx.write(res);
-    res.end();
-  } catch (err) {
-    console.error("🔥 exportStockSummary Error:", err);
-    res.status(500).json({ success: false, message: err.message });
-  }
-};
-
-// =======================
-// EXPORT STOCK SUMMARY / HISTORY
-// =======================
 exports.exportStock = async (req, res) => {
   try {
-    const { type, productId } = req.query;
+    const { type, productId, start, end } = req.query;
 
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Stock Report");
 
+    // Build filter
+    const filter = {};
+    if (productId) filter.product = productId;
+    if (start && end) {
+      filter.createdAt = { $gte: new Date(start), $lte: new Date(end) };
+    }
+
     if (type === "summary") {
-      
-      if (productId) {
-        const tx = await StockTransaction.find({ product: productId })
-          .populate("product")
-          .populate("unit");
+      const tx = await StockTransaction.find(filter)
+        .populate("product")
+        .populate("unit");
 
-        let totalIn = 0,
-          totalOut = 0;
+      const summaryMap = {};
+      tx.forEach((t) => {
+        const pid = t.product?._id;
+        if (!pid) return;
 
-        tx.forEach((t) => {
-          if (t.type === "IN") totalIn += t.qty;
-          if (t.type === "OUT") totalOut += t.qty;
-        });
+        if (!summaryMap[pid]) {
+          summaryMap[pid] = {
+            product: t.product?.name,
+            unit: t.unit?.short,
+            in: 0,
+            out: 0,
+          };
+        }
+        if (t.type === "IN") summaryMap[pid].in += t.qty;
+        if (t.type === "OUT") summaryMap[pid].out += t.qty;
+      });
 
-        const balance = totalIn - totalOut;
+      worksheet.columns = [
+        { header: "Produk", key: "product", width: 30 },
+        { header: "Total In", key: "in", width: 15 },
+        { header: "Total Out", key: "out", width: 15 },
+        { header: "Saldo", key: "balance", width: 15 },
+        { header: "Unit", key: "unit", width: 10 },
+      ];
 
-        worksheet.columns = [
-          { header: "Produk", key: "product", width: 30 },
-          { header: "Total In", key: "in", width: 15 },
-          { header: "Total Out", key: "out", width: 15 },
-          { header: "Saldo", key: "balance", width: 15 },
-          { header: "Unit", key: "unit", width: 10 },
-        ];
-
+      Object.values(summaryMap).forEach((s) => {
         worksheet.addRow({
-          product: tx[0]?.product?.name || "-",
-          in: totalIn,
-          out: totalOut,
-          balance,
-          unit: tx[0]?.unit?.short || "-",
+          product: s.product,
+          in: s.in,
+          out: s.out,
+          balance: s.in - s.out,
+          unit: s.unit,
         });
-      } else {
-        // summary all products
-        const tx = await StockTransaction.find({})
-          .populate("product")
-          .populate("unit");
+      });
 
-        const summaryMap = {};
-
-        tx.forEach((t) => {
-          const pid = t.product?._id;
-          if (!pid) return;
-
-          if (!summaryMap[pid]) {
-            summaryMap[pid] = {
-              product: t.product?.name,
-              unit: t.unit?.short,
-              in: 0,
-              out: 0,
-            };
-          }
-
-          if (t.type === "IN") summaryMap[pid].in += t.qty;
-          if (t.type === "OUT") summaryMap[pid].out += t.qty;
-        });
-
-        worksheet.columns = [
-          { header: "Produk", key: "product", width: 30 },
-          { header: "Total In", key: "in", width: 15 },
-          { header: "Total Out", key: "out", width: 15 },
-          { header: "Saldo", key: "balance", width: 15 },
-          { header: "Unit", key: "unit", width: 10 },
-        ];
-
-        Object.values(summaryMap).forEach((s) => {
-          worksheet.addRow({
-            product: s.product,
-            in: s.in,
-            out: s.out,
-            balance: s.in - s.out,
-            unit: s.unit,
-          });
-        });
-      }
     } else if (type === "history") {
       if (!productId) {
         return res.status(400).json({
@@ -446,7 +287,7 @@ exports.exportStock = async (req, res) => {
         });
       }
 
-      const history = await StockTransaction.find({ product: productId })
+      const history = await StockTransaction.find(filter)
         .sort({ createdAt: 1 })
         .populate("product")
         .populate("unit");
@@ -474,21 +315,66 @@ exports.exportStock = async (req, res) => {
       return res.status(400).json({ success: false, message: "type tidak valid" });
     }
 
-    
+    // --- Styling ---
+    // Header styling
+    worksheet.getRow(1).eachCell((cell) => {
+      cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
+      cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FF4B5563" }, // abu-abu gelap
+      };
+      cell.alignment = { vertical: "middle", horizontal: "center" };
+    });
+
+    // Border + alignment isi tabel
+    worksheet.eachRow((row, rowNumber) => {
+      row.eachCell((cell) => {
+        cell.border = {
+          top: { style: "thin", color: { argb: "FFAAAAAA" } },
+          left: { style: "thin", color: { argb: "FFAAAAAA" } },
+          bottom: { style: "thin", color: { argb: "FFAAAAAA" } },
+          right: { style: "thin", color: { argb: "FFAAAAAA" } },
+        };
+        if (typeof cell.value === "number") {
+          cell.alignment = { horizontal: "center" };
+        }
+      });
+    });
+
+    // --- Auto Naming ---
+    let filename = `stock_${type}`;
+    if (start && end) {
+      filename += `_${start}_${end}`;
+    } else {
+      filename += `_all`;
+    }
+    filename += `.xlsx`;
+
+    // ✅ Buffer way (lebih aman)
+    const buffer = await workbook.xlsx.writeBuffer();
+
     res.setHeader(
       "Content-Type",
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     );
-    res.setHeader("Content-Disposition", `attachment; filename=stock_${type}.xlsx`);
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${filename}"`
+    );
 
-    await workbook.xlsx.write(res);
-    res.end();
+    return res.send(buffer);
+
   } catch (err) {
-    console.error("Export error:", err);
+    console.error("🔥 Export error:", err);
     res.status(500).json({ success: false, message: "Gagal export" });
   }
 };
-// stockController.js
+
+
+
+
+// Shortcut untuk export per produk
 exports.exportStockSummaryByProduct = (req, res) => {
   req.query.type = "summary";
   req.query.productId = req.params.productId;

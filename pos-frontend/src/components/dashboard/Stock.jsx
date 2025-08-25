@@ -53,6 +53,7 @@ const Stock = () => {
     queryFn: getAllStockSummary,
   });
 
+
   return (
     <div className="p-6 space-y-6">
       {/* --- Tabs --- */}
@@ -261,7 +262,7 @@ const Stock = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {historyData?.data?.map((h) => (
+                    {historyData?.data?.data?.map((h) => (
                       <tr
                         key={h._id}
                         className="border-t border-gray-700 hover:bg-[#333]/50"
@@ -316,13 +317,16 @@ const Stock = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {allSummaryData?.data?.map((s) => (
+                    {allSummaryData?.data?.data?.map((s) => (
                       <tr
-                        key={s.product._id}
+                        key={s.productId} // ganti ini, bukan s.product._id
                         className="border-t border-gray-700 hover:bg-[#333]/50"
                       >
-                        <td className="px-3 py-2">{s.product?.name}</td>
-                        <td className="px-3 py-2">{s.totalQty}</td>
+                        <td className="px-3 py-2">{s.productName}</td>
+                        <td className="px-3 py-2">
+                          {s.balance} {s.unitShort}{" "}
+                          ({s.balanceBase} {s.baseUnitShort})
+                        </td>
                         <td className="px-3 py-2">{s.unit?.short}</td>
                       </tr>
                     ))}
