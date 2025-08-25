@@ -1,6 +1,6 @@
 const Payment = require("../models/paymentModel");
 
-// ✅ GET semua payment (cashflow)
+// ✅ GET semua payment
 const getAllPayments = async (req, res, next) => {
   try {
     const payments = await Payment.find().sort({ createdAt: -1 });
@@ -10,15 +10,14 @@ const getAllPayments = async (req, res, next) => {
   }
 };
 
-
+// ✅ POST manual (bisa cash masuk/keluar)
 const createPayment = async (req, res, next) => {
   try {
     const { sourceType, sourceId, method, status, amount, note } = req.body;
 
-    // ✅ Tentukan arah otomatis berdasarkan sourceType
     let direction = "out";
-    if (sourceType === "order") direction = "in"; // order = pemasukan
-    if (sourceType === "purchase" || sourceType === "expense") direction = "out"; // pembelian & pengeluaran = keluar
+    if (sourceType === "order") direction = "in";
+    if (sourceType === "purchase" || sourceType === "expense") direction = "out";
 
     const newPayment = new Payment({
       paymentId: `${sourceType.toUpperCase()}-${Date.now()}`,
@@ -28,7 +27,7 @@ const createPayment = async (req, res, next) => {
       status,
       amount,
       note,
-      direction, // ✅ sudah ditentukan otomatis
+      direction,
       createdBy: req.user?._id,
     });
 
@@ -44,14 +43,12 @@ const createPayment = async (req, res, next) => {
   }
 };
 
-// ✅ GET: detail payment
+// ✅ GET detail payment
 const getPaymentById = async (req, res, next) => {
   try {
     const payment = await Payment.findById(req.params.id);
     if (!payment) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Payment tidak ditemukan" });
+      return res.status(404).json({ success: false, message: "Payment tidak ditemukan" });
     }
     res.status(200).json({ success: true, data: payment });
   } catch (error) {
@@ -59,30 +56,27 @@ const getPaymentById = async (req, res, next) => {
   }
 };
 
-// ✅ PUT: update payment
+// ✅ PUT update
 const updatePayment = async (req, res, next) => {
   try {
-    const updated = await Payment.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-    });
+    const updated = await Payment.findByIdAndUpdate(req.params.id, req.body, { new: true });
     res.status(200).json({ success: true, data: updated });
   } catch (error) {
     next(error);
   }
 };
 
-// ✅ DELETE: hapus payment
+// ✅ DELETE
 const deletePayment = async (req, res, next) => {
   try {
     await Payment.findByIdAndDelete(req.params.id);
-    res
-      .status(200)
-      .json({ success: true, message: "Payment berhasil dihapus" });
+    res.status(200).json({ success: true, message: "Payment berhasil dihapus" });
   } catch (error) {
     next(error);
   }
 };
 
+// ✅ Internal: save otomatis ketika order dibuat
 const savePaymentFromOrder = async (order, userId) => {
   const payment = new Payment({
     paymentId: `PAY-${Date.now()}`,
@@ -90,9 +84,9 @@ const savePaymentFromOrder = async (order, userId) => {
     sourceId: order._id,
     method: order.paymentMethod || "Cash",
     status: "Success",
-    amount: order.total,
+    amount: order.bills?.totalWithTax || order.total || 0,
     note: `Payment from order ${order._id}`,
-    direction: "in", // order = pemasukan
+    direction: "in",
     createdBy: userId,
   });
 
