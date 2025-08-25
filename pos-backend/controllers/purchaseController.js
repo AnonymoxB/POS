@@ -46,16 +46,13 @@ exports.getPurchases = async (req, res) => {
 // ================= CREATE PURCHASE =================
 exports.createPurchase = async (req, res) => {
   const session = await mongoose.startSession();
-  session.startTransaction();
   try {
-    const { supplier, items } = req.body;
+    session.startTransaction();
 
+    const { supplier, items } = req.body;
     const grandTotal = items.reduce((sum, item) => sum + item.total, 0);
 
-    const purchase = await Purchase.create(
-      [{ supplier, items, grandTotal }],
-      { session }
-    );
+    const purchase = await Purchase.create([{ supplier, items, grandTotal }], { session });
 
     for (const item of items) {
       const product = await Product.findById(item.product).session(session);
@@ -67,7 +64,8 @@ exports.createPurchase = async (req, res) => {
       const newStock = oldStock + item.quantity;
 
       product.stock = newStock;
-      product.price = newStock > 0 ? (oldValue + newValue) / newStock : item.price;
+      product.price =
+        newStock > 0 ? (oldValue + newValue) / newStock : item.price;
       await product.save({ session });
 
       // hitung unitBase & qtyBase
@@ -87,19 +85,24 @@ exports.createPurchase = async (req, res) => {
       );
     }
 
+    // ✅ commit transaksi database
     await session.commitTransaction();
-    session.endSession();
 
     const savedPurchase = purchase[0];
+    // ⚠️ savePayment sebaiknya juga ikut transaction biar konsisten
     await savePaymentFromPurchase(savedPurchase, req.user?._id);
 
-    res.status(201).json({ success: true, data: purchase[0] });
+    res.status(201).json({ success: true, data: savedPurchase });
   } catch (error) {
-    await session.abortTransaction();
-    session.endSession();
+    if (session.inTransaction()) {
+      await session.abortTransaction();
+    }
     res.status(400).json({ success: false, message: error.message });
+  } finally {
+    session.endSession();
   }
 };
+
 
 
 // ================= UPDATE PURCHASE =================
