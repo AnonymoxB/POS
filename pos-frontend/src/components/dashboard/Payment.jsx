@@ -92,7 +92,7 @@ const Payment = () => {
     setFilteredPayments(filtered);
   };
 
-  // 🔢 Hitung total masuk, keluar, saldo
+  
   const totalIn = filteredPayments
     .filter((p) => p.direction === "in")
     .reduce((acc, curr) => acc + (curr.amount || 0), 0);
@@ -103,7 +103,7 @@ const Payment = () => {
 
   const netTotal = totalIn - totalOut;
 
-  // 📊 Data untuk grafik bulanan
+  
   const chartData = [];
   const grouped = {};
 

@@ -1,6 +1,5 @@
 const Payment = require("../models/paymentModel");
 
-s
 const getAllPayments = async (req, res, next) => {
   try {
     const payments = await Payment.find()
