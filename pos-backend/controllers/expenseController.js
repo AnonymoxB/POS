@@ -26,13 +26,21 @@ exports.getExpenseById = async (req, res) => {
 exports.createExpense = async (req, res) => {
   try {
     const { category, amount, note, date } = req.body;
-    const newExpense = new Expense({ category, amount, note, date });
+    const newExpense = new Expense({
+      category,
+      amount,
+      note,
+      date,
+      createdBy: req.user?._id,
+    });
+
     await newExpense.save();
     res.status(201).json({ success: true, data: newExpense });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
 };
+
 
 // UPDATE
 exports.updateExpense = async (req, res) => {

@@ -83,10 +83,12 @@ export const updatePurchase = (id, data) => api.put(`api/purchase/${id}`, data);
 
 //Expense Endpoint
 
-export const getExpenses = () => api.get("api/expense");
-export const deleteExpense = (id) => api.delete(`api/expense/${id}`);
-export const createExpense = (data) => api.post("api/expense", data);
-export const updateExpense = (id, data) => api.put(`api/expense/${id}`, data);
+export const getExpenses = () => api.get("api/expenses");
+export const deleteExpense = (id) => api.delete(`api/expenses/${id}`);
+export const createExpense = (data) => api.post("api/expenses", data);
+export const updateExpense = (id, data) => api.put(`api/expenses/${id}`, data);
+
+
 
 // Product
 export const getProducts = async () => {
