@@ -242,23 +242,24 @@ exports.exportStock = async (req, res) => {
     if (type === "summary") {
       const tx = await StockTransaction.find(filter)
         .populate("product")
-        .populate("unit");
+        .populate("unit")
+        .lean();
 
       const summaryMap = {};
       tx.forEach((t) => {
-        const pid = t.product?._id;
+        const pid = t.product?._id?.toString();
         if (!pid) return;
 
         if (!summaryMap[pid]) {
           summaryMap[pid] = {
-            product: t.product?.name,
-            unit: t.unit?.short,
+            product: t.product?.name || "-",
+            unit: t.unit?.short || "-",
             in: 0,
             out: 0,
           };
         }
-        if (t.type === "IN") summaryMap[pid].in += t.qty;
-        if (t.type === "OUT") summaryMap[pid].out += t.qty;
+        if (t.type === "IN") summaryMap[pid].in += Number(t.qty) || 0;
+        if (t.type === "OUT") summaryMap[pid].out += Number(t.qty) || 0;
       });
 
       worksheet.columns = [
@@ -290,7 +291,8 @@ exports.exportStock = async (req, res) => {
       const history = await StockTransaction.find(filter)
         .sort({ createdAt: 1 })
         .populate("product")
-        .populate("unit");
+        .populate("unit")
+        .lean();
 
       worksheet.columns = [
         { header: "Tanggal", key: "date", width: 20 },
@@ -303,20 +305,23 @@ exports.exportStock = async (req, res) => {
 
       history.forEach((h) => {
         worksheet.addRow({
-          date: new Date(h.createdAt).toLocaleString("id-ID"),
-          product: h.product?.name,
-          type: h.type,
-          qty: h.qty,
-          unit: h.unit?.short,
+          date: h.createdAt
+            ? new Date(h.createdAt).toLocaleString("id-ID")
+            : "-",
+          product: h.product?.name || "-",
+          type: h.type || "-",
+          qty: Number(h.qty) || 0,
+          unit: h.unit?.short || "-",
           note: h.note || "-",
         });
       });
     } else {
-      return res.status(400).json({ success: false, message: "type tidak valid" });
+      return res
+        .status(400)
+        .json({ success: false, message: "type tidak valid" });
     }
 
     // --- Styling ---
-    // Header styling
     worksheet.getRow(1).eachCell((cell) => {
       cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
       cell.fill = {
@@ -327,8 +332,7 @@ exports.exportStock = async (req, res) => {
       cell.alignment = { vertical: "middle", horizontal: "center" };
     });
 
-    // Border + alignment isi tabel
-    worksheet.eachRow((row, rowNumber) => {
+    worksheet.eachRow((row) => {
       row.eachCell((cell) => {
         cell.border = {
           top: { style: "thin", color: { argb: "FFAAAAAA" } },
@@ -344,6 +348,7 @@ exports.exportStock = async (req, res) => {
 
     // --- Auto Naming ---
     let filename = `stock_${type}`;
+    if (productId) filename += `_${productId}`;
     if (start && end) {
       filename += `_${start}_${end}`;
     } else {
@@ -351,7 +356,6 @@ exports.exportStock = async (req, res) => {
     }
     filename += `.xlsx`;
 
-    // ✅ Buffer way (lebih aman)
     const buffer = await workbook.xlsx.writeBuffer();
 
     res.setHeader(
@@ -364,17 +368,16 @@ exports.exportStock = async (req, res) => {
     );
 
     return res.send(buffer);
-
   } catch (err) {
-    console.error("🔥 Export error:", err);
-    res.status(500).json({ success: false, message: "Gagal export" });
+    console.error("🔥 Export error:", err.message);
+    console.error(err.stack);
+    res
+      .status(500)
+      .json({ success: false, message: "Gagal export", error: err.message });
   }
 };
 
-
-
-
-// Shortcut untuk export per produk
+// Shortcuts
 exports.exportStockSummaryByProduct = (req, res) => {
   req.query.type = "summary";
   req.query.productId = req.params.productId;

@@ -238,9 +238,10 @@ const Stock = () => {
                   className="bg-green-600 hover:bg-green-700 rounded-lg"
                   asChild
                 >
-                  <a href={`/api/stock/export-history?productId=${selectedProduct}`}>
-                    Export Excel
-                  </a>
+                 <a href={`/api/stock/history/export/${selectedProduct}`}>
+                  Export Excel
+                </a>
+
                 </Button>
               )}
             </div>
