@@ -94,6 +94,33 @@ const savePaymentFromOrder = async (order, userId) => {
   return payment;
 };
 
+const getPaymentsSummary = async (req, res, next) => {
+  try {
+    const pipeline = [
+      {
+        $group: {
+          _id: { direction: "$direction", month: { $month: "$createdAt" } },
+          totalAmount: { $sum: "$amount" },
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $sort: { "_id.month": 1 },
+      },
+    ];
+
+    const summary = await Payment.aggregate(pipeline);
+
+    res.status(200).json({
+      success: true,
+      data: summary,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+
 module.exports = {
   getAllPayments,
   createPayment,
@@ -101,4 +128,5 @@ module.exports = {
   updatePayment,
   deletePayment,
   savePaymentFromOrder,
+  getPaymentsSummary
 };

@@ -6,6 +6,7 @@ const {
   getPaymentById,
   updatePayment,
   deletePayment,
+  getPaymentsSummary,
 } = require("../controllers/paymentController");
 
 // CRUD Payment
@@ -14,5 +15,6 @@ router.post("/", createPayment);
 router.get("/:id", getPaymentById);
 router.put("/:id", updatePayment);
 router.delete("/:id", deletePayment);
+router.get("/summary/all", getPaymentsSummary);
 
 module.exports = router;
