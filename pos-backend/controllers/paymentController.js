@@ -22,17 +22,17 @@ const createPayment = async (req, res, next) => {
     const { sourceType, sourceId, method, status, amount, note } = req.body;
 
     // arah otomatis
-    let direction = "out";
-    if (sourceType === "order" || sourceType === "sale") {
-      direction = "in";
+    let direction = "In";
+    if (sourceType === "Order" || sourceType === "Sale") {
+      direction = "Out";
     }
 
     const newPayment = new Payment({
       paymentId: `${sourceType?.toUpperCase() || "PAY"}-${Date.now()}`,
       sourceType: sourceType?.toLowerCase(), // biar konsisten di DB
       sourceId,
-      method: (method || "cash").toLowerCase(),
-      status: (status || "success").toLowerCase(),
+      method: (method || "Cash").toLowerCase(),
+      status: (status || "Success").toLowerCase(),
       amount: Number(amount) || 0,
       note,
       direction,
@@ -86,10 +86,10 @@ const deletePayment = async (req, res, next) => {
 const savePaymentFromOrder = async (order, userId) => {
   const payment = new Payment({
     paymentId: `ORD-${Date.now()}`,
-    sourceType: "order",
+    sourceType: "Order",
     sourceId: order._id,
     method: (order.paymentMethod || "cash").toLowerCase(),
-    status: "success",
+    status: "Success",
     amount: order.bills?.totalWithTax || order.total || 0,
     note: `Payment from order ${order._id}`,
     direction: "in",
@@ -122,7 +122,7 @@ const savePaymentFromPurchase = async (purchase, userId) => {
 const savePaymentFromExpense = async (expense, userId) => {
   const payment = new Payment({
     paymentId: `EXP-${Date.now()}`,
-    sourceType: "expense",
+    sourceType: "Expense",
     sourceId: expense._id,
     method: (expense.paymentMethod || "cash").toLowerCase(),
     status: "success",
