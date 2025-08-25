@@ -82,7 +82,7 @@ const Expense = () => {
   if (isLoading) return <p className="text-[#ababab]">Loading...</p>;
   if (isError) return <p className="text-red-500">Gagal memuat data expense</p>;
 
-  const expenses = data?.data || [];
+  const expenses = data?.data?.data || [];
 
   // Filter berdasarkan search
   const filteredExpenses = expenses.filter(
@@ -166,7 +166,7 @@ const Expense = () => {
                     <td className="border border-gray-600 px-3 py-2">
                       {new Date(exp.date).toLocaleDateString("id-ID")}
                     </td>
-                    <td className="border border-gray-600 px-3 py-2">{exp.description}</td>
+                    <td className="border border-gray-600 px-3 py-2">{exp.note}</td>
                     <td className="border border-gray-600 px-3 py-2">{exp.category}</td>
                     <td className="border border-gray-600 px-3 py-2">
                       Rp {exp.amount?.toLocaleString("id-ID")}

@@ -1,6 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { getPayments } from "../../https";
 import DatePicker from "react-datepicker";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
 
 const Payment = () => {
   const [payments, setPayments] = useState([]);
@@ -44,14 +53,15 @@ const Payment = () => {
           return date.toDateString() === now.toDateString();
         });
         break;
-      case "week":
-        { const startOfWeek = new Date(now);
+      case "week": {
+        const startOfWeek = new Date(now);
         startOfWeek.setDate(now.getDate() - now.getDay());
         filtered = payments.filter((p) => {
           const date = new Date(p.createdAt);
           return date >= startOfWeek && date <= now;
         });
-        break; }
+        break;
+      }
       case "month":
         filtered = payments.filter((p) => {
           const date = new Date(p.createdAt);
@@ -78,13 +88,40 @@ const Payment = () => {
     setFilteredPayments(filtered);
   };
 
-  const totalAmount = filteredPayments.reduce(
-    (acc, curr) => acc + (curr.amount || 0),
-    0
-  );
+  // 🔢 Hitung total masuk, keluar, saldo
+  const totalIn = filteredPayments
+    .filter((p) => p.direction === "in")
+    .reduce((acc, curr) => acc + (curr.amount || 0), 0);
+
+  const totalOut = filteredPayments
+    .filter((p) => p.direction === "out")
+    .reduce((acc, curr) => acc + (curr.amount || 0), 0);
+
+  const netTotal = totalIn - totalOut;
+
+  // 📊 Data untuk grafik bulanan
+  const chartData = [];
+  const grouped = {};
+
+  filteredPayments.forEach((p) => {
+    const date = new Date(p.createdAt);
+    const key = `${date.getMonth() + 1}/${date.getFullYear()}`;
+    if (!grouped[key]) grouped[key] = { month: key, masuk: 0, keluar: 0 };
+
+    if (p.direction === "in") {
+      grouped[key].masuk += p.amount || 0;
+    } else {
+      grouped[key].keluar += p.amount || 0;
+    }
+  });
+
+  for (let key in grouped) {
+    chartData.push(grouped[key]);
+  }
 
   return (
     <div className="container overflow-y-scroll h-[700px] scrollbar-hide mx-auto bg-[#262626] p-4 rounded-lg">
+      {/* Filter & Header */}
       <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
         <h2 className="text-[#f5f5f5] text-xl font-semibold">Payment History</h2>
         <div className="flex items-center gap-2">
@@ -129,13 +166,44 @@ const Payment = () => {
         </div>
       </div>
 
-      <div className="text-[#f5f5f5] mb-3 text-sm">
-        Total Pembayaran:{" "}
-        <span className="font-bold text-green-400">
-          Rp {totalAmount.toLocaleString("id-ID")}
-        </span>
+      {/* Ringkasan total */}
+      <div className="text-[#f5f5f5] mb-6 text-sm space-y-1">
+        <div>
+          Total Masuk:{" "}
+          <span className="font-bold text-green-400">
+            Rp {totalIn.toLocaleString("id-ID")}
+          </span>
+        </div>
+        <div>
+          Total Keluar:{" "}
+          <span className="font-bold text-red-400">
+            Rp {totalOut.toLocaleString("id-ID")}
+          </span>
+        </div>
+        <div>
+          Saldo Bersih:{" "}
+          <span className="font-bold text-blue-400">
+            Rp {netTotal.toLocaleString("id-ID")}
+          </span>
+        </div>
       </div>
 
+      {/* Grafik bar */}
+      <div className="bg-[#333] p-4 rounded-lg mb-6">
+        <h3 className="text-[#f5f5f5] mb-2">Grafik Pemasukan vs Pengeluaran</h3>
+        <ResponsiveContainer width="100%" height={300}>
+          <BarChart data={chartData}>
+            <XAxis dataKey="month" stroke="#f5f5f5" />
+            <YAxis stroke="#f5f5f5" />
+            <Tooltip />
+            <Legend />
+            <Bar dataKey="masuk" fill="#22c55e" name="Pemasukan" />
+            <Bar dataKey="keluar" fill="#ef4444" name="Pengeluaran" />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* Tabel data */}
       {error ? (
         <p className="text-red-500">{error}</p>
       ) : loading ? (
@@ -149,7 +217,9 @@ const Payment = () => {
               <tr>
                 <th className="p-3">#</th>
                 <th className="p-3">Payment ID</th>
-                <th className="p-3">Order ID</th>
+                <th className="p-3">Source ID</th>
+                <th className="p-3">Tipe</th>
+                <th className="p-3">Arah</th>
                 <th className="p-3">Metode</th>
                 <th className="p-3">Status</th>
                 <th className="p-3">Jumlah</th>
@@ -164,10 +234,16 @@ const Payment = () => {
                 >
                   <td className="p-4 text-center">{index + 1}</td>
                   <td className="p-4">{pay.paymentId || "-"}</td>
-                  <td className="p-4">{pay.orderId || "-"}</td>
+                  <td className="p-4">{pay.sourceId || "-"}</td>
+                  <td className="p-4 capitalize">{pay.sourceType || "-"}</td>
+                  <td className="p-4 capitalize">
+                    {pay.direction === "in" ? "Masuk" : "Keluar"}
+                  </td>
                   <td className="p-4 capitalize">{pay.method || "-"}</td>
                   <td className="p-4 capitalize">{pay.status || "-"}</td>
-                  <td className="p-4">Rp {pay.amount?.toLocaleString("id-ID") ?? "-"}</td>
+                  <td className="p-4">
+                    Rp {pay.amount?.toLocaleString("id-ID") ?? "-"}
+                  </td>
                   <td className="p-4">
                     {pay.createdAt
                       ? new Date(pay.createdAt).toLocaleString("id-ID")

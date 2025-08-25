@@ -1,65 +1,86 @@
 const Payment = require("../models/paymentModel");
 
-// ✅ GET: Ambil semua data payment
+// ✅ GET semua payment (cashflow)
 const getAllPayments = async (req, res, next) => {
   try {
-    const payments = await Payment.find().sort({ createdAt: -1 }).populate("orderId");
-    res.status(200).json({ data: payments });
+    const payments = await Payment.find().sort({ createdAt: -1 });
+    res.status(200).json({ success: true, data: payments });
   } catch (error) {
     next(error);
   }
 };
 
-// ✅ POST: Simpan pembayaran cash manual
-const createCashPayment = async (req, res, next) => {
+
+const createPayment = async (req, res, next) => {
   try {
-    const { orderId, amount, contact, email } = req.body;
+    const { sourceType, sourceId, method, status, amount, note, direction } =
+      req.body;
 
     const newPayment = new Payment({
-      paymentId: "CASH-" + Date.now(),
-      orderId,
+      paymentId: `${sourceType.toUpperCase()}-${Date.now()}`,
+      sourceType,
+      sourceId,
+      method,
+      status,
       amount,
-      currency: "IDR",
-      status: "captured",
-      method: "cash",
-      email: email || "",
-      contact: contact || "",
+      note,
+      direction,
+      createdBy: req.user?._id,
     });
 
     await newPayment.save();
 
-    res.status(200).json({ success: true, message: "Cash payment recorded." });
+    res
+      .status(201)
+      .json({ success: true, message: "Payment berhasil ditambahkan", data: newPayment });
   } catch (error) {
     next(error);
   }
 };
 
-// ✅ Internal use: Simpan otomatis saat order dibuat
-const savePaymentFromOrder = async (order, reqBody) => {
+// ✅ GET: detail payment
+const getPaymentById = async (req, res, next) => {
   try {
-    const paymentMethod = reqBody.paymentMethod || "unknown";
-    const amount = reqBody.bills?.totalWithTax || 0;
-
-    if (paymentMethod && amount > 0) {
-      const payment = new Payment({
-        paymentId: `PAY-${Date.now()}`,
-        orderId: order._id,
-        method: paymentMethod,
-        status: "success",
-        amount,
-      });
-
-      await payment.save();
+    const payment = await Payment.findById(req.params.id);
+    if (!payment) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Payment tidak ditemukan" });
     }
+    res.status(200).json({ success: true, data: payment });
   } catch (error) {
-    console.error("❌ Failed to save payment from order:", error);
-    throw error;
+    next(error);
   }
 };
 
+// ✅ PUT: update payment
+const updatePayment = async (req, res, next) => {
+  try {
+    const updated = await Payment.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+    });
+    res.status(200).json({ success: true, data: updated });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ✅ DELETE: hapus payment
+const deletePayment = async (req, res, next) => {
+  try {
+    await Payment.findByIdAndDelete(req.params.id);
+    res
+      .status(200)
+      .json({ success: true, message: "Payment berhasil dihapus" });
+  } catch (error) {
+    next(error);
+  }
+};
 
 module.exports = {
   getAllPayments,
-  createCashPayment,
-  savePaymentFromOrder,
+  createPayment,
+  getPaymentById,
+  updatePayment,
+  deletePayment,
 };

@@ -1,14 +1,18 @@
 const express = require("express");
 const router = express.Router();
 const {
-  createCashPayment,
-  getAllPayments
+  getAllPayments,
+  createPayment,
+  getPaymentById,
+  updatePayment,
+  deletePayment,
 } = require("../controllers/paymentController");
 
-
-
-// 🔥 Rute untuk pembayaran cash
-router.post("/cash", createCashPayment);
+// CRUD Payment
 router.get("/", getAllPayments);
+router.post("/", createPayment);
+router.get("/:id", getPaymentById);
+router.put("/:id", updatePayment);
+router.delete("/:id", deletePayment);
 
 module.exports = router;

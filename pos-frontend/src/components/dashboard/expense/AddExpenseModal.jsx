@@ -10,7 +10,7 @@ const AddExpenseModal = ({ isOpen, onClose, onAdded }) => {
   const queryClient = useQueryClient();
 
   const [form, setForm] = useState({
-    name: "",
+    note: "",
     category: "",
     amount: "",
     date: "",
@@ -47,8 +47,8 @@ const AddExpenseModal = ({ isOpen, onClose, onAdded }) => {
         <form onSubmit={handleSubmit} className="space-y-3">
           <Input
             placeholder="Nama expense"
-            name="name"
-            value={form.name}
+            name="note"
+            value={form.note}
             onChange={handleChange}
             required
           />

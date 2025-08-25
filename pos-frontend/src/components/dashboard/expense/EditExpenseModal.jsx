@@ -10,7 +10,7 @@ const EditExpenseModal = ({ isOpen, onClose, expense, onUpdated }) => {
   const queryClient = useQueryClient();
 
   const [form, setForm] = useState({
-    name: "",
+    note: "",
     category: "",
     amount: "",
     date: "",
@@ -20,7 +20,7 @@ const EditExpenseModal = ({ isOpen, onClose, expense, onUpdated }) => {
   useEffect(() => {
     if (expense) {
       setForm({
-        name: expense.name || "",
+        name: expense.note || "",
         category: expense.category || "",
         amount: expense.amount || "",
         date: expense.date ? expense.date.split("T")[0] : "",
@@ -60,8 +60,8 @@ const EditExpenseModal = ({ isOpen, onClose, expense, onUpdated }) => {
         <form onSubmit={handleSubmit} className="space-y-3">
           <Input
             placeholder="Nama expense"
-            name="name"
-            value={form.name}
+            name="note"
+            value={form.note}
             onChange={handleChange}
             required
           />
