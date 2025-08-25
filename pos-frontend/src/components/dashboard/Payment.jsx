@@ -192,102 +192,103 @@ const Payment = () => {
         </div>
       </div>
 
-      {/* Grafik bar */}
-      <div className="bg-[#333] p-4 rounded-lg mb-6">
-        <h3 className="text-[#f5f5f5] mb-2">Grafik Pemasukan vs Pengeluaran</h3>
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={chartData}>
-            <XAxis dataKey="month" stroke="#f5f5f5" />
-            <YAxis stroke="#f5f5f5" />
-            <Tooltip />
-            <Legend />
-            <Bar dataKey="masuk" fill="#22c55e" name="Pemasukan" />
-            <Bar dataKey="keluar" fill="#ef4444" name="Pengeluaran" />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
-
-            {/* Pie Chart */}
-      <div className="bg-[#333] p-4 rounded-lg mb-6">
-        <h3 className="text-[#f5f5f5] mb-2">Perbandingan Masuk vs Keluar</h3>
-        <ResponsiveContainer width="100%" height={300}>
-          <PieChart>
-            <Pie
-              data={[
-                { name: "Pemasukan", value: totalIn },
-                { name: "Pengeluaran", value: totalOut },
-              ]}
-              cx="50%"
-              cy="50%"
-              outerRadius={100}
-              fill="#8884d8"
-              dataKey="value"
-              label={({ name, percent }) =>
-                `${name} ${(percent * 100).toFixed(0)}%`
-              }
-            >
-              <Cell key="in" fill="#22c55e" />
-              <Cell key="out" fill="#ef4444" />
-            </Pie>
-            <Tooltip />
-            <Legend />
-          </PieChart>
-        </ResponsiveContainer>
-      </div>
-
-
       {/* Tabel data */}
-      {error ? (
-        <p className="text-red-500">{error}</p>
-      ) : loading ? (
-        <p className="text-[#ababab]">Loading...</p>
-      ) : filteredPayments.length === 0 ? (
-        <p className="text-[#ababab]">Tidak ada data pembayaran.</p>
-      ) : (
-        <div className="w-full overflow-x-auto max-w-full">
-          <table className="w-full text-left text-[#f5f5f5]">
-            <thead className="bg-[#333] text-[#ababab]">
-              <tr>
-                <th className="p-3">#</th>
-                <th className="p-3">Payment ID</th>
-                <th className="p-3">Source ID</th>
-                <th className="p-3">Tipe</th>
-                <th className="p-3">Arah</th>
-                <th className="p-3">Metode</th>
-                <th className="p-3">Status</th>
-                <th className="p-3">Jumlah</th>
-                <th className="p-3">Tanggal</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredPayments.map((pay, index) => (
-                <tr
-                  key={pay._id || index}
-                  className="border-b border-gray-600 hover:bg-[#333]"
-                >
-                  <td className="p-4 text-center">{index + 1}</td>
-                  <td className="p-4">{pay.paymentId || "-"}</td>
-                  <td className="p-4">{pay.sourceId || "-"}</td>
-                  <td className="p-4 capitalize">{pay.sourceType || "-"}</td>
-                  <td className="p-4 capitalize">
-                    {pay.direction === "in" ? "Masuk" : "Keluar"}
-                  </td>
-                  <td className="p-4 capitalize">{pay.method || "-"}</td>
-                  <td className="p-4 capitalize">{pay.status || "-"}</td>
-                  <td className="p-4">
-                    Rp {pay.amount?.toLocaleString("id-ID") ?? "-"}
-                  </td>
-                  <td className="p-4">
-                    {pay.createdAt
-                      ? new Date(pay.createdAt).toLocaleString("id-ID")
-                      : "-"}
-                  </td>
+        {error ? (
+          <p className="text-red-500">{error}</p>
+        ) : loading ? (
+          <p className="text-[#ababab]">Loading...</p>
+        ) : filteredPayments.length === 0 ? (
+          <p className="text-[#ababab]">Tidak ada data pembayaran.</p>
+        ) : (
+          <div className="w-full overflow-x-auto max-w-full">
+            <table className="w-full text-left text-[#f5f5f5]">
+              <thead className="bg-[#333] text-[#ababab]">
+                <tr>
+                  <th className="p-3">#</th>
+                  <th className="p-3">Payment ID</th>
+                  <th className="p-3">Source</th>
+                  <th className="p-3">Arah</th>
+                  <th className="p-3">Metode</th>
+                  <th className="p-3">Status</th>
+                  <th className="p-3">Jumlah</th>
+                  <th className="p-3">Tanggal</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+              </thead>
+              <tbody>
+                {filteredPayments.map((pay, index) => (
+                  <tr
+                    key={pay._id || index}
+                    className="border-b border-gray-600 hover:bg-[#333]"
+                  >
+                    <td className="p-4 text-center">{index + 1}</td>
+                    <td className="p-4 font-mono">{pay.paymentId || "-"}</td>
+                    <td className="p-4">
+                      {/* Badge Source */}
+                      <span
+                        className={`px-2 py-1 rounded text-xs font-semibold mr-2
+                          ${
+                            pay.sourceType?.toLowerCase() === "purchase"
+                              ? "bg-blue-600/30 text-blue-400"
+                              : pay.sourceType?.toLowerCase() === "order"
+                              ? "bg-green-600/30 text-green-400"
+                              : pay.sourceType?.toLowerCase() === "expense"
+                              ? "bg-red-600/30 text-red-400"
+                              : "bg-gray-600/30 text-gray-300"
+                          }`}
+                      >
+                        {pay.sourceType || "-"}
+                      </span>
+                      <span className="text-gray-400">{pay.sourceId || "-"}</span>
+                    </td>
+                    <td className="p-4">
+                      {pay.direction === "in" ? (
+                        <span className="text-green-400 font-semibold">Masuk</span>
+                      ) : (
+                        <span className="text-red-400 font-semibold">Keluar</span>
+                      )}
+                    </td>
+                    <td className="p-4 capitalize">{pay.method || "-"}</td>
+                    <td className="p-4">
+                      {pay.status === "success" && (
+                        <span className="px-2 py-1 rounded bg-green-600/30 text-green-400 text-xs">
+                          Sukses
+                        </span>
+                      )}
+                      {pay.status === "pending" && (
+                        <span className="px-2 py-1 rounded bg-yellow-600/30 text-yellow-400 text-xs">
+                          Pending
+                        </span>
+                      )}
+                      {pay.status === "failed" && (
+                        <span className="px-2 py-1 rounded bg-red-600/30 text-red-400 text-xs">
+                          Gagal
+                        </span>
+                      )}
+                    </td>
+                    <td className="p-4 font-semibold">
+                      {pay.direction === "in" ? (
+                        <span className="text-green-400">
+                          + Rp {pay.amount?.toLocaleString("id-ID")}
+                        </span>
+                      ) : (
+                        <span className="text-red-400">
+                          - Rp {pay.amount?.toLocaleString("id-ID")}
+                        </span>
+                      )}
+                    </td>
+                    <td className="p-4">
+                      {pay.createdAt
+                        ? new Date(pay.createdAt).toLocaleString("id-ID")
+                        : "-"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+      
     </div>
   );
 };

@@ -1,7 +1,5 @@
 const Payment = require("../models/paymentModel");
 
-const Payment = require("../models/paymentModel");
-
 exports.savePaymentFromPurchase = async (purchase, userId, session = null) => {
   const totalAmount =
     purchase.grandTotal ||
