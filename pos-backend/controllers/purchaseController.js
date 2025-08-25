@@ -90,6 +90,9 @@ exports.createPurchase = async (req, res) => {
     await session.commitTransaction();
     session.endSession();
 
+    const savedPurchase = purchase[0];
+    await savePaymentFromPurchase(savedPurchase, req.user?._id);
+
     res.status(201).json({ success: true, data: purchase[0] });
   } catch (error) {
     await session.abortTransaction();

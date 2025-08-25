@@ -73,7 +73,7 @@ const deletePayment = async (req, res, next) => {
   }
 };
 
-
+// impan payment order
 const savePaymentFromOrder = async (order, userId) => {
   const payment = new Payment({
     paymentId: `PAY-${Date.now()}`,
@@ -84,6 +84,42 @@ const savePaymentFromOrder = async (order, userId) => {
     amount: order.bills?.totalWithTax || order.total || 0,
     note: `Payment from order ${order._id}`,
     direction: "in",
+    createdBy: userId || null,
+  });
+
+  await payment.save();
+  return payment;
+};
+
+// impan payment purchase
+const savePaymentFromPurchase = async (purchase, userId) => {
+  const payment = new Payment({
+    paymentId: `PAY-${Date.now()}`,
+    sourceType: "purchase",
+    sourceId: purchase._id,
+    method: (purchase.paymentMethod || "cash").toLowerCase(),
+    status: "success",
+    amount: purchase.total || 0,
+    note: `Payment for purchase ${purchase._id}`,
+    direction: "out",
+    createdBy: userId || null,
+  });
+
+  await payment.save();
+  return payment;
+};
+
+//simpan payment expense
+const savePaymentFromExpense = async (expense, userId) => {
+  const payment = new Payment({
+    paymentId: `PAY-${Date.now()}`,
+    sourceType: "expense",
+    sourceId: expense._id,
+    method: (expense.paymentMethod || "cash").toLowerCase(),
+    status: "success",
+    amount: expense.total || 0,
+    note: `Payment for expense ${expense._id}`,
+    direction: "out",
     createdBy: userId || null,
   });
 
@@ -151,5 +187,7 @@ module.exports = {
   updatePayment,
   deletePayment,
   savePaymentFromOrder,
-  getPaymentsSummary
+  getPaymentsSummary,
+  savePaymentFromPurchase,
+  savePaymentFromExpense,
 };

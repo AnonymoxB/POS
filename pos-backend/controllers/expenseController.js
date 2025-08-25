@@ -34,7 +34,11 @@ exports.createExpense = async (req, res) => {
       createdBy: req.user?._id,
     });
 
-    await newExpense.save();
+    const expense = await newExpense.save();
+
+    
+    await savePaymentFromExpense(expense, req.user?._id);
+
     res.status(201).json({ success: true, data: newExpense });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
