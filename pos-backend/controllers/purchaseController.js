@@ -3,6 +3,7 @@ const Purchase = require("../models/purchaseModel");
 const Product = require("../models/productModel");
 const StockTransaction = require("../models/stockModel");
 const Unit = require("../models/unitModel");
+const {savePaymentFromPurchase} = require("../helpers/paymentHelper");
 
 
 // 🔧 Helper rekursif untuk cari baseUnit & qtyBase
@@ -89,7 +90,7 @@ exports.createPurchase = async (req, res) => {
     await session.commitTransaction();
 
     const savedPurchase = purchase[0];
-    // ⚠️ savePayment sebaiknya juga ikut transaction biar konsisten
+    
     await savePaymentFromPurchase(savedPurchase, req.user?._id);
 
     res.status(201).json({ success: true, data: savedPurchase });
