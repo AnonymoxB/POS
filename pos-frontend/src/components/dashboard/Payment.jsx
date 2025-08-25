@@ -9,7 +9,11 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
 } from "recharts";
+
 
 const Payment = () => {
   const [payments, setPayments] = useState([]);
@@ -202,6 +206,35 @@ const Payment = () => {
           </BarChart>
         </ResponsiveContainer>
       </div>
+
+            {/* Pie Chart */}
+      <div className="bg-[#333] p-4 rounded-lg mb-6">
+        <h3 className="text-[#f5f5f5] mb-2">Perbandingan Masuk vs Keluar</h3>
+        <ResponsiveContainer width="100%" height={300}>
+          <PieChart>
+            <Pie
+              data={[
+                { name: "Pemasukan", value: totalIn },
+                { name: "Pengeluaran", value: totalOut },
+              ]}
+              cx="50%"
+              cy="50%"
+              outerRadius={100}
+              fill="#8884d8"
+              dataKey="value"
+              label={({ name, percent }) =>
+                `${name} ${(percent * 100).toFixed(0)}%`
+              }
+            >
+              <Cell key="in" fill="#22c55e" />
+              <Cell key="out" fill="#ef4444" />
+            </Pie>
+            <Tooltip />
+            <Legend />
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
+
 
       {/* Tabel data */}
       {error ? (

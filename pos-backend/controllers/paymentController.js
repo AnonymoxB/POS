@@ -13,8 +13,12 @@ const getAllPayments = async (req, res, next) => {
 
 const createPayment = async (req, res, next) => {
   try {
-    const { sourceType, sourceId, method, status, amount, note, direction } =
-      req.body;
+    const { sourceType, sourceId, method, status, amount, note } = req.body;
+
+    // ✅ Tentukan arah otomatis berdasarkan sourceType
+    let direction = "out";
+    if (sourceType === "order") direction = "in"; // order = pemasukan
+    if (sourceType === "purchase" || sourceType === "expense") direction = "out"; // pembelian & pengeluaran = keluar
 
     const newPayment = new Payment({
       paymentId: `${sourceType.toUpperCase()}-${Date.now()}`,
@@ -24,15 +28,17 @@ const createPayment = async (req, res, next) => {
       status,
       amount,
       note,
-      direction,
+      direction, // ✅ sudah ditentukan otomatis
       createdBy: req.user?._id,
     });
 
     await newPayment.save();
 
-    res
-      .status(201)
-      .json({ success: true, message: "Payment berhasil ditambahkan", data: newPayment });
+    res.status(201).json({
+      success: true,
+      message: "Payment berhasil ditambahkan",
+      data: newPayment,
+    });
   } catch (error) {
     next(error);
   }
