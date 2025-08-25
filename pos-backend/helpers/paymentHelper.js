@@ -7,14 +7,14 @@ exports.savePaymentFromPurchase = async (purchase, userId, session = null) => {
     0;
 
   const payment = new Payment({
-    paymentId: `PAY-${Date.now()}`,
-    sourceType: "purchase",         // konsisten dengan createPayment
-    sourceId: purchase.purchaseId || purchase._id, // simpan ID / kode PUR
+    paymentId: `PUR-${Date.now()}`, // ✅ pakai prefix PUR biar beda dengan lain
+    sourceType: "purchase",
+    sourceId: purchase.purchaseId || purchase._id, 
     amount: totalAmount,
-    method: "cash",                 // default cash
-    status: "success",              // default sukses
-    direction: "out",               // purchase = keluar uang
-    note: `Payment for Purchase ${purchase.purchaseId || purchase._id}`,
+    method: "cash",      // default cash
+    status: "success",   // default sukses
+    direction: "out",    // purchase = keluar uang
+    note: "Purchase Payment",
     createdBy: userId,
   });
 
@@ -26,4 +26,5 @@ exports.savePaymentFromPurchase = async (purchase, userId, session = null) => {
 
   return payment;
 };
+
 
