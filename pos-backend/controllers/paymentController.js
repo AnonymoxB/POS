@@ -10,22 +10,24 @@ const getAllPayments = async (req, res, next) => {
   }
 };
 
-// ✅ POST manual (bisa cash masuk/keluar)
+
 const createPayment = async (req, res, next) => {
   try {
     const { sourceType, sourceId, method, status, amount, note } = req.body;
 
-    // ✅ arah otomatis
+    // arah otomatis
     let direction = "out";
-    if (sourceType === "order") direction = "in"; 
+    if (sourceType === "order" || sourceType === "sale") {
+      direction = "in";
+    }
 
     const newPayment = new Payment({
-      paymentId: `${sourceType.toUpperCase()}-${Date.now()}`,
-      sourceType,
+      paymentId: `${sourceType?.toUpperCase() || "PAY"}-${Date.now()}`,
+      sourceType: sourceType?.toLowerCase(), // biar konsisten di DB
       sourceId,
       method: (method || "cash").toLowerCase(),
       status: (status || "success").toLowerCase(),
-      amount,
+      amount: Number(amount) || 0,
       note,
       direction,
       createdBy: req.user?._id,
@@ -37,6 +39,7 @@ const createPayment = async (req, res, next) => {
     next(error);
   }
 };
+
 
 
 
