@@ -17,14 +17,13 @@ const createPayment = async (req, res, next) => {
 
     let direction = "out";
     if (sourceType === "order") direction = "in";
-    if (sourceType === "purchase" || sourceType === "expense") direction = "out";
 
     const newPayment = new Payment({
       paymentId: `${sourceType.toUpperCase()}-${Date.now()}`,
       sourceType,
       sourceId,
-      method,
-      status,
+      method: (method || "cash").toLowerCase(),
+      status: (status || "success").toLowerCase(),
       amount,
       note,
       direction,
@@ -32,16 +31,12 @@ const createPayment = async (req, res, next) => {
     });
 
     await newPayment.save();
-
-    res.status(201).json({
-      success: true,
-      message: "Payment berhasil ditambahkan",
-      data: newPayment,
-    });
+    res.status(201).json({ success: true, data: newPayment });
   } catch (error) {
     next(error);
   }
 };
+
 
 // ✅ GET detail payment
 const getPaymentById = async (req, res, next) => {
@@ -76,23 +71,29 @@ const deletePayment = async (req, res, next) => {
   }
 };
 
-// ✅ Internal: save otomatis ketika order dibuat
-const savePaymentFromOrder = async (order, userId) => {
-  const payment = new Payment({
-    paymentId: `PAY-${Date.now()}`,
-    sourceType: "order",
-    sourceId: order._id,
-    method: order.paymentMethod || "Cash",
-    status: "Success",
-    amount: order.bills?.totalWithTax || order.total || 0,
-    note: `Payment from order ${order._id}`,
-    direction: "in",
-    createdBy: userId,
-  });
 
-  await payment.save();
-  return payment;
+const savePaymentFromOrder = async (order, userId) => {
+  try {
+    const payment = new Payment({
+      paymentId: `PAY-${Date.now()}`,
+      sourceType: "order",                 
+      sourceId: order._id,                 
+      method: (order.paymentMethod || "cash").toLowerCase(), 
+      status: "success",
+      amount: order.bills?.totalWithTax || order.total || 0, 
+      note: `Payment from order ${order._id}`,
+      direction: "in",                  
+      createdBy: userId || null,
+    });
+
+    await payment.save();
+    return payment;
+  } catch (error) {
+    console.error("❌ Failed to save payment from order:", error);
+    throw error;
+  }
 };
+
 
 const getPaymentsSummary = async (req, res, next) => {
   try {
