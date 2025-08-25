@@ -1,5 +1,5 @@
 // helpers/paymentHelper.js
-const Payment = require("../models/Payment");
+const Payment = require("../models/paymentModel");
 
 exports.savePaymentFromPurchase = async (purchase, userId, session = null) => {
   const payment = new Payment({
