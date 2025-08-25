@@ -29,7 +29,7 @@ const createPayment = async (req, res, next) => {
 
     const newPayment = new Payment({
       paymentId: `${sourceType?.toUpperCase() || "PAY"}-${Date.now()}`,
-      sourceType: sourceType?.toLowerCase(), // biar konsisten di DB
+      sourceType,
       sourceId,
       method: (method || "Cash").toLowerCase(),
       status: (status || "Success").toLowerCase(),
@@ -88,11 +88,11 @@ const savePaymentFromOrder = async (order, userId) => {
     paymentId: `ORD-${Date.now()}`,
     sourceType: "Order",
     sourceId: order._id,
-    method: (order.paymentMethod || "cash").toLowerCase(),
+    method: (order.paymentMethod || "Cash"),
     status: "Success",
     amount: order.bills?.totalWithTax || order.total || 0,
     note: `Payment from order ${order._id}`,
-    direction: "in",
+    direction: "In",
     createdBy: userId || null,
   });
 
@@ -104,13 +104,13 @@ const savePaymentFromOrder = async (order, userId) => {
 const savePaymentFromPurchase = async (purchase, userId) => {
   const payment = new Payment({
     paymentId: `PUR-${Date.now()}`,
-    sourceType: "purchase",
+    sourceType: "Purchase",
     sourceId: purchase._id,
-    method: (purchase.paymentMethod || "cash").toLowerCase(),
-    status: "success",
+    method: (purchase.paymentMethod || "Cash"),
+    status: "Success",
     amount: purchase.total || 0,
     note: `Payment for purchase ${purchase._id}`,
-    direction: "out",
+    direction: "Out",
     createdBy: userId || null,
   });
 
@@ -124,11 +124,11 @@ const savePaymentFromExpense = async (expense, userId) => {
     paymentId: `EXP-${Date.now()}`,
     sourceType: "Expense",
     sourceId: expense._id,
-    method: (expense.paymentMethod || "cash").toLowerCase(),
-    status: "success",
+    method: (expense.paymentMethod || "Cash"),
+    status: "Success",
     amount: expense.total || 0,
     note: `Payment for expense ${expense._id}`,
-    direction: "out",
+    direction: "Out",
     createdBy: userId || null,
   });
 
