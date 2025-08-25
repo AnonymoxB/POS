@@ -4,7 +4,6 @@ const paymentSchema = new mongoose.Schema(
   {
     paymentId: { type: String, required: true, unique: true },
 
-    // asal pembayaran
     sourceType: {
       type: String,
       enum: ["Purchase", "Order", "Expense"],
@@ -16,16 +15,15 @@ const paymentSchema = new mongoose.Schema(
       refPath: "sourceType",
     },
 
-    // detail pembayaran
     method: {
       type: String,
       enum: ["Cash", "Transfer", "Qris", "Other"],
-      default: "cash",
+      default: "Cash",
     },
     status: {
       type: String,
       enum: ["Success", "Pending", "Failed"],
-      default: "success",
+      default: "Success",
     },
     direction: {
       type: String,
