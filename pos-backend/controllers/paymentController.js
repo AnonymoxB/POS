@@ -15,8 +15,9 @@ const createPayment = async (req, res, next) => {
   try {
     const { sourceType, sourceId, method, status, amount, note } = req.body;
 
+    // ✅ arah otomatis
     let direction = "out";
-    if (sourceType === "order") direction = "in";
+    if (sourceType === "order") direction = "in"; 
 
     const newPayment = new Payment({
       paymentId: `${sourceType.toUpperCase()}-${Date.now()}`,
@@ -36,6 +37,7 @@ const createPayment = async (req, res, next) => {
     next(error);
   }
 };
+
 
 
 // ✅ GET detail payment
@@ -73,26 +75,22 @@ const deletePayment = async (req, res, next) => {
 
 
 const savePaymentFromOrder = async (order, userId) => {
-  try {
-    const payment = new Payment({
-      paymentId: `PAY-${Date.now()}`,
-      sourceType: "order",                 
-      sourceId: order._id,                 
-      method: (order.paymentMethod || "cash").toLowerCase(), 
-      status: "success",
-      amount: order.bills?.totalWithTax || order.total || 0, 
-      note: `Payment from order ${order._id}`,
-      direction: "in",                  
-      createdBy: userId || null,
-    });
+  const payment = new Payment({
+    paymentId: `PAY-${Date.now()}`,
+    sourceType: "order",
+    sourceId: order._id,
+    method: (order.paymentMethod || "cash").toLowerCase(),
+    status: "success",
+    amount: order.bills?.totalWithTax || order.total || 0,
+    note: `Payment from order ${order._id}`,
+    direction: "in",
+    createdBy: userId || null,
+  });
 
-    await payment.save();
-    return payment;
-  } catch (error) {
-    console.error("❌ Failed to save payment from order:", error);
-    throw error;
-  }
+  await payment.save();
+  return payment;
 };
+
 
 
 const getPaymentsSummary = async (req, res, next) => {
@@ -100,26 +98,50 @@ const getPaymentsSummary = async (req, res, next) => {
     const pipeline = [
       {
         $group: {
-          _id: { direction: "$direction", month: { $month: "$createdAt" } },
+          _id: {
+            year: { $year: "$createdAt" },
+            month: { $month: "$createdAt" },
+            direction: "$direction",
+          },
           totalAmount: { $sum: "$amount" },
           count: { $sum: 1 },
         },
       },
       {
-        $sort: { "_id.month": 1 },
+        $group: {
+          _id: { year: "$_id.year", month: "$_id.month" },
+          in: {
+            $sum: {
+              $cond: [{ $eq: ["$_id.direction", "in"] }, "$totalAmount", 0],
+            },
+          },
+          out: {
+            $sum: {
+              $cond: [{ $eq: ["$_id.direction", "out"] }, "$totalAmount", 0],
+            },
+          },
+        },
       },
+      { $sort: { "_id.year": 1, "_id.month": 1 } },
     ];
 
     const summary = await Payment.aggregate(pipeline);
 
-    res.status(200).json({
-      success: true,
-      data: summary,
-    });
+    // biar frontend gampang
+    const formatted = summary.map((s) => ({
+      year: s._id.year,
+      month: s._id.month,
+      in: s.in,
+      out: s.out,
+      net: s.in - s.out, // saldo bersih bulan itu
+    }));
+
+    res.status(200).json({ success: true, data: formatted });
   } catch (error) {
     next(error);
   }
 };
+
 
 
 module.exports = {
