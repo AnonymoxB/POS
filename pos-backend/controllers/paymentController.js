@@ -1,14 +1,19 @@
 const Payment = require("../models/paymentModel");
 
-// ✅ GET semua payment
+s
 const getAllPayments = async (req, res, next) => {
   try {
-    const payments = await Payment.find().sort({ createdAt: -1 });
+    const payments = await Payment.find()
+      .sort({ createdAt: -1 })
+      .populate("sourceId")
+      .populate("createdBy", "name email");
+
     res.status(200).json({ success: true, data: payments });
   } catch (error) {
     next(error);
   }
 };
+
 
 
 const createPayment = async (req, res, next) => {
@@ -79,7 +84,7 @@ const deletePayment = async (req, res, next) => {
 // impan payment order
 const savePaymentFromOrder = async (order, userId) => {
   const payment = new Payment({
-    paymentId: `PAY-${Date.now()}`,
+    paymentId: `ORD-${Date.now()}`,
     sourceType: "order",
     sourceId: order._id,
     method: (order.paymentMethod || "cash").toLowerCase(),
@@ -97,7 +102,7 @@ const savePaymentFromOrder = async (order, userId) => {
 // impan payment purchase
 const savePaymentFromPurchase = async (purchase, userId) => {
   const payment = new Payment({
-    paymentId: `PAY-${Date.now()}`,
+    paymentId: `PUR-${Date.now()}`,
     sourceType: "purchase",
     sourceId: purchase._id,
     method: (purchase.paymentMethod || "cash").toLowerCase(),
@@ -115,7 +120,7 @@ const savePaymentFromPurchase = async (purchase, userId) => {
 //simpan payment expense
 const savePaymentFromExpense = async (expense, userId) => {
   const payment = new Payment({
-    paymentId: `PAY-${Date.now()}`,
+    paymentId: `EXP-${Date.now()}`,
     sourceType: "expense",
     sourceId: expense._id,
     method: (expense.paymentMethod || "cash").toLowerCase(),
