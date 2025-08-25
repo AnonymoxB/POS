@@ -13,7 +13,6 @@ router.delete("/transactions/:id", controller.deleteStockTransaction);
 // =====================
 // Summary routes
 // =====================
-router.get("/summary/export", controller.exportStockSummary);
 router.get("/summary/export/:productId", controller.exportStockSummaryByProduct);
 
 // Semua produk
