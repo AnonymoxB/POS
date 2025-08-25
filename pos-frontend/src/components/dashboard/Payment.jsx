@@ -94,11 +94,11 @@ const Payment = () => {
 
   
   const totalIn = filteredPayments
-    .filter((p) => p.direction === "in")
+    .filter((p) => p.direction === "In")
     .reduce((acc, curr) => acc + (curr.amount || 0), 0);
 
   const totalOut = filteredPayments
-    .filter((p) => p.direction === "out")
+    .filter((p) => p.direction === "Out")
     .reduce((acc, curr) => acc + (curr.amount || 0), 0);
 
   const netTotal = totalIn - totalOut;
@@ -112,7 +112,7 @@ const Payment = () => {
     const key = `${date.getMonth() + 1}/${date.getFullYear()}`;
     if (!grouped[key]) grouped[key] = { month: key, masuk: 0, keluar: 0 };
 
-    if (p.direction === "in") {
+    if (p.direction === "In") {
       grouped[key].masuk += p.amount || 0;
     } else {
       grouped[key].keluar += p.amount || 0;
