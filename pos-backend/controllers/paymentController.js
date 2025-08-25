@@ -1,5 +1,6 @@
 const Payment = require("../models/paymentModel");
 
+// ✅ GET all payments
 const getAllPayments = async (req, res, next) => {
   try {
     const payments = await Payment.find()
@@ -14,28 +15,26 @@ const getAllPayments = async (req, res, next) => {
   }
 };
 
-
-
-
+// ✅ CREATE payment
 const createPayment = async (req, res, next) => {
   try {
     const { sourceType, sourceId, method, status, amount, note } = req.body;
 
     // arah otomatis
     let direction = "In";
-    if (sourceType === "Order" || sourceType === "Sale") {
+    if (sourceType === "Purchase" || sourceType === "Expense") {
       direction = "Out";
     }
 
     const newPayment = new Payment({
       paymentId: `${sourceType?.toUpperCase() || "PAY"}-${Date.now()}`,
-      sourceType,
+      sourceType,                               // enum: Purchase | Order | Expense
       sourceId,
-      method: (method || "Cash").toLowerCase(),
-      status: (status || "Success").toLowerCase(),
+      method: method || "Cash",                 // enum: Cash | Transfer | Qris | Other
+      status: status || "Success",              // enum: Success | Pending | Failed
       amount: Number(amount) || 0,
       note,
-      direction,
+      direction,                                // enum: In | Out
       createdBy: req.user?._id,
     });
 
@@ -45,9 +44,6 @@ const createPayment = async (req, res, next) => {
     next(error);
   }
 };
-
-
-
 
 // ✅ GET detail payment
 const getPaymentById = async (req, res, next) => {
@@ -62,7 +58,7 @@ const getPaymentById = async (req, res, next) => {
   }
 };
 
-// ✅ PUT update
+// ✅ UPDATE payment
 const updatePayment = async (req, res, next) => {
   try {
     const updated = await Payment.findByIdAndUpdate(req.params.id, req.body, { new: true });
@@ -72,7 +68,7 @@ const updatePayment = async (req, res, next) => {
   }
 };
 
-// ✅ DELETE
+// ✅ DELETE payment
 const deletePayment = async (req, res, next) => {
   try {
     await Payment.findByIdAndDelete(req.params.id);
@@ -82,13 +78,13 @@ const deletePayment = async (req, res, next) => {
   }
 };
 
-// impan payment order
+// ✅ simpan payment dari Order
 const savePaymentFromOrder = async (order, userId) => {
   const payment = new Payment({
     paymentId: `ORD-${Date.now()}`,
     sourceType: "Order",
     sourceId: order._id,
-    method: (order.paymentMethod || "Cash"),
+    method: order.paymentMethod || "Cash",
     status: "Success",
     amount: order.bills?.totalWithTax || order.total || 0,
     note: `Payment from order ${order._id}`,
@@ -100,13 +96,13 @@ const savePaymentFromOrder = async (order, userId) => {
   return payment;
 };
 
-// impan payment purchase
+// ✅ simpan payment dari Purchase
 const savePaymentFromPurchase = async (purchase, userId) => {
   const payment = new Payment({
     paymentId: `PUR-${Date.now()}`,
     sourceType: "Purchase",
     sourceId: purchase._id,
-    method: (purchase.paymentMethod || "Cash"),
+    method: purchase.paymentMethod || "Cash",
     status: "Success",
     amount: purchase.total || 0,
     note: `Payment for purchase ${purchase._id}`,
@@ -118,13 +114,13 @@ const savePaymentFromPurchase = async (purchase, userId) => {
   return payment;
 };
 
-//simpan payment expense
+// ✅ simpan payment dari Expense
 const savePaymentFromExpense = async (expense, userId) => {
   const payment = new Payment({
     paymentId: `EXP-${Date.now()}`,
     sourceType: "Expense",
     sourceId: expense._id,
-    method: (expense.paymentMethod || "Cash"),
+    method: expense.paymentMethod || "Cash",
     status: "Success",
     amount: expense.total || 0,
     note: `Payment for expense ${expense._id}`,
@@ -136,8 +132,7 @@ const savePaymentFromExpense = async (expense, userId) => {
   return payment;
 };
 
-
-
+// ✅ GET summary
 const getPaymentsSummary = async (req, res, next) => {
   try {
     const pipeline = [
@@ -157,12 +152,12 @@ const getPaymentsSummary = async (req, res, next) => {
           _id: { year: "$_id.year", month: "$_id.month" },
           in: {
             $sum: {
-              $cond: [{ $eq: ["$_id.direction", "in"] }, "$totalAmount", 0],
+              $cond: [{ $eq: ["$_id.direction", "In"] }, "$totalAmount", 0],
             },
           },
           out: {
             $sum: {
-              $cond: [{ $eq: ["$_id.direction", "out"] }, "$totalAmount", 0],
+              $cond: [{ $eq: ["$_id.direction", "Out"] }, "$totalAmount", 0],
             },
           },
         },
@@ -172,13 +167,12 @@ const getPaymentsSummary = async (req, res, next) => {
 
     const summary = await Payment.aggregate(pipeline);
 
-    // biar frontend gampang
     const formatted = summary.map((s) => ({
       year: s._id.year,
       month: s._id.month,
       in: s.in,
       out: s.out,
-      net: s.in - s.out, // saldo bersih bulan itu
+      net: s.in - s.out,
     }));
 
     res.status(200).json({ success: true, data: formatted });
@@ -187,8 +181,6 @@ const getPaymentsSummary = async (req, res, next) => {
   }
 };
 
-
-
 module.exports = {
   getAllPayments,
   createPayment,
@@ -196,7 +188,7 @@ module.exports = {
   updatePayment,
   deletePayment,
   savePaymentFromOrder,
-  getPaymentsSummary,
   savePaymentFromPurchase,
   savePaymentFromExpense,
+  getPaymentsSummary,
 };
