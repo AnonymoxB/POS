@@ -83,10 +83,28 @@ const deletePayment = async (req, res, next) => {
   }
 };
 
+const savePaymentFromOrder = async (order, userId) => {
+  const payment = new Payment({
+    paymentId: `PAY-${Date.now()}`,
+    sourceType: "order",
+    sourceId: order._id,
+    method: order.paymentMethod || "Cash",
+    status: "Success",
+    amount: order.total,
+    note: `Payment from order ${order._id}`,
+    direction: "in", // order = pemasukan
+    createdBy: userId,
+  });
+
+  await payment.save();
+  return payment;
+};
+
 module.exports = {
   getAllPayments,
   createPayment,
   getPaymentById,
   updatePayment,
   deletePayment,
+  savePaymentFromOrder,
 };
