@@ -95,35 +95,37 @@ const Bill = () => {
       // ✅ CASH
       console.log("cartData", cartData);
       const cleanedCart = cartData
-      .filter(item => item.id && item.quantity)
-      .map(item => ({
-        dishId: item.id,
-        name: item.name,
-        variant: item.variant,
-        qty: item.quantity || item.qty || 1,
-        unitPrice: item.pricePerQuantity || 0,
-        totalPrice: (item.pricePerQuantity || 0) * (item.quantity || 1)
-      }));
+        .filter(item => item.id && (item.quantity || item.qty))
+        .map(item => ({
+          dishId: item.id,
+          name: item.name,
+          variant: item.variant,
+          qty: item.quantity || item.qty || 1,
+          unitPrice: item.pricePerQuantity || 0,
+          totalPrice: (item.pricePerQuantity || 0) * (item.quantity || 1)
+        }));
 
+      if (!cleanedCart.length) {
+        enqueueSnackbar("Cart kosong, tidak bisa buat order!", { variant: "error" });
+        return;
+      }
 
-
-      // Place the order
       const orderData = {
         customerDetails: {
-          name: customerData.customerName,
-          phone: customerData.customerPhone,
-          guests: customerData.guests,
+          name: customerData.customerName || "Guest",
+          phone: customerData.customerPhone || "",
+          guests: customerData.guests || 1,
           type: customerData.type,
-          tableNo: customerData.type === "dinein" ? customerData.table?.tableNo || null : null,
         },
         orderStatus: "In Progress",
         bills: {
-          total: total,
-          // tax: tax,
+          total,
           totalWithTax: totalPriceWithTax,
         },
         items: cleanedCart,
-        table: customerData.type === "dinein" ? customerData.table?.tableId : null,
+        ...(customerData.type === "dinein" && customerData.table?.tableId
+          ? { table: customerData.table.tableId }
+          : {}),
         paymentMethod: paymentMethod,
       };
 

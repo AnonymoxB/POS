@@ -1,4 +1,5 @@
 const Payment = require("../models/paymentModel");
+const getNextSequence = require("../utils/getNextSequence");
 
 // ✅ GET all payments
 const getAllPayments = async (req, res, next) => {
@@ -15,37 +16,59 @@ const getAllPayments = async (req, res, next) => {
   }
 };
 
-// ✅ CREATE payment
+//CREATE payment
 const createPayment = async (req, res, next) => {
   try {
-    const { sourceType, sourceId, method, status, amount, note } = req.body;
+    let { sourceType, sourceId, method, status, amount, note } = req.body;
 
-    // arah otomatis
-    let direction = "In";
-    if (sourceType === "Purchase" || sourceType === "Expense") {
-      direction = "Out";
+    // Normalisasi sourceType
+    if (sourceType) {
+      sourceType =
+        sourceType.charAt(0).toUpperCase() + sourceType.slice(1).toLowerCase();
     }
 
+    // Prefix per tipe
+    const prefixMap = {
+      Order: "ORD",
+      Purchase: "PUR",
+      Expense: "EXP",
+    };
+    const prefix = prefixMap[sourceType] || "PAY";
+
+    // Arah otomatis
+    const directionMap = {
+      Order: "In",
+      Purchase: "Out",
+      Expense: "Out",
+    };
+    const direction = directionMap[sourceType] || "In";
+
+    // Ambil nomor urut khusus untuk tipe ini
+    const seq = await getNextSequence(sourceType || "Payment");
+    const paddedSeq = String(seq).padStart(4, "0"); // 0001, 0002, dst
+
     const newPayment = new Payment({
-      paymentId: `${sourceType?.toUpperCase() || "PAY"}-${Date.now()}`,
-      sourceType,                               // enum: Purchase | Order | Expense
+      paymentId: `${prefix}-${paddedSeq}`,
+      sourceType,
       sourceId,
-      method: method || "Cash",                 // enum: Cash | Transfer | Qris | Other
-      status: status || "Success",              // enum: Success | Pending | Failed
+      method: method || "Cash",
+      status: status || "Success",
       amount: Number(amount) || 0,
       note,
-      direction,                                // enum: In | Out
-      createdBy: req.user?._id,
+      direction,
+      createdBy: req.user?._id || null,
     });
 
     await newPayment.save();
     res.status(201).json({ success: true, data: newPayment });
   } catch (error) {
+    console.error("❌ Error in createPayment:", error.message);
     next(error);
   }
 };
 
-// ✅ GET detail payment
+
+//  GET detail payment
 const getPaymentById = async (req, res, next) => {
   try {
     const payment = await Payment.findById(req.params.id);
@@ -58,7 +81,7 @@ const getPaymentById = async (req, res, next) => {
   }
 };
 
-// ✅ UPDATE payment
+//  UPDATE payment
 const updatePayment = async (req, res, next) => {
   try {
     const updated = await Payment.findByIdAndUpdate(req.params.id, req.body, { new: true });
@@ -68,7 +91,7 @@ const updatePayment = async (req, res, next) => {
   }
 };
 
-// ✅ DELETE payment
+//  DELETE payment
 const deletePayment = async (req, res, next) => {
   try {
     await Payment.findByIdAndDelete(req.params.id);
@@ -78,10 +101,16 @@ const deletePayment = async (req, res, next) => {
   }
 };
 
-// ✅ simpan payment dari Order
+const getNextSequence = require("../utils/getNextSequence");
+const Payment = require("../models/paymentModel");
+
+//simpan payment dari Order
 const savePaymentFromOrder = async (order, userId) => {
+  const seq = await getNextSequence("Order");   
+  const paddedSeq = String(seq).padStart(4, "0"); 
+
   const payment = new Payment({
-    paymentId: `ORD-${Date.now()}`,
+    paymentId: `ORD-${paddedSeq}`,
     sourceType: "Order",
     sourceId: order._id,
     method: order.paymentMethod || "Cash",
@@ -89,17 +118,21 @@ const savePaymentFromOrder = async (order, userId) => {
     amount: order.bills?.totalWithTax || order.total || 0,
     note: `Payment from order ${order._id}`,
     direction: "In",
-    createdBy: userId || null,
+    createdBy: userId ? new mongoose.Types.ObjectId(userId) : null,
   });
 
   await payment.save();
   return payment;
 };
 
-// ✅ simpan payment dari Purchase
+
+// simpan payment dari Purchase
 const savePaymentFromPurchase = async (purchase, userId) => {
+  const seq = await getNextSequence("Purchase");
+  const paddedSeq = String(seq).padStart(4, "0");
+
   const payment = new Payment({
-    paymentId: `PUR-${Date.now()}`,
+    paymentId: `PUR-${paddedSeq}`,
     sourceType: "Purchase",
     sourceId: purchase._id,
     method: purchase.paymentMethod || "Cash",
@@ -114,10 +147,13 @@ const savePaymentFromPurchase = async (purchase, userId) => {
   return payment;
 };
 
-// ✅ simpan payment dari Expense
+// simpan payment dari Expense
 const savePaymentFromExpense = async (expense, userId) => {
+  const seq = await getNextSequence("Expense");
+  const paddedSeq = String(seq).padStart(4, "0");
+
   const payment = new Payment({
-    paymentId: `EXP-${Date.now()}`,
+    paymentId: `EXP-${paddedSeq}`,
     sourceType: "Expense",
     sourceId: expense._id,
     method: expense.paymentMethod || "Cash",
@@ -132,7 +168,8 @@ const savePaymentFromExpense = async (expense, userId) => {
   return payment;
 };
 
-// ✅ GET summary
+
+//  GET summary
 const getPaymentsSummary = async (req, res, next) => {
   try {
     const pipeline = [

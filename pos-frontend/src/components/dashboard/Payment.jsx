@@ -215,75 +215,82 @@ const Payment = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredPayments.map((pay, index) => (
-                  <tr
-                    key={pay._id || index}
-                    className="border-b border-gray-600 hover:bg-[#333]"
-                  >
-                    <td className="p-4 text-center">{index + 1}</td>
-                    <td className="p-4 font-mono">{pay.paymentId || "-"}</td>
-                    <td className="p-4">
-                      {/* Badge Source */}
-                      <span
-                        className={`px-2 py-1 rounded text-xs font-semibold mr-2
-                          ${
-                            pay.sourceType?.toLowerCase() === "purchase"
-                              ? "bg-blue-600/30 text-blue-400"
-                              : pay.sourceType?.toLowerCase() === "order"
-                              ? "bg-green-600/30 text-green-400"
-                              : pay.sourceType?.toLowerCase() === "expense"
-                              ? "bg-red-600/30 text-red-400"
-                              : "bg-gray-600/30 text-gray-300"
-                          }`}
-                      >
-                        {pay.sourceType || "-"}
-                      </span>
-                      <span className="text-gray-400">{pay.sourceId || "-"}</span>
-                    </td>
-                    <td className="p-4">
-                      {pay.direction === "in" ? (
-                        <span className="text-green-400 font-semibold">Masuk</span>
-                      ) : (
-                        <span className="text-red-400 font-semibold">Keluar</span>
-                      )}
-                    </td>
-                    <td className="p-4 capitalize">{pay.method || "-"}</td>
-                    <td className="p-4">
-                      {pay.status === "success" && (
-                        <span className="px-2 py-1 rounded bg-green-600/30 text-green-400 text-xs">
-                          Sukses
+                {filteredPayments
+                  .filter((pay) => pay)
+                  .map((pay, index) => (
+                    <tr
+                      key={pay?._id || index}
+                      className="border-b border-gray-600 hover:bg-[#333]"
+                    >
+                      <td className="p-4 text-center">{index + 1}</td>
+                      <td className="p-4 font-mono">{pay?.paymentId || "-"}</td>
+                      <td className="p-4">
+                        <span
+                          className={`px-2 py-1 rounded text-xs font-semibold mr-2
+                            ${
+                              pay?.sourceType?.toLowerCase() === "purchase"
+                                ? "bg-blue-600/30 text-blue-400"
+                                : pay?.sourceType?.toLowerCase() === "order"
+                                ? "bg-green-600/30 text-green-400"
+                                : pay?.sourceType?.toLowerCase() === "expense"
+                                ? "bg-red-600/30 text-red-400"
+                                : "bg-gray-600/30 text-gray-300"
+                            }`}
+                        >
+                          {pay?.sourceType || "-"}
                         </span>
-                      )}
-                      {pay.status === "pending" && (
-                        <span className="px-2 py-1 rounded bg-yellow-600/30 text-yellow-400 text-xs">
-                          Pending
+
+                        <span className="text-gray-400">
+                          {typeof pay?.sourceId === "object"
+                            ? pay?.sourceId?._id || "-"
+                            : pay?.sourceId || "-"}
                         </span>
-                      )}
-                      {pay.status === "failed" && (
-                        <span className="px-2 py-1 rounded bg-red-600/30 text-red-400 text-xs">
-                          Gagal
-                        </span>
-                      )}
-                    </td>
-                    <td className="p-4 font-semibold">
-                      {pay.direction === "in" ? (
-                        <span className="text-green-400">
-                          + Rp {pay.amount?.toLocaleString("id-ID")}
-                        </span>
-                      ) : (
-                        <span className="text-red-400">
-                          - Rp {pay.amount?.toLocaleString("id-ID")}
-                        </span>
-                      )}
-                    </td>
-                    <td className="p-4">
-                      {pay.createdAt
-                        ? new Date(pay.createdAt).toLocaleString("id-ID")
-                        : "-"}
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                      <td className="p-4">
+                        {pay?.direction?.toLowerCase() === "in" ? (
+                          <span className="text-green-400 font-semibold">Masuk</span>
+                        ) : (
+                          <span className="text-red-400 font-semibold">Keluar</span>
+                        )}
+                      </td>
+                      <td className="p-4 capitalize">{pay?.method || "-"}</td>
+                      <td className="p-4">
+                        {pay?.status?.toLowerCase() === "success" && (
+                          <span className="px-2 py-1 rounded bg-green-600/30 text-green-400 text-xs">
+                            Sukses
+                          </span>
+                        )}
+                        {pay?.status?.toLowerCase() === "pending" && (
+                          <span className="px-2 py-1 rounded bg-yellow-600/30 text-yellow-400 text-xs">
+                            Pending
+                          </span>
+                        )}
+                        {pay?.status?.toLowerCase() === "failed" && (
+                          <span className="px-2 py-1 rounded bg-red-600/30 text-red-400 text-xs">
+                            Gagal
+                          </span>
+                        )}
+                      </td>
+                      <td className="p-4 font-semibold">
+                        {pay?.direction?.toLowerCase() === "in" ? (
+                          <span className="text-green-400">
+                            + Rp {pay?.amount?.toLocaleString("id-ID")}
+                          </span>
+                        ) : (
+                          <span className="text-red-400">
+                            - Rp {pay?.amount?.toLocaleString("id-ID")}
+                          </span>
+                        )}
+                      </td>
+                      <td className="p-4">
+                        {pay?.createdAt
+                          ? new Date(pay.createdAt).toLocaleString("id-ID")
+                          : "-"}
+                      </td>
+                    </tr>
+                  ))}
               </tbody>
+
             </table>
           </div>
         )}
