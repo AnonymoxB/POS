@@ -8,6 +8,7 @@ const paymentSchema = new mongoose.Schema(
       type: String,
       enum: ["Purchase", "Order", "Expense"],
       required: true,
+      set: (v) => v.charAt(0).toUpperCase() + v.slice(1).toLowerCase(),
     },
     sourceId: {
       type: mongoose.Schema.Types.ObjectId,
