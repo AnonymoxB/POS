@@ -1,7 +1,7 @@
 const Payment = require("../models/paymentModel");
 const { getNextSequence } = require("./sequenceHelper");
 
-exports.savePayment = async (sourceType, sourceId, amount, method = "Cash", direction = "In", userId = null, session = null) => {
+exports.savePaymentFromPurchase = async (sourceType, sourceId, amount, method = "Cash", direction = "In", userId = null, session = null) => {
   const seq = await getNextSequence(sourceType);
   const paddedSeq = String(seq).padStart(4, "0");
 
