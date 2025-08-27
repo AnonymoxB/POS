@@ -51,7 +51,15 @@ exports.createPurchase = async (req, res) => {
     session.startTransaction();
 
     const { supplier, items } = req.body;
-    const grandTotal = items.reduce((sum, item) => sum + item.total, 0);
+
+    if (!items || items.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Items tidak boleh kosong",
+      });
+    }
+
+    const grandTotal = items.reduce((sum, item) => sum + (item.total || 0), 0);
 
     // 🔹 generate purchaseId
     const purchaseId = `PUR-${Date.now()}`;
@@ -71,16 +79,11 @@ exports.createPurchase = async (req, res) => {
       const newStock = oldStock + item.quantity;
 
       product.stock = newStock;
-      product.price =
-        newStock > 0 ? (oldValue + newValue) / newStock : item.price;
+      product.price = newStock > 0 ? (oldValue + newValue) / newStock : item.price;
       await product.save({ session });
 
       // hitung unitBase & qtyBase
-      const { unitBase, qtyBase } = await getBaseUnitAndQty(
-        item.unit,
-        item.quantity,
-        session
-      );
+      const { unitBase, qtyBase } = await getBaseUnitAndQty(item.unit, item.quantity, session);
 
       await StockTransaction.create(
         [
@@ -98,14 +101,22 @@ exports.createPurchase = async (req, res) => {
       );
     }
 
-    // ✅ commit transaksi database
-    await session.commitTransaction();
-    session.endSession();
-
     const savedPurchase = purchase[0];
 
-    // 🔹 simpan Payment otomatis
-    await savePaymentFromPurchase(savedPurchase, req.user?._id);
+    // 🔹 simpan Payment otomatis dengan parameter lengkap
+    await savePaymentFromPurchase(
+      "Purchase",              // sourceType
+      savedPurchase._id,       // sourceId
+      grandTotal,              // amount
+      "Cash",                  // method
+      "In",                    // direction
+      req.user?._id,           // userId
+      session                  // session
+    );
+
+    
+    await session.commitTransaction();
+    session.endSession();
 
     res.status(201).json({
       success: true,
@@ -120,6 +131,7 @@ exports.createPurchase = async (req, res) => {
     res.status(400).json({ success: false, message: error.message });
   }
 };
+
 
 
 
