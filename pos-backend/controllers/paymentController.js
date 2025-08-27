@@ -101,8 +101,6 @@ const deletePayment = async (req, res, next) => {
   }
 };
 
-const getNextSequence = require("../utils/getNextSequence");
-const Payment = require("../models/paymentModel");
 
 //simpan payment dari Order
 const savePaymentFromOrder = async (order, userId) => {
