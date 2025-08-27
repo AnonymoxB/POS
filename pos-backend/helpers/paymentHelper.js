@@ -1,20 +1,24 @@
 const Payment = require("../models/paymentModel");
+const { getNextSequence } = require("./sequenceHelper");
 
-exports.savePaymentFromPurchase = async (purchase, userId, session = null) => {
-  const totalAmount =
-    purchase.grandTotal ||
-    purchase.items?.reduce((sum, i) => sum + (i.total || 0), 0) ||
-    0;
+exports.savePayment = async (sourceType, sourceId, amount, method = "Cash", direction = "In", userId = null, session = null) => {
+  const seq = await getNextSequence(sourceType);
+  const paddedSeq = String(seq).padStart(4, "0");
+
+  let prefix = "PAY";
+  if (sourceType === "Purchase") prefix = "PUR";
+  if (sourceType === "Order") prefix = "ORD";
+  if (sourceType === "Expense") prefix = "EXP";
 
   const payment = new Payment({
-    paymentId: `PAY-${Date.now()}`, 
-    sourceType: "Purchase",       
-    sourceId: purchase._id,   
-    amount: totalAmount,
-    method: "Cash",                
-    status: "Success",                
-    direction: "Out",              
-    note: "Purchase Payment",
+    paymentId: `${prefix}-${paddedSeq}`,
+    sourceType,
+    sourceId,
+    amount,
+    method,
+    status: "Success",
+    direction,
+    note: `${sourceType} Payment`,
     createdBy: userId,
   });
 

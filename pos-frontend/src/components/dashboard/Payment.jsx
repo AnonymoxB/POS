@@ -13,24 +13,26 @@ import {
   Pie,
   Cell,
 } from "recharts";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 
 const Payment = () => {
   const [payments, setPayments] = useState([]);
-  const [filteredPayments, setFilteredPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [filter, setFilter] = useState("all");
 
-  const [startDate, setStartDate] = useState(null);
-  const [endDate, setEndDate] = useState(null);
+  // Search & Pagination
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   useEffect(() => {
     const fetchPayments = async () => {
       try {
         const response = await getPayments();
         setPayments(response.data.data);
-        setFilteredPayments(response.data.data);
       } catch (error) {
         console.error("Error fetching payments", error);
         setError("Gagal memuat data pembayaran");
@@ -42,261 +44,238 @@ const Payment = () => {
     fetchPayments();
   }, []);
 
-  useEffect(() => {
-    filterPayments();
-  }, [filter, payments, startDate, endDate]);
+  if (loading) return <p className="text-[#ababab]">Loading...</p>;
+  if (error) return <p className="text-red-500">{error}</p>;
 
-  const filterPayments = () => {
-    const now = new Date();
-    let filtered = [];
+  // Filter by search
+  const filteredPayments = payments.filter(
+    (pay) =>
+      pay.paymentId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      pay.sourceType?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      pay.method?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
-    switch (filter) {
-      case "today":
-        filtered = payments.filter((p) => {
-          const date = new Date(p.createdAt);
-          return date.toDateString() === now.toDateString();
-        });
-        break;
-      case "week": {
-        const startOfWeek = new Date(now);
-        startOfWeek.setDate(now.getDate() - now.getDay());
-        filtered = payments.filter((p) => {
-          const date = new Date(p.createdAt);
-          return date >= startOfWeek && date <= now;
-        });
-        break;
+  // Pagination
+  const totalPages = Math.ceil(filteredPayments.length / itemsPerPage);
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentPayments = filteredPayments.slice(indexOfFirstItem, indexOfLastItem);
+
+  const getPagination = () => {
+    const pages = [];
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
       }
-      case "month":
-        filtered = payments.filter((p) => {
-          const date = new Date(p.createdAt);
-          return (
-            date.getMonth() === now.getMonth() &&
-            date.getFullYear() === now.getFullYear()
-          );
-        });
-        break;
-      case "custom":
-        if (startDate && endDate) {
-          filtered = payments.filter((p) => {
-            const date = new Date(p.createdAt);
-            return date >= startDate && date <= endDate;
-          });
-        } else {
-          filtered = payments;
-        }
-        break;
-      default:
-        filtered = payments;
+    } else {
+      pages.push(1);
+      if (currentPage > 3) pages.push("...");
+      const startPage = Math.max(2, currentPage - 1);
+      const endPage = Math.min(totalPages - 1, currentPage + 1);
+      for (let i = startPage; i <= endPage; i++) {
+        pages.push(i);
+      }
+      if (currentPage < totalPages - 2) pages.push("...");
+      pages.push(totalPages);
     }
-
-    setFilteredPayments(filtered);
+    return pages;
   };
 
-  
-  const totalIn = filteredPayments
-    .filter((p) => p.direction === "In")
-    .reduce((acc, curr) => acc + (curr.amount || 0), 0);
-
-  const totalOut = filteredPayments
-    .filter((p) => p.direction === "Out")
-    .reduce((acc, curr) => acc + (curr.amount || 0), 0);
-
-  const netTotal = totalIn - totalOut;
-
-  
-  const chartData = [];
-  const grouped = {};
-
-  filteredPayments.forEach((p) => {
-    const date = new Date(p.createdAt);
-    const key = `${date.getMonth() + 1}/${date.getFullYear()}`;
-    if (!grouped[key]) grouped[key] = { month: key, masuk: 0, keluar: 0 };
-
-    if (p.direction === "In") {
-      grouped[key].masuk += p.amount || 0;
-    } else {
-      grouped[key].keluar += p.amount || 0;
-    }
-  });
-
-  for (let key in grouped) {
-    chartData.push(grouped[key]);
-  }
-
   return (
-    <div className="container overflow-y-scroll h-[700px] scrollbar-hide mx-auto bg-[#262626] p-4 rounded-lg">
-      {/* Filter & Header */}
-      <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
-        <h2 className="text-[#f5f5f5] text-xl font-semibold">Payment History</h2>
-        <div className="flex items-center gap-2">
-          <select
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-            className="bg-[#333] text-[#f5f5f5] border border-gray-600 rounded-md px-3 py-1 text-sm"
-          >
-            <option value="all">Semua</option>
-            <option value="today">Hari Ini</option>
-            <option value="week">Minggu Ini</option>
-            <option value="month">Bulan Ini</option>
-            <option value="custom">Custom Tanggal</option>
-          </select>
+    <Card className="bg-[#262626] text-white">
+      <CardContent className="p-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
+          <h2 className="text-xl font-bold">Daftar Payment</h2>
+        </div>
 
-          {filter === "custom" && (
-            <div className="flex items-center gap-2">
-              <DatePicker
-                selected={startDate}
-                onChange={(date) => setStartDate(date)}
-                selectsStart
-                startDate={startDate}
-                endDate={endDate}
-                dateFormat="dd/MM/yyyy"
-                placeholderText="Mulai"
-                className="bg-[#333] text-[#f5f5f5] border border-gray-600 rounded-md px-3 py-1 text-sm"
-              />
-              <span className="text-[#f5f5f5]">sampai</span>
-              <DatePicker
-                selected={endDate}
-                onChange={(date) => setEndDate(date)}
-                selectsEnd
-                startDate={startDate}
-                endDate={endDate}
-                minDate={startDate}
-                dateFormat="dd/MM/yyyy"
-                placeholderText="Selesai"
-                className="bg-[#333] text-[#f5f5f5] border border-gray-600 rounded-md px-3 py-1 text-sm"
-              />
-            </div>
-          )}
+        {/* Search */}
+        <div className="mb-4">
+          <Input
+            placeholder="Cari berdasarkan Payment ID, Source, atau Metode..."
+            value={searchTerm}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="bg-[#333] text-white border-gray-600"
+          />
         </div>
-      </div>
 
-      {/* Ringkasan total */}
-      <div className="text-[#f5f5f5] mb-6 text-sm space-y-1">
-        <div>
-          Total Masuk:{" "}
-          <span className="font-bold text-green-400">
-            Rp {totalIn.toLocaleString("id-ID")}
-          </span>
-        </div>
-        <div>
-          Total Keluar:{" "}
-          <span className="font-bold text-red-400">
-            Rp {totalOut.toLocaleString("id-ID")}
-          </span>
-        </div>
-        <div>
-          Saldo Bersih:{" "}
-          <span className="font-bold text-blue-400">
-            Rp {netTotal.toLocaleString("id-ID")}
-          </span>
-        </div>
-      </div>
-
-      {/* Tabel data */}
-        {error ? (
-          <p className="text-red-500">{error}</p>
-        ) : loading ? (
-          <p className="text-[#ababab]">Loading...</p>
-        ) : filteredPayments.length === 0 ? (
-          <p className="text-[#ababab]">Tidak ada data pembayaran.</p>
+        {currentPayments.length === 0 ? (
+          <p className="text-gray-400">Tidak ada data pembayaran.</p>
         ) : (
-          <div className="w-full overflow-x-auto max-w-full">
-            <table className="w-full text-left text-[#f5f5f5]">
-              <thead className="bg-[#333] text-[#ababab]">
-                <tr>
-                  <th className="p-3">#</th>
-                  <th className="p-3">Payment ID</th>
-                  <th className="p-3">Source</th>
-                  <th className="p-3">Arah</th>
-                  <th className="p-3">Metode</th>
-                  <th className="p-3">Status</th>
-                  <th className="p-3">Jumlah</th>
-                  <th className="p-3">Tanggal</th>
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse border border-gray-600 text-sm">
+              <thead>
+                <tr className="bg-[#333] text-gray-300">
+                  <th className="border border-gray-600 px-3 py-2">#</th>
+                  <th className="border border-gray-600 px-3 py-2">Payment ID</th>
+                  <th className="border border-gray-600 px-3 py-2">Source</th>
+                  <th className="border border-gray-600 px-3 py-2">Arah</th>
+                  <th className="border border-gray-600 px-3 py-2">Metode</th>
+                  <th className="border border-gray-600 px-3 py-2">Status</th>
+                  <th className="border border-gray-600 px-3 py-2">Jumlah</th>
+                  <th className="border border-gray-600 px-3 py-2">Tanggal</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredPayments
-                  .filter((pay) => pay)
-                  .map((pay, index) => (
-                    <tr
-                      key={pay?._id || index}
-                      className="border-b border-gray-600 hover:bg-[#333]"
-                    >
-                      <td className="p-4 text-center">{index + 1}</td>
-                      <td className="p-4 font-mono">{pay?.paymentId || "-"}</td>
-                      <td className="p-4">
-                        <span
-                          className={`px-2 py-1 rounded text-xs font-semibold mr-2
-                            ${
-                              pay?.sourceType?.toLowerCase() === "purchase"
-                                ? "bg-blue-600/30 text-blue-400"
-                                : pay?.sourceType?.toLowerCase() === "order"
-                                ? "bg-green-600/30 text-green-400"
-                                : pay?.sourceType?.toLowerCase() === "expense"
-                                ? "bg-red-600/30 text-red-400"
-                                : "bg-gray-600/30 text-gray-300"
-                            }`}
-                        >
-                          {pay?.sourceType || "-"}
+                {currentPayments.map((pay, index) => (
+                  <tr
+                    key={pay?._id || index}
+                    className="border-t border-gray-700 hover:bg-[#333]/50"
+                  >
+                    <td className="border border-gray-600 px-3 py-2 text-center">
+                      {indexOfFirstItem + index + 1}
+                    </td>
+                    <td className="border border-gray-600 px-3 py-2 font-mono">
+                      {pay?.paymentId || "-"}
+                    </td>
+                    <td className="border border-gray-600 px-3 py-2">
+                      <span
+                        className={`px-2 py-1 rounded text-xs font-semibold mr-2
+                          ${
+                            pay?.sourceType?.toLowerCase() === "purchase"
+                              ? "bg-blue-600/30 text-blue-400"
+                              : pay?.sourceType?.toLowerCase() === "order"
+                              ? "bg-green-600/30 text-green-400"
+                              : pay?.sourceType?.toLowerCase() === "expense"
+                              ? "bg-red-600/30 text-red-400"
+                              : "bg-gray-600/30 text-gray-300"
+                          }`}
+                      >
+                        {pay?.sourceType || "-"}
+                      </span>
+                    </td>
+                    <td className="border border-gray-600 px-3 py-2">
+                      {pay?.direction?.toLowerCase() === "in" ? (
+                        <span className="text-green-400 font-semibold">Masuk</span>
+                      ) : (
+                        <span className="text-red-400 font-semibold">Keluar</span>
+                      )}
+                    </td>
+                    <td className="border border-gray-600 px-3 py-2 capitalize">
+                      {pay?.method || "-"}
+                    </td>
+                    <td className="border border-gray-600 px-3 py-2">
+                      {pay?.status?.toLowerCase() === "success" && (
+                        <span className="px-2 py-1 rounded bg-green-600/30 text-green-400 text-xs">
+                          Sukses
                         </span>
-
-                        <span className="text-gray-400">
-                          {typeof pay?.sourceId === "object"
-                            ? pay?.sourceId?._id || "-"
-                            : pay?.sourceId || "-"}
+                      )}
+                      {pay?.status?.toLowerCase() === "pending" && (
+                        <span className="px-2 py-1 rounded bg-yellow-600/30 text-yellow-400 text-xs">
+                          Pending
                         </span>
-                      </td>
-                      <td className="p-4">
-                        {pay?.direction?.toLowerCase() === "in" ? (
-                          <span className="text-green-400 font-semibold">Masuk</span>
-                        ) : (
-                          <span className="text-red-400 font-semibold">Keluar</span>
-                        )}
-                      </td>
-                      <td className="p-4 capitalize">{pay?.method || "-"}</td>
-                      <td className="p-4">
-                        {pay?.status?.toLowerCase() === "success" && (
-                          <span className="px-2 py-1 rounded bg-green-600/30 text-green-400 text-xs">
-                            Sukses
-                          </span>
-                        )}
-                        {pay?.status?.toLowerCase() === "pending" && (
-                          <span className="px-2 py-1 rounded bg-yellow-600/30 text-yellow-400 text-xs">
-                            Pending
-                          </span>
-                        )}
-                        {pay?.status?.toLowerCase() === "failed" && (
-                          <span className="px-2 py-1 rounded bg-red-600/30 text-red-400 text-xs">
-                            Gagal
-                          </span>
-                        )}
-                      </td>
-                      <td className="p-4 font-semibold">
-                        {pay?.direction?.toLowerCase() === "in" ? (
-                          <span className="text-green-400">
-                            + Rp {pay?.amount?.toLocaleString("id-ID")}
-                          </span>
-                        ) : (
-                          <span className="text-red-400">
-                            - Rp {pay?.amount?.toLocaleString("id-ID")}
-                          </span>
-                        )}
-                      </td>
-                      <td className="p-4">
-                        {pay?.createdAt
-                          ? new Date(pay.createdAt).toLocaleString("id-ID")
-                          : "-"}
-                      </td>
-                    </tr>
-                  ))}
+                      )}
+                      {pay?.status?.toLowerCase() === "failed" && (
+                        <span className="px-2 py-1 rounded bg-red-600/30 text-red-400 text-xs">
+                          Gagal
+                        </span>
+                      )}
+                    </td>
+                    <td className="border border-gray-600 px-3 py-2 font-semibold">
+                      {pay?.direction?.toLowerCase() === "in" ? (
+                        <span className="text-green-400">
+                          + Rp {pay?.amount?.toLocaleString("id-ID")}
+                        </span>
+                      ) : (
+                        <span className="text-red-400">
+                          - Rp {pay?.amount?.toLocaleString("id-ID")}
+                        </span>
+                      )}
+                    </td>
+                    <td className="border border-gray-600 px-3 py-2">
+                      {pay?.createdAt
+                        ? new Date(pay.createdAt).toLocaleString("id-ID")
+                        : "-"}
+                    </td>
+                  </tr>
+                ))}
               </tbody>
-
             </table>
+
+            {/* Pagination */}
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-3 mt-4">
+              <div className="text-gray-400 text-sm">
+                {filteredPayments.length > 0 && (
+                  <span>
+                    Menampilkan{" "}
+                    <b>{indexOfFirstItem + 1}</b>–
+                    <b>
+                      {indexOfLastItem > filteredPayments.length
+                        ? filteredPayments.length
+                        : indexOfLastItem}
+                    </b>{" "}
+                    dari <b>{filteredPayments.length}</b> payment
+                  </span>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2 text-gray-300">
+                <label htmlFor="itemsPerPage">Tampilkan</label>
+                <select
+                  id="itemsPerPage"
+                  value={itemsPerPage}
+                  onChange={(e) => {
+                    setItemsPerPage(Number(e.target.value));
+                    setCurrentPage(1);
+                  }}
+                  className="bg-[#333] text-white border border-gray-600 rounded px-2 py-1"
+                >
+                  <option value={5}>5</option>
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                </select>
+                <span>per halaman</span>
+              </div>
+
+              <div className="flex items-center gap-1">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage((prev) => prev - 1)}
+                >
+                  Prev
+                </Button>
+
+                {getPagination().map((page, idx) =>
+                  page === "..." ? (
+                    <span key={idx} className="px-2 text-gray-400">
+                      ...
+                    </span>
+                  ) : (
+                    <Button
+                      key={page}
+                      size="sm"
+                      variant={currentPage === page ? "default" : "outline"}
+                      className={`${
+                        currentPage === page
+                          ? "bg-green-600 text-white"
+                          : "bg-[#333] text-gray-300 hover:bg-gray-700"
+                      }`}
+                      onClick={() => setCurrentPage(page)}
+                    >
+                      {page}
+                    </Button>
+                  )
+                )}
+
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={currentPage === totalPages}
+                  onClick={() => setCurrentPage((prev) => prev + 1)}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
           </div>
         )}
-
-      
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 
