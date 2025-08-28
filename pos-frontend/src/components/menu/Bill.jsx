@@ -211,7 +211,7 @@ const Bill = () => {
 
     {/* Payment Method */}
     <div className="flex flex-col sm:flex-row items-stretch gap-3 px-5 mt-4">
-      {["Cash", "QRIS", "Online"].map((method) => (
+      {["Cash", "QRIS"].map((method) => (
         <button
           key={method}
           onClick={() => setPaymentMethod(method)}
