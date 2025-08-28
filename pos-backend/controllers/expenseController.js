@@ -1,5 +1,7 @@
 const Expense = require("../models/expenseModel");
 const ExcelJS = require("exceljs");
+const { savePaymentFromExpense } = require("./paymentController");
+
 
 // GET semua expense
 exports.getExpenses = async (req, res) => {
@@ -30,7 +32,10 @@ exports.createExpense = async (req, res) => {
     const numericAmount = Number(amount);
 
     if (!numericAmount || numericAmount <= 0) {
-      return res.status(400).json({ success: false, message: "Amount harus lebih dari 0" });
+      return res.status(400).json({
+        success: false,
+        message: "Amount harus lebih dari 0",
+      });
     }
 
     const newExpense = new Expense({
@@ -44,15 +49,16 @@ exports.createExpense = async (req, res) => {
     const expense = await newExpense.save();
     console.log("✅ Expense saved:", expense);
 
-    const payment = await savePaymentFromExpense(expense, req.user?._id);
-    console.log("✅ Payment saved:", payment);
+    await savePaymentFromExpense(expense, req.user?._id);
+    console.log("✅ Payment saved");
 
     res.status(201).json({ success: true, data: expense });
   } catch (err) {
-    console.error("🔥 createExpense error:", err); // 🔥 lihat error detail di server
+    console.error("🔥 createExpense error:", err);
     res.status(500).json({ success: false, message: err.message });
   }
 };
+
 
 
 
