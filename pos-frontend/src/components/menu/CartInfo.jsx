@@ -37,7 +37,7 @@ const CartInfo = () => {
       </h1>
 
       <div
-        className="mt-4 overflow-y-auto sm:overflow-y-scroll scrollbar-hide h-[300px] sm:h-[380px]"
+        className="mt-4 overflow-y-auto sm:overflow-y-scroll scrollbar-hide h-[200px] sm:h-[280px]"
         ref={scrolLRef}
       >
         {cartData.length === 0 ? (
