@@ -110,12 +110,12 @@ const Payment = () => {
                 <tr className="bg-[#333] text-gray-300">
                   <th className="border border-gray-600 px-3 py-2">#</th>
                   <th className="border border-gray-600 px-3 py-2">Payment ID</th>
+                  <th className="border border-gray-600 px-3 py-2">Tanggal</th>
                   <th className="border border-gray-600 px-3 py-2">Source</th>
                   <th className="border border-gray-600 px-3 py-2">Arah</th>
                   <th className="border border-gray-600 px-3 py-2">Metode</th>
                   <th className="border border-gray-600 px-3 py-2">Status</th>
-                  <th className="border border-gray-600 px-3 py-2">Jumlah</th>
-                  <th className="border border-gray-600 px-3 py-2">Tanggal</th>
+                  <th className="border border-gray-600 px-3 py-2 text-right">Jumlah</th>
                 </tr>
               </thead>
               <tbody>
@@ -130,7 +130,12 @@ const Payment = () => {
                     <td className="border border-gray-600 px-3 py-2 font-mono">
                       {pay?.paymentId || "-"}
                     </td>
-                    <td className="border border-gray-600 px-3 py-2">
+                    <td className="border border-gray-600 px-3 py-2 text-center">
+                      {pay?.createdAt
+                        ? new Date(pay.createdAt).toLocaleString("id-ID")
+                        : "-"}
+                    </td>
+                    <td className="border border-gray-600 px-3 py-2 text-center">
                       <span
                         className={`px-2 py-1 rounded text-xs font-semibold mr-2
                           ${
@@ -146,17 +151,17 @@ const Payment = () => {
                         {pay?.sourceType || "-"}
                       </span>
                     </td>
-                    <td className="border border-gray-600 px-3 py-2">
+                    <td className="border border-gray-600 px-3 py-2 text-center">
                       {pay?.direction?.toLowerCase() === "in" ? (
                         <span className="text-green-400 font-semibold">Masuk</span>
                       ) : (
                         <span className="text-red-400 font-semibold">Keluar</span>
                       )}
                     </td>
-                    <td className="border border-gray-600 px-3 py-2 capitalize">
+                    <td className="border border-gray-600 px-3 py-2 capitalize text-center">
                       {pay?.method || "-"}
                     </td>
-                    <td className="border border-gray-600 px-3 py-2">
+                    <td className="border border-gray-600 px-3 py-2 text-center">
                       {pay?.status?.toLowerCase() === "success" && (
                         <span className="px-2 py-1 rounded bg-green-600/30 text-green-400 text-xs">
                           Sukses
@@ -173,7 +178,7 @@ const Payment = () => {
                         </span>
                       )}
                     </td>
-                    <td className="border border-gray-600 px-3 py-2 font-semibold">
+                    <td className="border border-gray-600 px-3 py-2 font-semibold text-right">
                       {pay?.direction?.toLowerCase() === "in" ? (
                         <span className="text-green-400">
                           + Rp {pay?.amount?.toLocaleString("id-ID")}
@@ -183,11 +188,6 @@ const Payment = () => {
                           - Rp {pay?.amount?.toLocaleString("id-ID")}
                         </span>
                       )}
-                    </td>
-                    <td className="border border-gray-600 px-3 py-2">
-                      {pay?.createdAt
-                        ? new Date(pay.createdAt).toLocaleString("id-ID")
-                        : "-"}
                     </td>
                   </tr>
                 ))}

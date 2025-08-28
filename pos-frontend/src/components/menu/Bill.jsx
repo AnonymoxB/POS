@@ -180,63 +180,68 @@ const Bill = () => {
   });
 
   return (
-    <>
-      <div className="flex items-center justify-between px-5 mt-2">
-        <p className="text-xs text-[#ababab] font-medium mt-2">
-          Items({cartData.length})
+  <>
+    {/* Summary */}
+    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-5 mt-2 gap-2 sm:gap-0">
+      <p className="text-xs text-[#ababab] font-medium">
+        Items({cartData.length})
+      </p>
+      <h1 className="text-[#f5f5f5] text-md font-bold">
+        Rp {total.toFixed(0)}
+      </h1>
+    </div>
+
+    {/* {taxRate > 0 && (
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-5 mt-2 gap-2 sm:gap-0">
+        <p className="text-xs text-[#ababab] font-medium">
+          Tax ({taxRate}%)
         </p>
         <h1 className="text-[#f5f5f5] text-md font-bold">
-          Rp {total.toFixed(0)}
+          Rp {taxAmount.toFixed(0)}
         </h1>
       </div>
-      {/* <div className="flex items-center justify-between px-5 mt-2">
-        <p className="text-xs text-[#ababab] font-medium mt-2">Tax(5.25%)</p>
-        <h1 className="text-[#f5f5f5] text-md font-bold">Rp {tax.toFixed(2)}</h1>
-      </div> */}
-      <div className="flex items-center justify-between px-5 mt-2">
-        <p className="text-xs text-[#ababab] font-medium mt-2">
-          Total
-        </p>
-        <h1 className="text-[#f5f5f5] text-md font-bold">
-          Rp {totalPriceWithTax.toFixed(0)}
-        </h1>
-      </div>
-      <div className="flex items-center gap-3 px-5 mt-4">
-        <button
-          onClick={() => setPaymentMethod("Cash")}
-          className={`bg-[#1f1f1f] px-4 py-3 w-full rounded-lg text-[#ababab] font-semibold ${
-            paymentMethod === "Cash" ? "bg-[#383737]" : ""
-          }`}
-        >
-          Cash
-        </button>
-        <button
-          onClick={() => setPaymentMethod("Online")}
-          className={`bg-[#1f1f1f] px-4 py-3 w-full rounded-lg text-[#ababab] font-semibold ${
-            paymentMethod === "Online" ? "bg-[#383737]" : ""
-          }`}
-        >
-          QRIS
-        </button>
-      </div>
+    )} */}
 
-      <div className="flex items-center gap-3 px-5 mt-4">
-        <button className="bg-[#025cca] px-4 py-3 w-full rounded-lg text-[#f5f5f5] font-semibold text-lg">
-          Print Receipt
-        </button>
-        <button
-          onClick={handlePlaceOrder}
-          className="bg-[#f6b100] px-4 py-3 w-full rounded-lg text-[#1f1f1f] font-semibold text-lg"
-        >
-          Place Order
-        </button>
-      </div>
+    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-5 mt-2 gap-2 sm:gap-0 font-bold text-lg">
+      <p className="text-xs sm:text-md text-[#ababab]">Total</p>
+      <h1 className="text-[#f5f5f5] text-md sm:text-lg">
+        Rp {totalPriceWithTax.toFixed(0)}
+      </h1>
+    </div>
 
-      {showInvoice && (
-        <Invoice orderInfo={orderInfo} setShowInvoice={setShowInvoice} />
-      )}
-    </>
-  );
+    {/* Payment Method */}
+    <div className="flex flex-col sm:flex-row items-stretch gap-3 px-5 mt-4">
+      {["Cash", "QRIS", "Online"].map((method) => (
+        <button
+          key={method}
+          onClick={() => setPaymentMethod(method)}
+          className={`flex-1 px-4 py-3 rounded-lg font-semibold transition-colors duration-200
+            ${paymentMethod === method ? "bg-[#383737] text-white" : "bg-[#1f1f1f] text-[#ababab] hover:bg-[#2a2a2a]"}`}
+        >
+          {method}
+        </button>
+      ))}
+    </div>
+
+    {/* Action Buttons */}
+    <div className="flex flex-col sm:flex-row items-stretch gap-3 px-5 mt-4">
+      <button className="flex-1 bg-[#025cca] px-4 py-3 rounded-lg text-[#f5f5f5] font-semibold text-lg">
+        Print Receipt
+      </button>
+      <button
+        onClick={handlePlaceOrder}
+        className="flex-1 bg-[#f6b100] px-4 py-3 rounded-lg text-[#1f1f1f] font-semibold text-lg"
+      >
+        Place Order
+      </button>
+    </div>
+
+    {/* Invoice */}
+    {showInvoice && (
+      <Invoice orderInfo={orderInfo} setShowInvoice={setShowInvoice} />
+    )}
+  </>
+);
 };
 
 export default Bill;
