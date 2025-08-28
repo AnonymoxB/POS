@@ -32,46 +32,63 @@ const CartInfo = () => {
 
   return (
     <div className="px-4 py-2">
-      <h1 className="text-lg text-[#e4e4e4] font-semibold tracking-wide">
+      <h1 className="text-lg sm:text-xl text-[#e4e4e4] font-semibold tracking-wide">
         Order Details
       </h1>
-      <div className="mt-4 overflow-y-scroll scrollbar-hide h-[380px]" ref={scrolLRef} >
+
+      <div
+        className="mt-4 overflow-y-auto sm:overflow-y-scroll scrollbar-hide h-[300px] sm:h-[380px]"
+        ref={scrolLRef}
+      >
         {cartData.length === 0 ? (
-          <p className="text-[#ababab] text-sm flex justify-center items-center h-[380px]">Your cart is empty. Start adding items!</p>
-        ) : cartData.map((item) => {
-          return (
-            <div key={`${item.id}-${item.name}`} className="bg-[#1f1f1f] rounded-lg px-4 py-4 mb-2">
-              <div className="flex items-center justify-between">
-                <h1 className="text-[#ababab] font-semibold tracling-wide text-md">
+          <p className="text-[#ababab] text-sm flex justify-center items-center h-full">
+            Your cart is empty. Start adding items!
+          </p>
+        ) : (
+          cartData.map((item) => (
+            <div
+              key={`${item.id}-${item.name}`}
+              className="bg-[#1f1f1f] rounded-lg px-4 py-3 sm:py-4 mb-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4"
+            >
+              {/* Nama & Qty */}
+              <div className="flex justify-between items-center w-full sm:w-auto">
+                <h1 className="text-[#ababab] font-semibold tracking-wide text-sm sm:text-md">
                   {item.name}
                 </h1>
-                <p className="text-[#ababab] font-semibold">x{item.quantity}</p>
+                <p className="text-[#ababab] font-semibold text-sm sm:text-md">
+                  x{item.quantity}
+                </p>
               </div>
-              <div className="flex items-center justify-between mt-3">
-                <div className="flex items-center gap-3">
+
+              {/* Controls & Price */}
+              <div className="flex justify-between items-center w-full sm:w-auto mt-2 sm:mt-0 gap-3 sm:gap-4">
+                <div className="flex items-center gap-2 sm:gap-3">
                   <RiDeleteBin2Fill
                     onClick={() => handleRemove(item.id)}
                     className="text-[#ababab] cursor-pointer"
-                    size={20}
+                    size={18}
                   />
                   <FaCirclePlus
-                    onClick={()=> handleAddOne(item.id) }
+                    onClick={() => handleAddOne(item.id)}
                     className="text-[#ababab] cursor-pointer"
-                    size={20}
+                    size={18}
                   />
                   <FaCircleMinus
-                    onClick={()=> handleDecres(item.id) }
+                    onClick={() => handleDecres(item.id)}
                     className="text-[#ababab] cursor-pointer"
-                    size={20}
+                    size={18}
                   />
                 </div>
-                <p className="text-[#f5f5f5] text-md font-bold">Rp {item.price}</p>
+                <p className="text-[#f5f5f5] text-sm sm:text-md font-bold">
+                  Rp {item.price.toLocaleString("id-ID")}
+                </p>
               </div>
             </div>
-          );
-        })}
+          ))
+        )}
       </div>
     </div>
+
   );
 };
 
