@@ -157,7 +157,7 @@ const savePaymentFromExpense = async (expense, userId) => {
     sourceId: expense._id,
     method: expense.paymentMethod || "Cash",
     status: "Success",
-    amount: expense.total || 0,
+    amount: expense.amount || 0,
     note: `Payment for expense ${expense._id}`,
     direction: "Out",
     createdBy: userId || null,
@@ -166,6 +166,7 @@ const savePaymentFromExpense = async (expense, userId) => {
   await payment.save();
   return payment;
 };
+
 
 
 //  GET summary
