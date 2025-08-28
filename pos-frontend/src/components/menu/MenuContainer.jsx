@@ -121,20 +121,20 @@ const MenuContainer = () => {
       <hr className="border-gray-700 border-t-2 mt-4" />
 
       {/* Dishes */}
-      <div className="flex-1 overflow-y-auto px-2 sm:px-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 py-4">
+      <div className="flex-1 overflow-y-auto px-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 py-4">
           {filteredDishes.map((dish) => (
             <div
               key={dish._id}
-              className="flex flex-col justify-between p-3 sm:p-4 rounded-lg hover:bg-[#2a2a2a] bg-[#1a1a1a] transition-all duration-200 w-full"
+              className="flex flex-col items-start justify-between p-4 rounded-lg cursor-pointer hover:bg-[#2a2a2a] bg-[#1a1a1a] transition-all duration-200"
             >
               <div className="flex items-start justify-between w-full">
-                <h1 className="text-white text-sm sm:text-base md:text-lg font-semibold">{dish.name}</h1>
+                <h1 className="text-white text-lg font-semibold">{dish.name}</h1>
                 <button
                   onClick={() => handleAddToCart(dish)}
-                  className="bg-[#2e4a40] text-[#02ca3a] p-1 sm:p-2 rounded-lg"
+                  className="bg-[#2e4a40] text-[#02ca3a] p-2 rounded-lg"
                 >
-                  <FaShoppingCart size={18} />
+                  <FaShoppingCart size={20} />
                 </button>
               </div>
 
@@ -143,24 +143,24 @@ const MenuContainer = () => {
                 <select
                   value={selectedTypes[dish._id] || "hot"}
                   onChange={(e) => handleTypeChange(dish._id, e.target.value)}
-                  className="bg-[#1f1f1f] text-white px-2 py-1 rounded-md text-xs sm:text-sm mt-2 w-full"
+                  className="bg-[#1f1f1f] text-white px-2 py-1 rounded-md text-sm mt-2"
                 >
                   <option value="hot">Hot</option>
                   <option value="ice">Ice</option>
                 </select>
               )}
 
-              <div className="flex items-center justify-between bg-[#1f1f1f] px-3 sm:px-4 py-2 rounded-lg gap-3 sm:gap-4 w-full mt-2">
+              <div className="flex items-center justify-between bg-[#1f1f1f] px-4 py-3 rounded-lg gap-6 w-full mt-2">
                 <button
                   onClick={() => decrement(dish._id)}
-                  className="text-yellow-500 text-lg sm:text-2xl"
+                  className="text-yellow-500 text-2xl"
                 >
                   &minus;
                 </button>
-                <span className="text-white text-sm sm:text-base">{itemCounts[dish._id] || 0}</span>
+                <span className="text-white">{itemCounts[dish._id] || 0}</span>
                 <button
                   onClick={() => increment(dish._id)}
-                  className="text-yellow-500 text-lg sm:text-2xl"
+                  className="text-yellow-500 text-2xl"
                 >
                   &#43;
                 </button>
@@ -169,7 +169,6 @@ const MenuContainer = () => {
           ))}
         </div>
       </div>
-
 
     </>
   );
