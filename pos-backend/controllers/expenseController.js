@@ -28,8 +28,10 @@ exports.createExpense = async (req, res) => {
   try {
     const { category, amount, note, date } = req.body;
 
-    
-    if (!amount || amount <= 0) {
+    const numericAmount = Number(amount);
+
+    // 🔹 Validasi amount
+    if (!numericAmount || numericAmount <= 0) {
       return res.status(400).json({
         success: false,
         message: "Amount harus lebih dari 0",
@@ -38,7 +40,7 @@ exports.createExpense = async (req, res) => {
 
     const newExpense = new Expense({
       category,
-      amount,
+      amount: numericAmount,
       note,
       date,
       createdBy: req.user?._id,
@@ -46,10 +48,12 @@ exports.createExpense = async (req, res) => {
 
     const expense = await newExpense.save();
 
+    
     await savePaymentFromExpense(expense, req.user?._id);
 
     res.status(201).json({ success: true, data: expense });
   } catch (err) {
+    console.error("🔥 createExpense error:", err);
     res.status(500).json({ success: false, message: err.message });
   }
 };
