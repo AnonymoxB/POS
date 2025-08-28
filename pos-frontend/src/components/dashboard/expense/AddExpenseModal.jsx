@@ -35,7 +35,7 @@ const AddExpenseModal = ({ isOpen, onClose, onAdded }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    mutate(form);
+    mutate({ ...form, amount: Number(form.amount) });
   };
 
   if (!isOpen) return null;

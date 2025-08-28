@@ -27,15 +27,10 @@ exports.getExpenseById = async (req, res) => {
 exports.createExpense = async (req, res) => {
   try {
     const { category, amount, note, date } = req.body;
-
     const numericAmount = Number(amount);
 
-    // 🔹 Validasi amount
     if (!numericAmount || numericAmount <= 0) {
-      return res.status(400).json({
-        success: false,
-        message: "Amount harus lebih dari 0",
-      });
+      return res.status(400).json({ success: false, message: "Amount harus lebih dari 0" });
     }
 
     const newExpense = new Expense({
@@ -47,16 +42,18 @@ exports.createExpense = async (req, res) => {
     });
 
     const expense = await newExpense.save();
+    console.log("✅ Expense saved:", expense);
 
-    
-    await savePaymentFromExpense(expense, req.user?._id);
+    const payment = await savePaymentFromExpense(expense, req.user?._id);
+    console.log("✅ Payment saved:", payment);
 
     res.status(201).json({ success: true, data: expense });
   } catch (err) {
-    console.error("🔥 createExpense error:", err);
+    console.error("🔥 createExpense error:", err); // 🔥 lihat error detail di server
     res.status(500).json({ success: false, message: err.message });
   }
 };
+
 
 
 
