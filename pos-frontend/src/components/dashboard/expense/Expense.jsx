@@ -87,7 +87,7 @@ const Expense = () => {
   // Filter berdasarkan search
   const filteredExpenses = expenses.filter(
     (exp) =>
-      exp.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      exp.note?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       exp.category?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -116,6 +116,9 @@ const Expense = () => {
     }
     return pages;
   };
+
+  // Hitung total amount
+  const totalAmount = currentExpenses.reduce((sum, exp) => sum + (exp.amount || 0), 0);
 
   return (
     <Card className="bg-[#262626] text-white">
@@ -192,18 +195,17 @@ const Expense = () => {
               </tbody>
             </table>
 
+            {/* Total */}
+            <div className="mt-2 text-right text-white font-semibold">
+              Total: Rp {totalAmount.toLocaleString("id-ID")}
+            </div>
+
             {/* Pagination */}
             <div className="flex flex-col sm:flex-row justify-between items-center gap-3 mt-4">
               <div className="text-gray-400 text-sm">
                 {filteredExpenses.length > 0 && (
                   <span>
-                    Menampilkan{" "}
-                    <b>{indexOfFirstItem + 1}</b>–
-                    <b>
-                      {indexOfLastItem > filteredExpenses.length
-                        ? filteredExpenses.length
-                        : indexOfLastItem}
-                    </b>{" "}
+                    Menampilkan <b>{indexOfFirstItem + 1}</b>–<b>{Math.min(indexOfLastItem, filteredExpenses.length)}</b>{" "}
                     dari <b>{filteredExpenses.length}</b> expense
                   </span>
                 )}

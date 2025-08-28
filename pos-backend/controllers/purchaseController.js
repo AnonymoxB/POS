@@ -109,7 +109,7 @@ exports.createPurchase = async (req, res) => {
       savedPurchase._id,       // sourceId
       grandTotal,              // amount
       "Cash",                  // method
-      "In",                    // direction
+      "Out",                    // direction
       req.user?._id,           // userId
       session                  // session
     );
