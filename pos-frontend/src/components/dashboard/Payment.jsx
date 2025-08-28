@@ -55,6 +55,31 @@ const Payment = () => {
       pay.method?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const summary = payments.reduce(
+  (acc, pay) => {
+    const source = pay.sourceType?.toLowerCase();
+    const amount = pay.amount || 0;
+
+    if (source === "expense") {
+      acc.expense.count += 1;
+      acc.expense.total += amount;
+    } else if (source === "purchase") {
+      acc.purchase.count += 1;
+      acc.purchase.total += amount;
+    } else if (source === "order") {
+      acc.order.count += 1;
+      acc.order.total += amount;
+    }
+
+    return acc;
+  },
+  {
+    expense: { count: 0, total: 0 },
+    purchase: { count: 0, total: 0 },
+    order: { count: 0, total: 0 },
+  }
+);
+
   // Pagination
   const totalPages = Math.ceil(filteredPayments.length / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -87,6 +112,20 @@ const Payment = () => {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
           <h2 className="text-xl font-bold">Daftar Payment</h2>
         </div>
+
+        {/* Summary jumlah per tipe */}
+          <div className="flex gap-4 mb-4">
+            <div className="bg-red-600/20 text-red-400 px-3 py-2 rounded font-semibold">
+              Expense: {summary.expense.count} | Rp {summary.expense.total.toLocaleString("id-ID")}
+            </div>
+            <div className="bg-blue-600/20 text-blue-400 px-3 py-2 rounded font-semibold">
+              Purchase: {summary.purchase.count} | Rp {summary.purchase.total.toLocaleString("id-ID")}
+            </div>
+            <div className="bg-green-600/20 text-green-400 px-3 py-2 rounded font-semibold">
+              Order: {summary.order.count} | Rp {summary.order.total.toLocaleString("id-ID")}
+            </div>
+          </div>
+
 
         {/* Search */}
         <div className="mb-4">

@@ -1,9 +1,12 @@
 import React, { useRef } from "react";
 import { motion } from "framer-motion";
 import { FaCheck } from "react-icons/fa6";
+import { useNavigate } from "react-router-dom";
 
 const Invoice = ({ orderInfo, setShowInvoice }) => {
   const invoiceRef = useRef(null);
+  const navigate = useNavigate();
+
   const handlePrint = () => {
     const printContent = invoiceRef.current.innerHTML;
     const WinPrint = window.open("", "", "width=900,height=650");
@@ -30,6 +33,11 @@ const Invoice = ({ orderInfo, setShowInvoice }) => {
       WinPrint.print();
       WinPrint.close();
     }, 1000);
+  };
+
+  const handleClose = () => {
+    setShowInvoice(false);
+    navigate("/"); // redirect ke halaman utama
   };
 
   return (
@@ -146,7 +154,7 @@ const Invoice = ({ orderInfo, setShowInvoice }) => {
             Print Receipt
           </button>
           <button
-            onClick={() => setShowInvoice(false)}
+            onClick={handleClose}
             className="text-red-500 hover:underline text-xs px-4 py-2 rounded-lg"
           >
             Close
