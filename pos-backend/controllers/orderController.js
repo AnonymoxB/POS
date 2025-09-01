@@ -95,26 +95,27 @@ const addOrder = async (req, res, next) => {
           throw createHttpError(400, `Konversi unit invalid untuk produk ${product.name}`);
         }
 
-        // DEBUG (opsional, bisa hapus nanti)
         console.log(
           `[STOCK] ${product.name}: ${totalBomQty} ${bom.unit.short} → ${qtyBase} ${product.defaultUnit.short}`
         );
 
+        // 🔒 Ambil ulang product dengan session (biar tidak race condition)
+        const productDoc = await Product.findById(product._id).session(session);
+        if (!productDoc) {
+          throw createHttpError(404, `Produk ${product.name} tidak ditemukan`);
+        }
 
         // cek stok cukup dulu
-        if (product.stockBase < qtyBase) {
+        if (productDoc.stockBase < qtyBase) {
           throw createHttpError(
             400,
-            `Stok ${product.name} tidak cukup. Dibutuhkan ${qtyBase} ${product.defaultUnit.short}, tersedia hanya ${product.stockBase}`
+            `Stok ${product.name} tidak cukup. Dibutuhkan ${qtyBase} ${product.defaultUnit.short}, tersedia hanya ${productDoc.stockBase}`
           );
         }
 
         // update stok product
-        await Product.updateOne(
-          { _id: product._id },
-          { $inc: { stockBase: -qtyBase } },
-          { session }
-        );
+        productDoc.stockBase -= qtyBase;
+        await productDoc.save({ session });
 
         // simpan transaksi stok
         await StockTransaction.create(
@@ -133,9 +134,9 @@ const addOrder = async (req, res, next) => {
           ],
           { session }
         );
-
       }
     }
+
 
     /**
      * 🔹 Simpan payment

@@ -3,8 +3,7 @@ const Purchase = require("../models/purchaseModel");
 const Product = require("../models/productModel");
 const StockTransaction = require("../models/stockModel");
 const Unit = require("../models/unitModel");
-const {savePaymentFromPurchase} = require("../helpers/paymentHelper");
-
+const { savePaymentFromPurchase } = require("../helpers/paymentHelper");
 
 // 🔧 Helper rekursif untuk cari baseUnit & qtyBase
 async function getBaseUnitAndQty(unitId, qty, session) {
@@ -29,7 +28,6 @@ async function getBaseUnitAndQty(unitId, qty, session) {
   );
 }
 
-
 exports.getPurchases = async (req, res) => {
   try {
     const purchases = await Purchase.find()
@@ -42,7 +40,6 @@ exports.getPurchases = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
-
 
 // ================= CREATE PURCHASE =================
 exports.createPurchase = async (req, res) => {
@@ -73,24 +70,29 @@ exports.createPurchase = async (req, res) => {
       const product = await Product.findById(item.product).session(session);
       if (!product) continue;
 
-      const oldStock = product.stock || 0;
-      const oldValue = oldStock * (product.price || 0);
-      const newValue = item.quantity * item.price;
-      const newStock = oldStock + item.quantity;
+      // hitung unitBase & qtyBase
+      const { unitBase, qtyBase } = await getBaseUnitAndQty(
+        item.unit,
+        item.quantity,
+        session
+      );
 
-      product.stock = newStock;
+      // update stockBase & harga rata-rata
+      const oldStock = product.stockBase || 0;
+      const oldValue = oldStock * (product.price || 0);
+      const newValue = qtyBase * item.price;
+      const newStock = oldStock + qtyBase;
+
+      product.stockBase = newStock;
       product.price = newStock > 0 ? (oldValue + newValue) / newStock : item.price;
       await product.save({ session });
-
-      // hitung unitBase & qtyBase
-      const { unitBase, qtyBase } = await getBaseUnitAndQty(item.unit, item.quantity, session);
 
       await StockTransaction.create(
         [
           {
             product: product._id,
             type: "IN",
-            qty: item.quantity,
+            qty: item.quantity, // qty as input
             unit: item.unit,
             unitBase,
             qtyBase,
@@ -103,18 +105,17 @@ exports.createPurchase = async (req, res) => {
 
     const savedPurchase = purchase[0];
 
-    // 🔹 simpan Payment otomatis dengan parameter lengkap
+    // 🔹 simpan Payment otomatis
     await savePaymentFromPurchase(
-      "Purchase",              // sourceType
-      savedPurchase._id,       // sourceId
-      grandTotal,              // amount
-      "Cash",                  // method
-      "Out",                    // direction
-      req.user?._id,           // userId
-      session                  // session
+      "Purchase",
+      savedPurchase._id,
+      grandTotal,
+      "Cash",
+      "Out",
+      req.user?._id,
+      session
     );
 
-    
     await session.commitTransaction();
     session.endSession();
 
@@ -131,10 +132,6 @@ exports.createPurchase = async (req, res) => {
     res.status(400).json({ success: false, message: error.message });
   }
 };
-
-
-
-
 
 // ================= UPDATE PURCHASE =================
 exports.updatePurchase = async (req, res) => {
@@ -155,8 +152,30 @@ exports.updatePurchase = async (req, res) => {
     for (const oldItem of oldPurchase.items) {
       const product = await Product.findById(oldItem.product).session(session);
       if (!product) continue;
-      product.stock -= oldItem.quantity;
+
+      const { qtyBase } = await getBaseUnitAndQty(
+        oldItem.unit,
+        oldItem.quantity,
+        session
+      );
+
+      product.stockBase -= qtyBase;
       await product.save({ session });
+
+      await StockTransaction.create(
+        [
+          {
+            product: product._id,
+            type: "OUT",
+            qty: oldItem.quantity,
+            unit: oldItem.unit,
+            unitBase,
+            qtyBase,
+            note: "Rollback Purchase Update",
+          },
+        ],
+        { session }
+      );
     }
 
     const grandTotal = items.reduce((sum, item) => sum + item.total, 0);
@@ -171,28 +190,33 @@ exports.updatePurchase = async (req, res) => {
       const product = await Product.findById(item.product).session(session);
       if (!product) continue;
 
-      const oldStock = product.stock || 0;
-      const oldValue = oldStock * (product.price || 0);
-      const newValue = item.quantity * item.price;
-      const newStock = oldStock + item.quantity;
+      const { unitBase, qtyBase } = await getBaseUnitAndQty(
+        item.unit,
+        item.quantity,
+        session
+      );
 
-      product.stock = newStock;
+      const oldStock = product.stockBase || 0;
+      const oldValue = oldStock * (product.price || 0);
+      const newValue = qtyBase * item.price;
+      const newStock = oldStock + qtyBase;
+
+      product.stockBase = newStock;
       product.price = newStock > 0 ? (oldValue + newValue) / newStock : item.price;
       await product.save({ session });
 
-      // hitung unitBase & qtyBase
-      const { unitBase, qtyBase } = await getBaseUnitAndQty(item.unit, item.quantity, session);
-
       await StockTransaction.create(
-        [{
-          product: product._id,
-          type: "IN",
-          qty: item.quantity,
-          unit: item.unit,
-          unitBase,
-          qtyBase,
-          note: "Purchase Update",
-        }],
+        [
+          {
+            product: product._id,
+            type: "IN",
+            qty: item.quantity,
+            unit: item.unit,
+            unitBase,
+            qtyBase,
+            note: "Purchase Update",
+          },
+        ],
         { session }
       );
     }
@@ -207,7 +231,6 @@ exports.updatePurchase = async (req, res) => {
     res.status(400).json({ success: false, message: error.message });
   }
 };
-
 
 // ================= DELETE PURCHASE =================
 exports.deletePurchase = async (req, res) => {
@@ -228,22 +251,27 @@ exports.deletePurchase = async (req, res) => {
       const product = await Product.findById(item.product).session(session);
       if (!product) continue;
 
-      product.stock -= item.quantity;
+      const { qtyBase } = await getBaseUnitAndQty(
+        item.unit,
+        item.quantity,
+        session
+      );
+
+      product.stockBase -= qtyBase;
       await product.save({ session });
 
-      // hitung unitBase & qtyBase
-      const { unitBase, qtyBase } = await getBaseUnitAndQty(item.unit, item.quantity, session);
-
       await StockTransaction.create(
-        [{
-          product: product._id,
-          type: "OUT",
-          qty: item.quantity,
-          unit: item.unit,
-          unitBase,
-          qtyBase,
-          note: "Purchase Deleted",
-        }],
+        [
+          {
+            product: product._id,
+            type: "OUT",
+            qty: item.quantity,
+            unit: item.unit,
+            unitBase,
+            qtyBase,
+            note: "Purchase Deleted",
+          },
+        ],
         { session }
       );
     }
