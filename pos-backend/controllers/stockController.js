@@ -144,6 +144,8 @@ exports.getStockSummary = async (req, res) => {
       {
         $project: {
           productName: "$product.name",
+          totalIn: 1,
+          totalOut: 1,
           balance: { $subtract: ["$totalIn", "$totalOut"] },
           unit: "$defaultUnit.short"
         }
