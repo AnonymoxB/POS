@@ -3,6 +3,7 @@ const Purchase = require("../models/purchaseModel");
 const Product = require("../models/productModel");
 const StockTransaction = require("../models/stockModel");
 const Unit = require("../models/unitModel");
+const {savePaymentFromPurchase} = require("../helpers/paymentHelper");
 
 
 // 🔧 Helper rekursif untuk cari baseUnit & qtyBase
@@ -46,14 +47,25 @@ exports.getPurchases = async (req, res) => {
 // ================= CREATE PURCHASE =================
 exports.createPurchase = async (req, res) => {
   const session = await mongoose.startSession();
-  session.startTransaction();
   try {
+    session.startTransaction();
+
     const { supplier, items } = req.body;
 
-    const grandTotal = items.reduce((sum, item) => sum + item.total, 0);
+    if (!items || items.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Items tidak boleh kosong",
+      });
+    }
+
+    const grandTotal = items.reduce((sum, item) => sum + (item.total || 0), 0);
+
+    // 🔹 generate purchaseId
+    const purchaseId = `PUR-${Date.now()}`;
 
     const purchase = await Purchase.create(
-      [{ supplier, items, grandTotal }],
+      [{ purchaseId, supplier, items, grandTotal, createdBy: req.user?._id }],
       { session }
     );
 
@@ -74,29 +86,54 @@ exports.createPurchase = async (req, res) => {
       const { unitBase, qtyBase } = await getBaseUnitAndQty(item.unit, item.quantity, session);
 
       await StockTransaction.create(
-        [{
-          product: product._id,
-          type: "IN",
-          qty: item.quantity,
-          unit: item.unit,
-          unitBase,
-          qtyBase,
-          note: "Purchase",
-        }],
+        [
+          {
+            product: product._id,
+            type: "IN",
+            qty: item.quantity,
+            unit: item.unit,
+            unitBase,
+            qtyBase,
+            note: "Purchase",
+          },
+        ],
         { session }
       );
     }
 
+    const savedPurchase = purchase[0];
+
+    // 🔹 simpan Payment otomatis dengan parameter lengkap
+    await savePaymentFromPurchase(
+      "Purchase",              // sourceType
+      savedPurchase._id,       // sourceId
+      grandTotal,              // amount
+      "Cash",                  // method
+      "Out",                    // direction
+      req.user?._id,           // userId
+      session                  // session
+    );
+
+    
     await session.commitTransaction();
     session.endSession();
 
-    res.status(201).json({ success: true, data: purchase[0] });
+    res.status(201).json({
+      success: true,
+      message: "Purchase & Payment berhasil dibuat",
+      data: savedPurchase,
+    });
   } catch (error) {
-    await session.abortTransaction();
+    if (session.inTransaction()) {
+      await session.abortTransaction();
+    }
     session.endSession();
     res.status(400).json({ success: false, message: error.message });
   }
 };
+
+
+
 
 
 // ================= UPDATE PURCHASE =================

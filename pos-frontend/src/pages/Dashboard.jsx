@@ -35,6 +35,7 @@ import {
 } from "lucide-react";
 import DishBOM from "../components/dashboard/dishBOM/DishBOM";
 import DishBOMPage from "../components/dashboard/dishBOM/DishBOMPage";
+import Expense from "../components/dashboard/expense/Expense";
 
 
 
@@ -163,6 +164,7 @@ const Dashboard = () => {
         {activeTab === "Supplier" && <Supplier/>}
         {activeTab === "Stock" && <Stock/>}
         {activeTab === "Dish BOM" && <DishBOMPage/>}
+        {activeTab === "Expenses" && <Expense/>}
         
       </div>
 

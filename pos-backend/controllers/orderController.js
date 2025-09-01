@@ -129,7 +129,8 @@ const addOrder = async (req, res, next) => {
     /**
      * 🔹 Simpan payment
      */
-    await savePaymentFromOrder(order, req.body);
+    await savePaymentFromOrder(order, req.user && req.user._id ? req.user._id.toString() : null);
+
 
     await session.commitTransaction();
     session.endSession();
