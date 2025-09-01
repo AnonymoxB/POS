@@ -100,6 +100,22 @@ const addOrder = async (req, res, next) => {
           `[STOCK] ${product.name}: ${totalBomQty} ${bom.unit.short} → ${qtyBase} ${product.defaultUnit.short}`
         );
 
+
+        // cek stok cukup dulu
+        if (product.stockBase < qtyBase) {
+          throw createHttpError(
+            400,
+            `Stok ${product.name} tidak cukup. Dibutuhkan ${qtyBase} ${product.defaultUnit.short}, tersedia hanya ${product.stockBase}`
+          );
+        }
+
+        // update stok product
+        await Product.updateOne(
+          { _id: product._id },
+          { $inc: { stockBase: -qtyBase } },
+          { session }
+        );
+
         // simpan transaksi stok
         await StockTransaction.create(
           [
@@ -118,12 +134,6 @@ const addOrder = async (req, res, next) => {
           { session }
         );
 
-        // update stok product
-        await Product.updateOne(
-          { _id: product._id },
-          { $inc: { stockBase: -qtyBase } },
-          { session }
-        );
       }
     }
 
