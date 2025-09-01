@@ -140,7 +140,18 @@ exports.getStockSummary = async (req, res) => {
           as: "defaultUnit"
         }
       },
-      { $unwind: "$defaultUnit" },
+      { $unwind: { path: "$defaultUnit", preserveNullAndEmptyArrays: true } },
+
+      {
+        $lookup: {
+          from: "units",
+          localField: "product.baseUnit",
+          foreignField: "_id",
+          as: "baseUnit"
+        }
+      },
+      { $unwind: { path: "$baseUnit", preserveNullAndEmptyArrays: true } },
+      
       {
         $project: {
           productId: "$_id",
