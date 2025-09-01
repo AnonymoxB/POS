@@ -78,7 +78,17 @@ const addOrder = async (req, res, next) => {
         }
 
         // konversi qty BOM → unit default product
-        const qtyBase = await convertQty(totalBomQty, bom.unit._id, product.defaultUnit._id);
+        try {
+          const qtyBase = await convertQty(totalBomQty, bom.unit._id, product.defaultUnit._id);
+          console.log(
+            `[CONVERT OK] ${totalBomQty} ${bom.unit?.short} -> ${qtyBase} ${product.defaultUnit?.short}`
+          );
+        } catch (err) {
+          console.error(
+            `[CONVERT FAIL] Product: ${product.name}, BOM Unit: ${bom.unit?.short}, Default: ${product.defaultUnit?.short}`
+          );
+          throw err;
+        }
 
         if (qtyBase <= 0) {
           throw createHttpError(400, `Konversi unit invalid untuk produk ${product.name}`);
