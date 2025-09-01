@@ -1,4 +1,6 @@
 const Dish = require("../models/dishesModel");
+const DishBOM = require("../models/dishBOMModel");
+const Product = require("../models/productModel");
 
 // GET all dishes
 const getAllDishes = async (req, res) => {
@@ -52,6 +54,43 @@ const deleteDish = async (req, res) => {
   }
 };
 
+const calculateDishHPP = async (dishId) => {
+  const bomItems = await DishBOM.find({ dish: dishId }).populate("product");
+
+  let totalHPP = 0;
+
+  bomItems.forEach((item) => {
+    const productHPP = item.product.price || 0; // ambil harga pokok product
+    totalHPP += productHPP * item.qty;
+  });
+
+  // Simpan ke Dish (hpphot & hppice sama dulu, bisa dibedakan nanti)
+  const updatedDish = await Dish.findByIdAndUpdate(
+    dishId,
+    {
+      "hpp.hpphot": totalHPP,
+      "hpp.hppice": totalHPP,
+    },
+    { new: true }
+  );
+
+  return updatedDish;
+};
+
+// Endpoint khusus untuk hitung HPP dish
+const getDishHPP = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const dish = await calculateDishHPP(id);
+    if (!dish) {
+      return res.status(404).json({ success: false, message: "Dish tidak ditemukan" });
+    }
+    res.json({ success: true, data: dish });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
 
 
 
@@ -60,4 +99,5 @@ module.exports = {
   createDish,
   updateDish,
   deleteDish,
+  getDishHPP
 };

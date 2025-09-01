@@ -126,11 +126,8 @@ const Product = () => {
                   <th className="border border-gray-600 px-3 py-2 text-left">Nama</th>
                   <th className="border border-gray-600 px-3 py-2 text-left">Kategori</th>
                   <th className="border border-gray-600 px-3 py-2 text-center">Unit</th>
-                  <th className="border border-gray-600 px-3 py-2 text-center">Base Unit</th>
+                  <th className="border border-gray-600 px-3 py-2 text-right">HPP</th>
                   <th className="border border-gray-600 px-3 py-2 text-right">Harga</th>
-                  <th className="border border-gray-600 px-3 py-2 text-right">Stok In</th>
-                  <th className="border border-gray-600 px-3 py-2 text-right">Stok Out</th>
-                  <th className="border border-gray-600 px-3 py-2 text-right">Balance</th>
                   <th className="border border-gray-600 px-3 py-2 text-center">Aksi</th>
                 </tr>
               </thead>
@@ -144,18 +141,8 @@ const Product = () => {
                     <td className="border border-gray-600 px-3 py-2 text-left">{p.name}</td>
                     <td className="border border-gray-600 px-3 py-2 text-left">{p.category?.name || "-"}</td>
                     <td className="border border-gray-600 px-3 py-2 text-center">{summaryMap[p._id]?.unit || "-"}</td>
-                    <td className="border border-gray-600 px-3 py-2 text-center">{summaryMap[p._id]?.baseUnit || "-"}</td>
                     <td className="border border-gray-600 px-3 py-2 text-right">Rp {p.price?.toLocaleString("id-ID")}</td>
-                    <td className="border border-gray-600 px-3 py-2 text-right">
-                      {summaryMap[p._id]?.totalIn ?? 0}
-                    </td>
-                    <td className="border border-gray-600 px-3 py-2 text-right">
-                      {summaryMap[p._id]?.totalOut ?? 0}
-                    </td>
-                    <td className="border border-gray-600 px-3 py-2 text-right">
-                      {summaryMap[p._id]?.balance ?? 0}
-                    </td>
-
+                    <td className="border border-gray-600 px-3 py-2 text-right">Rp {p.price?.toLocaleString("id-ID")}</td>
                     <td className="p-3 flex gap-2 justify-center ">
                       <button
                         onClick={() => setEditData(p)}
