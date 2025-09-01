@@ -135,19 +135,19 @@ exports.getStockSummary = async (req, res) => {
       {
         $lookup: {
           from: "units",
-          localField: "product.defaultUnit",
+          localField: "product.baseUnit",
           foreignField: "_id",
-          as: "defaultUnit"
+          as: "baseUnit"
         }
       },
-      { $unwind: "$defaultUnit" },
+      { $unwind: "$baseUnit" },
       {
         $project: {
           productName: "$product.name",
+          balance: { $subtract: ["$totalIn", "$totalOut"] },
           totalIn: 1,
           totalOut: 1,
-          balance: { $subtract: ["$totalIn", "$totalOut"] },
-          unit: "$defaultUnit.short"
+          unit: "$baseUnit.short"
         }
       }
     ]);
