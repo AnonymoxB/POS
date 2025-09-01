@@ -32,7 +32,7 @@ const Product = () => {
   const summaryMap = Object.fromEntries(
     (summaryData?.data?.data || []).map((s) => [
       s.productId,
-      { totalIn: s.totalIn, totalOut: s.totalOut, balance: s.balance },
+      { unit: s.unit || "-", baseUnit: s.baseUnit || "-", totalIn: s.totalIn, totalOut: s.totalOut, balance: s.balance },
     ])
   );
   
@@ -143,8 +143,8 @@ const Product = () => {
                     <td className="border border-gray-600 px-3 py-2 text-center">{indexOfFirstItem + idx + 1}</td>
                     <td className="border border-gray-600 px-3 py-2 text-left">{p.name}</td>
                     <td className="border border-gray-600 px-3 py-2 text-left">{p.category?.name || "-"}</td>
-                    <td className="border border-gray-600 px-3 py-2 text-center">{p.defaultUnit?.short || "-"}</td>
-                    <td className="border border-gray-600 px-3 py-2 text-center">{p.baseUnit?.short || "-"}</td>
+                    <td className="border border-gray-600 px-3 py-2 text-center">{summaryMap[p._id]?.unit || "-"}</td>
+                    <td className="border border-gray-600 px-3 py-2 text-center">{summaryMap[p._id]?.baseUnit || "-"}</td>
                     <td className="border border-gray-600 px-3 py-2 text-right">Rp {p.price?.toLocaleString("id-ID")}</td>
                     <td className="border border-gray-600 px-3 py-2 text-right">
                       {summaryMap[p._id]?.totalIn ?? 0}

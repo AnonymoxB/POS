@@ -116,13 +116,19 @@ exports.deleteStockTransaction = async (req, res) => {
 exports.getStockSummary = async (req, res) => {
   try {
     const summary = await StockTransaction.aggregate([
+      // 1️⃣ Hitung total in/out dalam baseUnit
       {
         $group: {
           _id: "$product",
-          totalIn: { $sum: { $cond: [{ $eq: ["$type", "IN"] }, "$qtyBase", 0] } },
-          totalOut:{ $sum: { $cond: [{ $eq: ["$type", "OUT"] }, "$qtyBase", 0] } }
+          totalInBase: {
+            $sum: { $cond: [{ $eq: ["$type", "IN"] }, "$qtyBase", 0] }
+          },
+          totalOutBase: {
+            $sum: { $cond: [{ $eq: ["$type", "OUT"] }, "$qtyBase", 0] }
+          }
         }
       },
+      // 2️⃣ Lookup product
       {
         $lookup: {
           from: "products",
@@ -132,6 +138,8 @@ exports.getStockSummary = async (req, res) => {
         }
       },
       { $unwind: "$product" },
+
+      // 3️⃣ Lookup defaultUnit
       {
         $lookup: {
           from: "units",
@@ -142,6 +150,7 @@ exports.getStockSummary = async (req, res) => {
       },
       { $unwind: { path: "$defaultUnit", preserveNullAndEmptyArrays: true } },
 
+      // 4️⃣ Lookup baseUnit
       {
         $lookup: {
           from: "units",
@@ -151,20 +160,42 @@ exports.getStockSummary = async (req, res) => {
         }
       },
       { $unwind: { path: "$baseUnit", preserveNullAndEmptyArrays: true } },
-      
+
+      // 5️⃣ Project final output
       {
         $project: {
           productId: "$_id",
           productName: "$product.name",
-          totalIn: 1,
-          totalOut: 1,
-          balance: { $subtract: ["$totalIn", "$totalOut"] },
+          totalInBase: 1,
+          totalOutBase: 1,
+          balanceBase: { $subtract: ["$totalInBase", "$totalOutBase"] },
           unit: "$defaultUnit.short",
-          baseUnit: "$baseUnit.short"
+          baseUnit: { $ifNull: ["$baseUnit.short", "$defaultUnit.short"] },
+          // stok display dalam default unit
+          balanceDisplay: {
+            $cond: [
+              { $gt: ["$defaultUnit.conversion", 0] },
+              { $divide: [{ $subtract: ["$totalInBase", "$totalOutBase"] }, "$defaultUnit.conversion"] },
+              { $subtract: ["$totalInBase", "$totalOutBase"] }
+            ]
+          },
+          totalInDisplay: {
+            $cond: [
+              { $gt: ["$defaultUnit.conversion", 0] },
+              { $divide: ["$totalInBase", "$defaultUnit.conversion"] },
+              "$totalInBase"
+            ]
+          },
+          totalOutDisplay: {
+            $cond: [
+              { $gt: ["$defaultUnit.conversion", 0] },
+              { $divide: ["$totalOutBase", "$defaultUnit.conversion"] },
+              "$totalOutBase"
+            ]
+          }
         }
       }
     ]);
-    
 
     res.json({ success: true, data: summary });
   } catch (err) {
@@ -172,6 +203,7 @@ exports.getStockSummary = async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 };
+
 
 // Summary stok per produk (by ID + filter tanggal)
 exports.getStockSummaryByProduct = async (req, res) => {
