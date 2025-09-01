@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSnackbar } from "notistack";
-import { getProducts, deleteProduct } from "../../../https";
+import { getProducts, deleteProduct, getStockSummary } from "../../../https";
 import AddProductModal from "./AddProductModal";
 import EditProductModal from "./EditProductModal";
 import { Pencil, Trash2 } from "lucide-react";
@@ -24,6 +24,19 @@ const Product = () => {
     queryKey: ["products"],
     queryFn: getProducts,
   });
+
+  const { data: summaryData } = useQuery({
+    queryKey: ["summary"],
+    queryFn: getStockSummary,
+  });
+  const summaryMap = Object.fromEntries(
+    (summaryData?.data?.data || []).map((s) => [
+      s.productId,
+      { totalIn: s.totalIn, totalOut: s.totalOut, balance: s.balance },
+    ])
+  );
+  
+  
 
   const deleteMutation = useMutation({
     mutationFn: deleteProduct,
@@ -115,6 +128,8 @@ const Product = () => {
                   <th className="border border-gray-600 px-3 py-2 text-center">Unit</th>
                   <th className="border border-gray-600 px-3 py-2 text-right">Harga</th>
                   <th className="border border-gray-600 px-3 py-2 text-right">Stok</th>
+                  <th className="border border-gray-600 px-3 py-2 text-right">Stok</th>
+                  <th className="border border-gray-600 px-3 py-2 text-right">Stok</th>
                   <th className="border border-gray-600 px-3 py-2 text-center">Aksi</th>
                 </tr>
               </thead>
@@ -129,7 +144,16 @@ const Product = () => {
                     <td className="border border-gray-600 px-3 py-2 text-left">{p.category?.name || "-"}</td>
                     <td className="border border-gray-600 px-3 py-2 text-center">{p.defaultUnit?.short || "-"}</td>
                     <td className="border border-gray-600 px-3 py-2 text-right">Rp {p.price?.toLocaleString("id-ID")}</td>
-                    <td className="border border-gray-600 px-3 py-2 text-right">{p.stockDisplay || "0"}</td>
+                    <td className="border border-gray-600 px-3 py-2 text-right">
+  {summaryMap[p._id]?.totalIn ?? 0}
+</td>
+<td className="border border-gray-600 px-3 py-2 text-right">
+  {summaryMap[p._id]?.totalOut ?? 0}
+</td>
+<td className="border border-gray-600 px-3 py-2 text-right">
+  {summaryMap[p._id]?.balance ?? 0}
+</td>
+
                     <td className="p-3 flex gap-2 justify-center ">
                       <button
                         onClick={() => setEditData(p)}

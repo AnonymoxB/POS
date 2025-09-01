@@ -143,6 +143,7 @@ exports.getStockSummary = async (req, res) => {
       { $unwind: "$defaultUnit" },
       {
         $project: {
+          productId: "$_id",
           productName: "$product.name",
           totalIn: 1,
           totalOut: 1,
