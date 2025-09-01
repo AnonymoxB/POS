@@ -118,32 +118,38 @@ exports.getStockSummary = async (req, res) => {
     const summary = await StockTransaction.aggregate([
       {
         $group: {
-          _id: { product: "$product", unitBase: "$unitBase" },
+          _id: "$product",
           totalIn: { $sum: { $cond: [{ $eq: ["$type", "IN"] }, "$qtyBase", 0] } },
-          totalOut: { $sum: { $cond: [{ $eq: ["$type", "OUT"] }, "$qtyBase", 0] } },
-        },
+          totalOut:{ $sum: { $cond: [{ $eq: ["$type", "OUT"] }, "$qtyBase", 0] } }
+        }
       },
-      { $addFields: { balance: { $subtract: ["$totalIn", "$totalOut"] } } },
       {
-        $lookup: { from: "products", localField: "_id.product", foreignField: "_id", as: "product" },
+        $lookup: {
+          from: "products",
+          localField: "_id",
+          foreignField: "_id",
+          as: "product"
+        }
       },
       { $unwind: "$product" },
       {
-        $lookup: { from: "units", localField: "_id.unitBase", foreignField: "_id", as: "unitBase" },
+        $lookup: {
+          from: "units",
+          localField: "product.defaultUnit",
+          foreignField: "_id",
+          as: "defaultUnit"
+        }
       },
-      { $unwind: "$unitBase" },
+      { $unwind: "$defaultUnit" },
       {
         $project: {
-          _id: 0,
-          productId: "$product._id",
           productName: "$product.name",
-          unitBase: { _id: "$unitBase._id", short: "$unitBase.short", name: "$unitBase.name" },
-          totalIn: 1,
-          totalOut: 1,
-          balance: 1,
-        },
-      },
+          balance: { $subtract: ["$totalIn", "$totalOut"] },
+          unit: "$defaultUnit.short"
+        }
+      }
     ]);
+    
 
     res.json({ success: true, data: summary });
   } catch (err) {
