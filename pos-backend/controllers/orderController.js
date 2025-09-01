@@ -78,8 +78,9 @@ const addOrder = async (req, res, next) => {
         }
 
         // konversi qty BOM → unit default product
+        let qtyBase;
         try {
-          const qtyBase = await convertQty(totalBomQty, bom.unit._id, product.defaultUnit._id);
+          qtyBase = await convertQty(totalBomQty, bom.unit._id, product.defaultUnit._id);
           console.log(
             `[CONVERT OK] ${totalBomQty} ${bom.unit?.short} -> ${qtyBase} ${product.defaultUnit?.short}`
           );
