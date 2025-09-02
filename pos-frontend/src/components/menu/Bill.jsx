@@ -51,7 +51,7 @@ const Bill = () => {
       orderStatus: "In Progress",
       bills: {
         total,
-        totalPriceWithTax,
+        totalWithTax: totalPriceWithTax,
         ...(paymentMethod === "Cash" ? { cashGiven, change } : {}),
       },
       items: cleanedCart,
