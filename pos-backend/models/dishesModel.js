@@ -20,7 +20,7 @@ const dishSchema = new mongoose.Schema(
       hppice: { type: Number, default:0 }
     },
     category: {
-      type: "Category",
+      type: String,
       required: true,
     },
   },
