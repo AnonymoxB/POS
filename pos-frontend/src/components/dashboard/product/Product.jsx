@@ -141,7 +141,7 @@ const Product = () => {
                     <td className="border border-gray-600 px-3 py-2 text-left">{p.name}</td>
                     <td className="border border-gray-600 px-3 py-2 text-left">{p.category?.name || "-"}</td>
                     <td className="border border-gray-600 px-3 py-2 text-center">{summaryMap[p._id]?.unit || "-"}</td>
-                    <td className="border border-gray-600 px-3 py-2 text-right">Rp {p.price?.toLocaleString("id-ID")}</td>
+                    <td className="border border-gray-600 px-3 py-2 text-right">Rp {p.hpp?.toLocaleString("id-ID")}</td>
                     <td className="border border-gray-600 px-3 py-2 text-right">Rp {p.price?.toLocaleString("id-ID")}</td>
                     <td className="p-3 flex gap-2 justify-center ">
                       <button

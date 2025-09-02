@@ -14,6 +14,7 @@ const purchaseSchema = new mongoose.Schema(
         unit: { type: mongoose.Schema.Types.ObjectId, ref: "Unit", required: true },
         price: { type: Number, required: true },
         total: { type: Number, required: true },
+        qtyBase: { type: Number },
       },
     ],
     grandTotal: {

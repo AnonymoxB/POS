@@ -16,11 +16,11 @@ const productSchema = new mongoose.Schema(
     },
     stockBase: {
       type: Number,
-      default: 0,
+      default: 0, // stok dalam base unit
     },
     stockDisplay: {
       type: String,
-      default: "0",
+      default: "0", // stok dalam format user-friendly (misalnya "5 kg")
     },
     price: {
       type: Number,
@@ -28,7 +28,11 @@ const productSchema = new mongoose.Schema(
     },
     hpp: {
       type: Number,
-      default: 0, // harga pokok rata-rata dari purchase
+      default: 0, // harga pokok rata-rata
+    },
+    lastPurchasePrice: {
+      type: Number,
+      default: 0, // harga beli terakhir
     },
   },
   { timestamps: true }

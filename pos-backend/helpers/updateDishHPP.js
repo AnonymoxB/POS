@@ -3,50 +3,57 @@ const DishBOM = require("../models/dishBOMModel");
 const Product = require("../models/productModel");
 
 /**
- * Update HPP semua dish yang pakai product tertentu
- * @param {ObjectId} productId - id product yang berubah HPP
- * @param {mongoose.ClientSession} session - mongoose session (opsional)
+ * Update HPP dish berdasarkan product tertentu
+ * @param {ObjectId} productId - product yang berubah HPP
+ * @param {mongoose.ClientSession} session - opsional, mongoose session
  */
-async function updateDishHPP(productId, session) {
+async function updateDishHPPByProduct(productId, session) {
   // Cari semua BOM yang pakai product ini
   const boms = await DishBOM.find({ product: productId }).session(session);
   if (!boms.length) return;
 
-  // Grouping dish berdasarkan dishId + variant
+  // Ambil semua product yang terpakai di BOM ini
+  const productIds = [...new Set(boms.map(b => b.product.toString()))];
+  const products = await Product.find({ _id: { $in: productIds } }).session(session);
+  const productMap = Object.fromEntries(products.map(p => [p._id.toString(), p]));
+
+  // Group BOM per dish + variant
   const dishMap = {};
   for (const bom of boms) {
     const key = `${bom.dish}_${bom.variant || "default"}`;
-    if (!dishMap[key]) {
-      dishMap[key] = { dishId: bom.dish, variant: bom.variant || "default", items: [] };
-    }
+    if (!dishMap[key]) dishMap[key] = { dishId: bom.dish, variant: bom.variant || "default", items: [] };
     dishMap[key].items.push(bom);
   }
 
-  // Hitung ulang HPP per dish
+  // Hitung HPP tiap dish + variant
+  const dishUpdates = {};
   for (const { dishId, variant, items } of Object.values(dishMap)) {
     let totalHPP = 0;
-
     for (const bom of items) {
-      const product = await Product.findById(bom.product).session(session);
+      const product = productMap[bom.product.toString()];
       if (!product) continue;
-
-      // Ambil HPP terbaru dari product
       totalHPP += bom.qty * (product.hpp || 0);
     }
 
-    // Update ke field HPP dish sesuai variant
-    const updateField =
-      variant === "hot"
-        ? { "hpp.hpphot": totalHPP }
-        : variant === "ice"
-        ? { "hpp.hppice": totalHPP }
-        : {
-            "hpp.hpphot": totalHPP,
-            "hpp.hppice": totalHPP, // default → isi dua-duanya sama
-          };
-
-    await Dish.findByIdAndUpdate(dishId, { $set: updateField }, { session });
+    if (!dishUpdates[dishId]) dishUpdates[dishId] = {};
+    if (variant === "hot") dishUpdates[dishId].hpphot = totalHPP;
+    else if (variant === "ice") dishUpdates[dishId].hppice = totalHPP;
+    else {
+      dishUpdates[dishId].hpphot = totalHPP;
+      dishUpdates[dishId].hppice = totalHPP;
+    }
   }
+
+  // Update semua dish
+  const updatePromises = Object.entries(dishUpdates).map(([dishId, hpp]) =>
+    Dish.findByIdAndUpdate(
+      dishId,
+      { $set: { "hpp.hpphot": hpp.hpphot, "hpp.hppice": hpp.hppice } },
+      { session }
+    )
+  );
+
+  await Promise.all(updatePromises);
 }
 
-module.exports = { updateDishHPP };
+module.exports = { updateDishHPPByProduct };
