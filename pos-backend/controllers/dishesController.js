@@ -56,27 +56,39 @@ const deleteDish = async (req, res) => {
 };
 
 const calculateDishHPP = async (dishId) => {
+  // Ambil semua BOM untuk dish, populate product & unit
   const bomItems = await DishBOM.find({ dish: dishId })
     .populate("product")
-    .populate("unit"); // ambil info unit
+    .populate("unit");
 
   let totalHot = 0;
   let totalIce = 0;
 
   bomItems.forEach((item) => {
-    // Ambil HPP sesuai variant
-    const productHPP = item.variant === "hot" ? item.product.hpp.hpphot : item.product.hpp.hppice || 0;
+    if (!item.product || !item.unit) return; // skip kalau data kurang
 
-    // Konversi qty ke base unit
-    const qty = item.qty * (item.unit.conversion || 1);
+    // Ambil HPP product sesuai variant, default 0
+    const productHPP =
+      item.variant === "hot"
+        ? Number(item.product.hpphot || 0)
+        : Number(item.product.hppice || 0);
+
+    // Pastikan qty number
+    const qty = Number(item.qty || 0);
+
+    // Konversi ke base unit
+    const conversion = Number(item.unit.conversion || 1);
+
+    const totalQty = qty * conversion;
 
     if (item.variant === "hot") {
-      totalHot += productHPP * qty;
+      totalHot += productHPP * totalQty;
     } else if (item.variant === "ice") {
-      totalIce += productHPP * qty;
+      totalIce += productHPP * totalQty;
     }
   });
 
+  // Update Dish
   const updatedDish = await Dish.findByIdAndUpdate(
     dishId,
     {
@@ -88,6 +100,9 @@ const calculateDishHPP = async (dishId) => {
 
   return updatedDish;
 };
+
+module.exports = { calculateDishHPP };
+
 
 
 
