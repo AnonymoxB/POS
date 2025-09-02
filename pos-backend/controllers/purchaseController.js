@@ -7,22 +7,16 @@ const Payment = require("../models/paymentModel");
 const { savePaymentFromPurchase } = require("../helpers/paymentHelper");
 const { updateDishHPP } = require("../helpers/updateDishHPP");
 
+// ================= UTILS =================
 async function getBaseUnitAndQty(unitId, qty, session) {
   const unitDoc = await Unit.findById(unitId).session(session);
   if (!unitDoc) return { unitBase: unitId, qtyBase: qty };
 
   if (!unitDoc.baseUnit) {
-    return {
-      unitBase: unitDoc._id,
-      qtyBase: qty * (unitDoc.conversion || 1),
-    };
+    return { unitBase: unitDoc._id, qtyBase: qty * (unitDoc.conversion || 1) };
   }
 
-  return await getBaseUnitAndQty(
-    unitDoc.baseUnit,
-    qty * (unitDoc.conversion || 1),
-    session
-  );
+  return await getBaseUnitAndQty(unitDoc.baseUnit, qty * (unitDoc.conversion || 1), session);
 }
 
 // ================= GET ALL PURCHASE =================
@@ -47,10 +41,10 @@ exports.createPurchase = async (req, res) => {
     session.startTransaction();
 
     const { supplier, items } = req.body;
-    if (!items || items.length === 0) {
+    if (!items || items.length === 0)
       return res.status(400).json({ success: false, message: "Items tidak boleh kosong" });
-    }
 
+    // Validasi items
     for (const item of items) {
       if (!item.product || !item.unit || !item.quantity || !item.price) {
         throw new Error("Item harus punya product, unit, quantity, dan price");
@@ -65,6 +59,9 @@ exports.createPurchase = async (req, res) => {
       { session }
     );
 
+    const savedPurchase = purchase[0];
+
+    // Proses setiap item: update stock & HPP
     for (const item of items) {
       const product = await Product.findById(item.product).session(session);
       if (!product) continue;
@@ -80,6 +77,8 @@ exports.createPurchase = async (req, res) => {
       product.hpp = newStock > 0 ? (oldValue + newValue) / newStock : item.price;
 
       await product.save({ session });
+
+      // Update HPP dish sesuai product
       await updateDishHPP(product._id, session);
 
       await StockTransaction.create(
@@ -98,8 +97,7 @@ exports.createPurchase = async (req, res) => {
       );
     }
 
-    const savedPurchase = purchase[0];
-
+    // Simpan payment
     await savePaymentFromPurchase(
       "Purchase",
       savedPurchase._id,
@@ -134,16 +132,14 @@ exports.updatePurchase = async (req, res) => {
     const { supplier, items } = req.body;
 
     const oldPurchase = await Purchase.findById(id).session(session);
-    if (!oldPurchase) {
-      return res.status(404).json({ success: false, message: "Purchase not found" });
-    }
+    if (!oldPurchase) return res.status(404).json({ success: false, message: "Purchase not found" });
 
-    // rollback stok lama
+    // Rollback stock lama
     for (const oldItem of oldPurchase.items) {
       const product = await Product.findById(oldItem.product).session(session);
       if (!product) continue;
 
-      const { unitBase, qtyBase } = await getBaseUnitAndQty(oldItem.unit, oldItem.quantity, session);
+      const { qtyBase } = await getBaseUnitAndQty(oldItem.unit, oldItem.quantity, session);
       product.stockBase -= qtyBase;
       await product.save({ session });
 
@@ -156,7 +152,6 @@ exports.updatePurchase = async (req, res) => {
             type: "OUT",
             qty: oldItem.quantity,
             unit: oldItem.unit,
-            unitBase,
             qtyBase,
             note: "Rollback Purchase Update",
           },
@@ -173,6 +168,7 @@ exports.updatePurchase = async (req, res) => {
       { new: true, session }
     );
 
+    // Update stock & HPP baru
     for (const item of items) {
       const product = await Product.findById(item.product).session(session);
       if (!product) continue;
@@ -206,7 +202,7 @@ exports.updatePurchase = async (req, res) => {
       );
     }
 
-    // update payment juga
+    // Update payment
     await Payment.updateMany(
       { source: id, sourceType: "Purchase" },
       { $set: { amount: grandTotal } },
@@ -228,18 +224,16 @@ exports.deletePurchase = async (req, res) => {
   const session = await mongoose.startSession();
   try {
     session.startTransaction();
-    const { id } = req.params;
 
+    const { id } = req.params;
     const purchase = await Purchase.findById(id).session(session);
-    if (!purchase) {
-      return res.status(404).json({ success: false, message: "Purchase not found" });
-    }
+    if (!purchase) return res.status(404).json({ success: false, message: "Purchase not found" });
 
     for (const item of purchase.items) {
       const product = await Product.findById(item.product).session(session);
       if (!product) continue;
 
-      const { unitBase, qtyBase } = await getBaseUnitAndQty(item.unit, item.quantity, session);
+      const { qtyBase } = await getBaseUnitAndQty(item.unit, item.quantity, session);
       product.stockBase -= qtyBase;
       await product.save({ session });
 
@@ -252,7 +246,6 @@ exports.deletePurchase = async (req, res) => {
             type: "OUT",
             qty: item.quantity,
             unit: item.unit,
-            unitBase,
             qtyBase,
             note: "Purchase Deleted",
           },
