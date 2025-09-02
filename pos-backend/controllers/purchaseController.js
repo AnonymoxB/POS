@@ -266,6 +266,7 @@ exports.deletePurchase = async (req, res) => {
               type: "OUT",
               qty: item.quantity,
               unit: item.unit,
+              unitBase,
               qtyBase,
               note: "Purchase Deleted",
             },
