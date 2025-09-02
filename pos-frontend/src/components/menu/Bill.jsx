@@ -1,247 +1,143 @@
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getTotalPrice } from "../../redux/slices/cartSlices";
-import {
-  addOrder,
-  updateTable,
-} from "../../https/index";
+import { addOrder } from "../../https/index";
 import { enqueueSnackbar } from "notistack";
 import { useMutation } from "@tanstack/react-query";
 import { removeAllItems } from "../../redux/slices/cartSlices";
-import { removeCustomer } from "../../redux/slices/customerSlices";
 import Invoice from "../invoice/Invoice";
-
-
 
 const Bill = () => {
   const dispatch = useDispatch();
-
-  const customerData = useSelector((state) => state.customer);
   const cartData = useSelector((state) => state.cart);
   const total = useSelector(getTotalPrice);
-  // const taxRate = 5.25;
-  // const tax = (total * taxRate) / 100;
   const totalPriceWithTax = total;
 
   const [paymentMethod, setPaymentMethod] = useState();
+  const [cashGiven, setCashGiven] = useState(0);
   const [showInvoice, setShowInvoice] = useState(false);
   const [orderInfo, setOrderInfo] = useState();
 
-  
+  const change = cashGiven - totalPriceWithTax;
 
-  const handlePlaceOrder = async () => {
+  const handlePlaceOrder = () => {
     if (!paymentMethod) {
-      enqueueSnackbar("Please select a payment method!", {
-        variant: "warning",
-      });
-
+      enqueueSnackbar("Please select a payment method!", { variant: "warning" });
       return;
     }
 
-    if (paymentMethod === "Online") {
-      // load the script
-      try {
-        // create order
-
-        const reqData = {
-          amount: totalPriceWithTax.toFixed(0),
-        };
-
-        const { data } = await createOrderQris(reqData); // <-- ganti endpoint khusus QRIS
-        if (!data || !data.qrUrl) {
-          enqueueSnackbar("Gagal mendapatkan QRIS. Coba lagi.", { variant: "error" });
-          return;
-        }
-
-        // 🔰 Tampilkan QRIS ke user (misalnya di modal)
-        showQrisModal(data.qrUrl); // <-- pastikan kamu punya fungsi/modal ini
-
-        // 🔁 Tunggu user menyelesaikan pembayaran
-        const interval = setInterval(async () => {
-          const status = await checkQrisStatus(data.invoiceId); // <-- polling status invoice
-
-          if (status.data.paid) {
-            clearInterval(interval);
-            enqueueSnackbar("Pembayaran berhasil via QRIS!", { variant: "success" });
-
-            const orderData = {
-              customerDetails: {
-                name: customerData.customerName,
-                phone: customerData.customerPhone,
-                guests: customerData.guests,
-                type: customerData.type,
-              },
-              orderStatus: "In Progress",
-              bills: {
-                total: total,
-                totalWithTax: totalPriceWithTax,
-              },
-              items: cartData,
-              table: customerData.table?.tableId || null,
-              paymentMethod: paymentMethod,
-              paymentData: {
-                invoiceId: data.invoiceId,
-              },
-            };
-
-            orderMutation.mutate(orderData);
-          }
-        }, 3000); // polling tiap 3 detik
-      } catch (error) {
-        console.error("QRIS Payment error:", error);
-        enqueueSnackbar("Terjadi kesalahan saat memproses QRIS.", { variant: "error" });
-      }
-    } else {
-      // ✅ CASH
-      console.log("cartData", cartData);
-      const cleanedCart = cartData
-        .filter(item => item.id && (item.quantity || item.qty))
-        .map(item => ({
-          dishId: item.id,
-          name: item.name,
-          variant: item.variant,
-          qty: item.quantity || item.qty || 1,
-          unitPrice: item.pricePerQuantity || 0,
-          totalPrice: (item.pricePerQuantity || 0) * (item.quantity || 1)
-        }));
-
-      if (!cleanedCart.length) {
-        enqueueSnackbar("Cart kosong, tidak bisa buat order!", { variant: "error" });
-        return;
-      }
-
-      const orderData = {
-        customerDetails: {
-          name: customerData.customerName || "Guest",
-          phone: customerData.customerPhone || "",
-          guests: customerData.guests || 1,
-          type: customerData.type,
-        },
-        orderStatus: "In Progress",
-        bills: {
-          total,
-          totalWithTax: totalPriceWithTax,
-        },
-        items: cleanedCart,
-        ...(customerData.type === "dinein" && customerData.table?.tableId
-          ? { table: customerData.table.tableId }
-          : {}),
-        paymentMethod: paymentMethod,
-      };
-
-      console.log("customerData.table:", customerData.table); 
-      console.log("orderData yg dikirim:", orderData);
-
-      orderMutation.mutate(orderData);
+    if (paymentMethod === "Cash" && cashGiven < totalPriceWithTax) {
+      enqueueSnackbar("Jumlah cash kurang!", { variant: "error" });
+      return;
     }
+
+    const cleanedCart = cartData
+      .filter((item) => item.id && (item.quantity || item.qty))
+      .map((item) => ({
+        dishId: item.id,
+        name: item.name,
+        variant: item.variant || "",
+        qty: item.quantity || item.qty || 1,
+        unitPrice: item.pricePerQuantity || 0,
+        totalPrice: (item.pricePerQuantity || 0) * (item.quantity || 1),
+      }));
+
+    if (!cleanedCart.length) {
+      enqueueSnackbar("Cart kosong, tidak bisa buat order!", { variant: "error" });
+      return;
+    }
+
+    const orderData = {
+      orderStatus: "In Progress",
+      bills: {
+        total,
+        totalPriceWithTax,
+        ...(paymentMethod === "Cash" ? { cashGiven, change } : {}),
+      },
+      items: cleanedCart,
+      paymentMethod,
+    };
+
+    orderMutation.mutate(orderData);
   };
 
   const orderMutation = useMutation({
     mutationFn: (reqData) => addOrder(reqData),
     onSuccess: (resData) => {
       const { data } = resData.data;
-      console.log(data);
-
       setOrderInfo(data);
-
-      // Update Table
-      if (data.customerDetails?.type === "dinein" && data.table) {
-        const tableData = {
-          status: "Booked",
-          orderId: data._id,
-          tableId: data.table,
-        };
-
-        setTimeout(() => {
-          tableUpdateMutation.mutate(tableData);
-        }, 1500);
-      }
-
-      enqueueSnackbar("Order Placed!", {
-        variant: "success",
-      });
+      enqueueSnackbar("Order Placed!", { variant: "success" });
       setShowInvoice(true);
-      dispatch(removeCustomer());
       dispatch(removeAllItems());
-
-    },
-  });
-
-  const tableUpdateMutation = useMutation({
-    mutationFn: (data) => updateTable(data),
-    onSuccess: (resData) => {
-      console.log(resData);
-      dispatch(removeCustomer());
-      dispatch(removeAllItems());
+      setCashGiven(0);
     },
     onError: (error) => {
-      console.log(error);
+      console.error(error);
+      enqueueSnackbar("Gagal membuat order!", { variant: "error" });
     },
   });
 
   return (
-  <>
-    {/* Summary */}
-    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-5 mt-2 gap-2 sm:gap-0">
-      <p className="text-xs text-[#ababab] font-medium">
-        Items({cartData.length})
-      </p>
-      <h1 className="text-[#f5f5f5] text-md font-bold">
-        Rp {total.toFixed(0)}
-      </h1>
-    </div>
-
-    {/* {taxRate > 0 && (
+    <>
+      {/* Summary */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-5 mt-2 gap-2 sm:gap-0">
-        <p className="text-xs text-[#ababab] font-medium">
-          Tax ({taxRate}%)
-        </p>
-        <h1 className="text-[#f5f5f5] text-md font-bold">
-          Rp {taxAmount.toFixed(0)}
-        </h1>
+        <p className="text-xs text-[#ababab] font-medium">Items({cartData.length})</p>
+        <h1 className="text-[#f5f5f5] text-md font-bold">Rp {total.toFixed(0)}</h1>
       </div>
-    )} */}
 
-    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-5 mt-2 gap-2 sm:gap-0 font-bold text-lg">
-      <p className="text-xs sm:text-md text-[#ababab]">Total</p>
-      <h1 className="text-[#f5f5f5] text-md sm:text-lg">
-        Rp {totalPriceWithTax.toFixed(0)}
-      </h1>
-    </div>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-5 mt-2 gap-2 sm:gap-0 font-bold text-lg">
+        <p className="text-xs sm:text-md text-[#ababab]">Total</p>
+        <h1 className="text-[#f5f5f5] text-md sm:text-lg">Rp {totalPriceWithTax.toFixed(0)}</h1>
+      </div>
 
-    {/* Payment Method */}
-    <div className="flex flex-col sm:flex-row items-stretch gap-3 px-5 mt-4">
-      {["Cash", "QRIS"].map((method) => (
-        <button
-          key={method}
-          onClick={() => setPaymentMethod(method)}
-          className={`flex-1 px-4 py-3 rounded-lg font-semibold transition-colors duration-200
-            ${paymentMethod === method ? "bg-[#383737] text-white" : "bg-[#1f1f1f] text-[#ababab] hover:bg-[#2a2a2a]"}`}
-        >
-          {method}
+      {/* Payment Method */}
+      <div className="flex flex-col sm:flex-row items-stretch gap-3 px-5 mt-4">
+        {["Cash", "QRIS"].map((method) => (
+          <button
+            key={method}
+            onClick={() => setPaymentMethod(method)}
+            className={`flex-1 px-4 py-3 rounded-lg font-semibold transition-colors duration-200
+              ${paymentMethod === method ? "bg-[#383737] text-white" : "bg-[#1f1f1f] text-[#ababab] hover:bg-[#2a2a2a]"}`}
+          >
+            {method}
+          </button>
+        ))}
+      </div>
+
+      {/* Cash Input & Kembalian */}
+      {paymentMethod === "Cash" && (
+        <div className="flex flex-col px-5 mt-4 gap-2">
+          <label className="text-[#ababab] text-sm font-medium">Cash Given</label>
+          <input
+            type="number"
+            value={cashGiven}
+            onChange={(e) => setCashGiven(Number(e.target.value))}
+            className="bg-[#1f1f1f] text-white px-3 py-2 rounded-lg focus:outline-none"
+            placeholder="Masukkan jumlah cash"
+          />
+          {cashGiven >= totalPriceWithTax && (
+            <p className="text-green-400 font-semibold">Kembalian: Rp {change.toFixed(0)}</p>
+          )}
+        </div>
+      )}
+
+      {/* Action Buttons */}
+      <div className="flex flex-col sm:flex-row items-stretch gap-3 px-5 mt-4">
+        <button className="flex-1 bg-[#025cca] px-4 py-3 rounded-lg text-[#f5f5f5] font-semibold text-lg">
+          Print Receipt
         </button>
-      ))}
-    </div>
+        <button
+          onClick={handlePlaceOrder}
+          className="flex-1 bg-[#f6b100] px-4 py-3 rounded-lg text-[#1f1f1f] font-semibold text-lg"
+        >
+          Place Order
+        </button>
+      </div>
 
-    {/* Action Buttons */}
-    <div className="flex flex-col sm:flex-row items-stretch gap-3 px-5 mt-4">
-      <button className="flex-1 bg-[#025cca] px-4 py-3 rounded-lg text-[#f5f5f5] font-semibold text-lg">
-        Print Receipt
-      </button>
-      <button
-        onClick={handlePlaceOrder}
-        className="flex-1 bg-[#f6b100] px-4 py-3 rounded-lg text-[#1f1f1f] font-semibold text-lg"
-      >
-        Place Order
-      </button>
-    </div>
-
-    {/* Invoice */}
-    {showInvoice && (
-      <Invoice orderInfo={orderInfo} setShowInvoice={setShowInvoice} />
-    )}
-  </>
-);
+      {/* Invoice */}
+      {showInvoice && <Invoice orderInfo={orderInfo} setShowInvoice={setShowInvoice} />}
+    </>
+  );
 };
 
 export default Bill;

@@ -86,7 +86,7 @@ export default function DishBOM({ dish, open, onClose }) {
                       <td className="px-3 py-2 text-right">{item.qty}</td>
                       <td className="px-3 py-2">{item.unit?.short || item.unit}</td>
                       <td className="px-3 py-2">{item.variant}</td>
-                      <td className="px-3 py-2 text-right">{totalHPP}</td>
+                      <td className="px-3 py-2 text-right">Rp {totalHPP}</td>
                       <td className="px-3 py-2 text-center space-x-2">
                         <Button
                           size="sm"

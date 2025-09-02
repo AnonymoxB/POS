@@ -1,13 +1,6 @@
 const mongoose = require("mongoose");
 
-const orderSchema = new mongoose.Schema({
-    customerDetails: {
-        name:{type: String, required: true},
-        phone:{type: String, required: false},
-        guests:{type: String, required: true},
-        type: {type: String, required: true},
-        tableNo: Number
-    }, 
+const orderSchema = new mongoose.Schema({ 
     orderStatus: {
         type: String,
         required: true
