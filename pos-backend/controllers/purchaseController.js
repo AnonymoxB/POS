@@ -152,6 +152,7 @@ exports.updatePurchase = async (req, res) => {
             type: "OUT",
             qty: oldItem.quantity,
             unit: oldItem.unit,
+            unitBase,
             qtyBase,
             note: "Rollback Purchase Update",
           },
