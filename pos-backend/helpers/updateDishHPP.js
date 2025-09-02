@@ -7,7 +7,7 @@ const Product = require("../models/productModel");
  * @param {ObjectId} productId - product yang berubah HPP
  * @param {mongoose.ClientSession} session - opsional, mongoose session
  */
-async function updateDishHPPByProduct(productId, session) {
+async function updateDishHPP(productId, session) {
   // Cari semua BOM yang pakai product ini
   const boms = await DishBOM.find({ product: productId }).session(session);
   if (!boms.length) return;
@@ -56,4 +56,4 @@ async function updateDishHPPByProduct(productId, session) {
   await Promise.all(updatePromises);
 }
 
-module.exports = { updateDishHPPByProduct };
+module.exports = { updateDishHPP };
