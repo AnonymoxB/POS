@@ -26,6 +26,7 @@ const Bill = () => {
       return;
     }
 
+    // Validasi khusus Cash saja
     if (paymentMethod === "Cash" && cashGiven < totalPriceWithTax) {
       enqueueSnackbar("Jumlah cash kurang!", { variant: "error" });
       return;
@@ -52,14 +53,26 @@ const Bill = () => {
       bills: {
         total,
         totalWithTax: totalPriceWithTax,
-        ...(paymentMethod === "Cash" ? { cashGiven, change } : {}),
+        ...(paymentMethod === "Cash" ? { cashGiven, change } : {}), 
       },
       items: cleanedCart,
       paymentMethod,
     };
 
-    orderMutation.mutate(orderData);
+    orderMutation.mutate(orderData, {
+      onSuccess: () => {
+        if (paymentMethod === "Qris") {
+          enqueueSnackbar("✅ Pembayaran QRIS berhasil!", { variant: "success" });
+        } else if (paymentMethod === "Cash") {
+          enqueueSnackbar("✅ Pembayaran Cash berhasil!", { variant: "success" });
+        }
+      },
+      onError: () => {
+        enqueueSnackbar("❌ Gagal membuat order, coba lagi.", { variant: "error" });
+      },
+    });
   };
+
 
   const orderMutation = useMutation({
     mutationFn: (reqData) => addOrder(reqData),
@@ -92,7 +105,7 @@ const Bill = () => {
 
       {/* Payment Method */}
       <div className="flex flex-col sm:flex-row items-stretch gap-3 px-5 mt-4">
-        {["Cash", "QRIS"].map((method) => (
+        {["Cash", "Qris"].map((method) => (
           <button
             key={method}
             onClick={() => setPaymentMethod(method)}

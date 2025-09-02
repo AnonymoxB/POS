@@ -102,15 +102,22 @@ const deletePayment = async (req, res, next) => {
   }
 };
 
-// DELETE multiple payments
 const deleteMultiplePayments = async (req, res, next) => {
   try {
-    const { ids } = req.body; // array of payment _id
-    if (!ids || !ids.length)
-      return res.status(400).json({ success: false, message: "No IDs provided" });
+    const { ids } = req.body; // harus array of ObjectId
 
-    await Payment.deleteMany({ _id: { $in: ids } });
-    res.status(200).json({ success: true, message: `${ids.length} payment berhasil dihapus` });
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res
+        .status(400)
+        .json({ success: false, message: "No IDs provided or not an array" });
+    }
+
+    const result = await Payment.deleteMany({ _id: { $in: ids } });
+
+    res.status(200).json({
+      success: true,
+      message: `${result.deletedCount} payment berhasil dihapus`,
+    });
   } catch (error) {
     next(error);
   }

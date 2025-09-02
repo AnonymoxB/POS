@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { getPayments, deleteMultiplePayments } from "../../https";
-import DatePicker from "react-datepicker";
+import { getPayments, deleteMultiplePayments, deletePayment } from "../../https";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-
+import { toast } from "sonner";
 
 const Payment = () => {
   const [payments, setPayments] = useState([]);
@@ -34,11 +33,8 @@ const Payment = () => {
     fetchPayments();
   }, []);
 
-
   if (loading) return <p className="text-[#ababab]">Loading...</p>;
   if (error) return <p className="text-red-500">{error}</p>;
-
-  
 
   // Filter by search
   const filteredPayments = payments.filter(
@@ -67,46 +63,52 @@ const Payment = () => {
   };
 
   const handleDeleteSelected = async () => {
-    if (selectedPayments.size === 0) return;
-    if (!window.confirm(`Hapus ${selectedPayments.size} payment terpilih?`)) return;
+    if (selectedPayments.size === 0) {
+      toast.warning("Tidak ada payment yang dipilih");
+      return;
+    }
+
+    toast.info(`Menghapus ${selectedPayments.size} payment...`);
 
     try {
       setDeleting(true);
       await deleteMultiplePayments(Array.from(selectedPayments));
       setPayments((prev) => prev.filter((p) => !selectedPayments.has(p._id)));
       setSelectedPayments(new Set());
+
+      toast.success(`${selectedPayments.size} payment berhasil dihapus ✅`);
     } catch (err) {
       console.error(err);
-      alert("Gagal menghapus payment");
+      toast.error("Gagal menghapus payment ❌");
     } finally {
       setDeleting(false);
     }
   };
 
   const summary = payments.reduce(
-  (acc, pay) => {
-    const source = pay.sourceType?.toLowerCase();
-    const amount = pay.amount || 0;
+    (acc, pay) => {
+      const source = pay.sourceType?.toLowerCase();
+      const amount = pay.amount || 0;
 
-    if (source === "expense") {
-      acc.expense.count += 1;
-      acc.expense.total += amount;
-    } else if (source === "purchase") {
-      acc.purchase.count += 1;
-      acc.purchase.total += amount;
-    } else if (source === "order") {
-      acc.order.count += 1;
-      acc.order.total += amount;
+      if (source === "expense") {
+        acc.expense.count += 1;
+        acc.expense.total += amount;
+      } else if (source === "purchase") {
+        acc.purchase.count += 1;
+        acc.purchase.total += amount;
+      } else if (source === "order") {
+        acc.order.count += 1;
+        acc.order.total += amount;
+      }
+
+      return acc;
+    },
+    {
+      expense: { count: 0, total: 0 },
+      purchase: { count: 0, total: 0 },
+      order: { count: 0, total: 0 },
     }
-
-    return acc;
-  },
-  {
-    expense: { count: 0, total: 0 },
-    purchase: { count: 0, total: 0 },
-    order: { count: 0, total: 0 },
-  }
-);
+  );
 
   // Pagination
   const totalPages = Math.ceil(filteredPayments.length / itemsPerPage);
@@ -145,23 +147,25 @@ const Payment = () => {
             onClick={handleDeleteSelected}
             disabled={selectedPayments.size === 0 || deleting}
           >
-            Hapus Terpilih
-          </Button> 
+            {deleting ? "Menghapus..." : "Hapus Terpilih"}
+          </Button>
         </div>
 
         {/* Summary jumlah per tipe */}
-          <div className="flex gap-4 mb-4">
-            <div className="bg-red-600/20 text-red-400 px-3 py-2 rounded font-semibold">
-              Expense: {summary.expense.count} | Rp {summary.expense.total.toLocaleString("id-ID")}
-            </div>
-            <div className="bg-blue-600/20 text-blue-400 px-3 py-2 rounded font-semibold">
-              Purchase: {summary.purchase.count} | Rp {summary.purchase.total.toLocaleString("id-ID")}
-            </div>
-            <div className="bg-green-600/20 text-green-400 px-3 py-2 rounded font-semibold">
-              Order: {summary.order.count} | Rp {summary.order.total.toLocaleString("id-ID")}
-            </div>
+        <div className="flex gap-4 mb-4">
+          <div className="bg-red-600/20 text-red-400 px-3 py-2 rounded font-semibold">
+            Expense: {summary.expense.count} | Rp{" "}
+            {summary.expense.total.toLocaleString("id-ID")}
           </div>
-
+          <div className="bg-blue-600/20 text-blue-400 px-3 py-2 rounded font-semibold">
+            Purchase: {summary.purchase.count} | Rp{" "}
+            {summary.purchase.total.toLocaleString("id-ID")}
+          </div>
+          <div className="bg-green-600/20 text-green-400 px-3 py-2 rounded font-semibold">
+            Order: {summary.order.count} | Rp{" "}
+            {summary.order.total.toLocaleString("id-ID")}
+          </div>
+        </div>
 
         {/* Search */}
         <div className="mb-4">
@@ -187,7 +191,9 @@ const Payment = () => {
                     <input
                       type="checkbox"
                       onChange={handleSelectAll}
-                      checked={currentPayments.every((p) => selectedPayments.has(p._id))}
+                      checked={currentPayments.every((p) =>
+                        selectedPayments.has(p._id)
+                      )}
                     />
                   </th>
                   <th className="border border-gray-600 px-3 py-2">#</th>
@@ -197,7 +203,9 @@ const Payment = () => {
                   <th className="border border-gray-600 px-3 py-2">Arah</th>
                   <th className="border border-gray-600 px-3 py-2">Metode</th>
                   <th className="border border-gray-600 px-3 py-2">Status</th>
-                  <th className="border border-gray-600 px-3 py-2 text-right">Jumlah</th>
+                  <th className="border border-gray-600 px-3 py-2 text-right">
+                    Jumlah
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -288,8 +296,7 @@ const Payment = () => {
               <div className="text-gray-400 text-sm">
                 {filteredPayments.length > 0 && (
                   <span>
-                    Menampilkan{" "}
-                    <b>{indexOfFirstItem + 1}</b>–
+                    Menampilkan <b>{indexOfFirstItem + 1}</b>–
                     <b>
                       {indexOfLastItem > filteredPayments.length
                         ? filteredPayments.length
