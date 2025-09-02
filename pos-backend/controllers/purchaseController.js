@@ -5,7 +5,7 @@ const StockTransaction = require("../models/stockModel");
 const Unit = require("../models/unitModel");
 const Payment = require("../models/paymentModel");
 const { savePaymentFromPurchase } = require("../helpers/paymentHelper");
-const { updateDishHPP, getBaseUnitAndQty } = require("../helpers/updateDishHPP");
+const { updateDishHPP } = require("../helpers/updateDishHPP");
 
 // ================= UTILS =================
 async function getBaseUnitAndQty(unitId, qty, session) {
