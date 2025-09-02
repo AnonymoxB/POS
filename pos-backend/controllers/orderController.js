@@ -62,7 +62,9 @@ const addOrder = async (req, res, next) => {
      * 🔹 Update stok berdasarkan BOM
      */
     for (const item of detailedItems) {
-      const bomList = await DishBOM.find({ dish: item.dishId })
+      const bomList = await DishBOM.find({ 
+        dish: item.dishId,
+        variant: item.variant, })
         .populate({ path: "product", populate: "defaultUnit" })
         .populate("unit");
 

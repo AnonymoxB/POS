@@ -75,15 +75,6 @@ const Invoice = ({ orderInfo, setShowInvoice }) => {
               <strong>Order ID:</strong>{" "}
               {Math.floor(new Date(orderInfo.orderDate).getTime())}
             </p>
-            <p>
-              <strong>Name:</strong> {orderInfo.customerDetails.name}
-            </p>
-            <p>
-              <strong>Phone:</strong> {orderInfo.customerDetails.phone}
-            </p>
-            <p>
-              <strong>Guests:</strong> {orderInfo.customerDetails.guests}
-            </p>
           </div>
 
           {/* Items Summary */}
