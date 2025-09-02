@@ -15,6 +15,7 @@ const EditDishBOMModal = ({ item, isOpen, onClose }) => {
         product: item.product?._id || "",
         qty: item.qty || 1,
         unit: item.unit?._id || item.unit || "",
+        variant: item.variant || "",
       });
 
       fetch("/api/unit")
@@ -81,6 +82,17 @@ const EditDishBOMModal = ({ item, isOpen, onClose }) => {
                 {u.name} ({u.short})
               </option>
             ))}
+          </select>
+          {/* Variant */}
+          <select
+            value={form.variant}
+            onChange={(e) => setForm({ ...form, variant: e.target.value })}
+            className="w-full p-2 rounded bg-[#333] text-white"
+            required
+          >
+            <option value="">-- pilih variant --</option>
+            <option value="hot">Hot</option>
+            <option value="ice">Ice</option>
           </select>
 
           <div className="flex justify-end gap-2">

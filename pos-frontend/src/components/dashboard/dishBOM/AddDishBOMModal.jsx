@@ -9,7 +9,7 @@ const AddDishBOMModal = ({ dish, isOpen, onClose }) => {
 
   const [products, setProducts] = useState([]);
   const [units, setUnits] = useState([]);
-  const [form, setForm] = useState({ product: "", qty: 1, unit: "" });
+  const [form, setForm] = useState({ product: "", qty: 1, unit: "", variant: "ice" });
 
   // 🔹 load product & unit
   useEffect(() => {
@@ -99,6 +99,17 @@ const AddDishBOMModal = ({ dish, isOpen, onClose }) => {
                 {u.name || u.unitName} ({u.short || u.symbol})
               </option>
             ))}
+          </select>
+          {/* Variant */}
+          <select
+            value={form.variant || ""}
+            onChange={(e) => setForm({ ...form, variant: e.target.value })}
+            className="w-full p-2 rounded bg-[#333] text-white"
+            required
+          >
+            <option value="">-- pilih variant --</option>
+            <option value="hot">Hot</option>
+            <option value="ice">Ice</option>
           </select>
 
           <div className="flex justify-end gap-2">

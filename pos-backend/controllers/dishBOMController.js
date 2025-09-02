@@ -8,11 +8,11 @@ exports.addBOMItem = async (req, res) => {
       const { product, qty, unit } = req.body;
       const { dishId } = req.params;
   
-      if (!dishId || !product || !qty || !unit) {
+      if (!dishId || !product || !qty || !unit || !variant) {
         return res.status(400).json({ success: false, message: "All fields are required" });
       }
   
-      const newItem = await DishBOM.create({ dish: dishId, product, qty, unit });
+      const newItem = await DishBOM.create({ dish: dishId, product, qty, unit, variant });
       res.status(201).json({ success: true, data: newItem });
     } catch (err) {
       console.error("🔥 addBOMItem Error:", err);
