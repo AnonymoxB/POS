@@ -7,6 +7,7 @@ const {
   updatePayment,
   deletePayment,
   getPaymentsSummary,
+  deleteMultiplePayments
 } = require("../controllers/paymentController");
 
 // CRUD Payment
