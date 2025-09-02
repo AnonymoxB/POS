@@ -221,6 +221,7 @@ exports.updatePurchase = async (req, res) => {
 };
 
 // ================= DELETE PURCHASE =================
+// ================= DELETE PURCHASE =================
 exports.deletePurchase = async (req, res) => {
   const session = await mongoose.startSession();
   try {
@@ -241,10 +242,10 @@ exports.deletePurchase = async (req, res) => {
           continue;
         }
 
-        // Hitung qty base
-        const { qtyBase } = await getBaseUnitAndQty(item.unit, item.quantity, session);
-        if (!qtyBase || qtyBase <= 0) {
-          console.warn(`qtyBase invalid untuk produk ${product.name}, skip rollback`);
+        // Hitung qty base & unit base
+        const { unitBase, qtyBase } = await getBaseUnitAndQty(item.unit, item.quantity, session);
+        if (!unitBase || !qtyBase || qtyBase <= 0) {
+          console.warn(`qtyBase/unitBase invalid untuk produk ${product.name}, skip rollback`);
           continue;
         }
 
@@ -276,7 +277,7 @@ exports.deletePurchase = async (req, res) => {
         );
       } catch (errItem) {
         console.error(`Gagal rollback item ${item._id}:`, errItem.message);
-        throw errItem; // biar transaksi abort
+        // jangan throw, biar item lain tetap jalan
       }
     }
 
@@ -294,4 +295,5 @@ exports.deletePurchase = async (req, res) => {
     session.endSession();
   }
 };
+
 
