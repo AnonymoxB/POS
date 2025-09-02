@@ -5,7 +5,7 @@ const Product = require("../models/productModel");
 // Tambah BOM untuk dish
 exports.addBOMItem = async (req, res) => {
     try {
-      const { product, qty, unit } = req.body;
+      const { product, qty, unit, variant } = req.body;
       const { dishId } = req.params;
   
       if (!dishId || !product || !qty || !unit || !variant) {
