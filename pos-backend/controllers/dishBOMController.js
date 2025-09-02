@@ -1,6 +1,8 @@
 const DishBOM = require("../models/dishBOMModel");
 const Dish = require("../models/dishesModel");
 const Product = require("../models/productModel");
+const { calculateDishHPP } = require("./dishesController");
+
 
 // Tambah BOM untuk dish
 exports.addBOMItem = async (req, res) => {
@@ -13,6 +15,7 @@ exports.addBOMItem = async (req, res) => {
       }
   
       const newItem = await DishBOM.create({ dish: dishId, product, qty, unit, variant });
+      await calculateDishHPP(dishId);
       res.status(201).json({ success: true, data: newItem });
     } catch (err) {
       console.error("🔥 addBOMItem Error:", err);
@@ -43,7 +46,7 @@ exports.updateBOMItem = async (req, res) => {
     const updated = await DishBOM.findByIdAndUpdate(id, req.body, { new: true });
 
     if (!updated) return res.status(404).json({ success: false, message: "BOM item not found" });
-
+    await calculateDishHPP(updated.dish);
     res.json({ success: true, data: updated });
   } catch (err) {
     console.error("🔥 updateBOMItem Error:", err);
@@ -58,7 +61,7 @@ exports.deleteBOMItem = async (req, res) => {
     const deleted = await DishBOM.findByIdAndDelete(id);
 
     if (!deleted) return res.status(404).json({ success: false, message: "BOM item not found" });
-
+    await calculateDishHPP(deleted.dish);
     res.json({ success: true, message: "BOM item deleted" });
   } catch (err) {
     console.error("🔥 deleteBOMItem Error:", err);

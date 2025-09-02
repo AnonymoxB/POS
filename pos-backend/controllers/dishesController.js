@@ -61,7 +61,7 @@ const calculateDishHPP = async (dishId) => {
   let totalIce = 0;
 
   bomItems.forEach((item) => {
-    const productHPP = item.product.price || 0;
+    const productHPP = item.product.hpp || 0;
     if (item.variant === "hot") {
       totalHot += productHPP * item.qty;
     } else if (item.variant === "ice") {
@@ -69,7 +69,6 @@ const calculateDishHPP = async (dishId) => {
     }
   });
 
-  // update dish sesuai hasil per variant
   const updatedDish = await Dish.findByIdAndUpdate(
     dishId,
     {
@@ -81,6 +80,7 @@ const calculateDishHPP = async (dishId) => {
 
   return updatedDish;
 };
+
 
 
 // Endpoint khusus untuk hitung HPP dish

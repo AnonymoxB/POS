@@ -252,7 +252,6 @@ export default function DishBOMPage() {
           onClose={(updated) => {
             setSelectedDish(null);
             if (updated) {
-              // refresh list dishes agar HPP terbaru ikut update
               fetchDishes();
             }
           }}
