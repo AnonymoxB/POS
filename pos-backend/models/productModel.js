@@ -24,7 +24,11 @@ const productSchema = new mongoose.Schema(
     },
     price: {
       type: Number,
-      required: true,
+      required: true, // harga jual
+    },
+    hpp: {
+      type: Number,
+      default: 0, // harga pokok rata-rata dari purchase
     },
   },
   { timestamps: true }

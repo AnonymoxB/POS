@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import DishBOM from "./DishBOM";
 import { Card, CardContent } from "@/components/ui/card";
@@ -17,19 +17,20 @@ export default function DishBOMPage() {
   // Search state
   const [searchTerm, setSearchTerm] = useState("");
 
-  useEffect(() => {
-  const fetchDishes = async () => {
+  const fetchDishes = useCallback(async () => {
     try {
-      const data = await getDishes(); // langsung array
+      const data = await getDishes();
       setDishes(data);
     } catch (err) {
       console.error("Gagal fetch dishes:", err);
     } finally {
       setLoading(false);
     }
-  };
-  fetchDishes();
-}, []);
+  }, []);
+
+  useEffect(() => {
+    fetchDishes();
+  }, [fetchDishes]);
 
 
   // Filter berdasarkan search
@@ -110,9 +111,12 @@ export default function DishBOMPage() {
                   <th className="border border-gray-600 px-3 py-2 text-left">
                     Kategori
                   </th>
+                  <th className="border border-gray-600 px-3 py-2 text-right">HPP Hot</th>
+                  <th className="border border-gray-600 px-3 py-2 text-right">HPP Ice</th>
                   <th className="border border-gray-600 px-3 py-2 text-center">
                     Aksi
                   </th>
+                  
                 </tr>
               </thead>
               <tbody>
@@ -128,6 +132,13 @@ export default function DishBOMPage() {
                       <td className="border border-gray-600 px-3 py-2 text-left">
                         {dish.category || "-"}
                       </td>
+                      <td className="border border-gray-600 px-3 py-2 text-right">
+                        Rp {dish.hpp?.hpphot?.toLocaleString() || 0}
+                      </td>
+                      <td className="border border-gray-600 px-3 py-2 text-right">
+                        Rp {dish.hpp?.hppice?.toLocaleString() || 0}
+                      </td>
+
                       <td className="border border-gray-600 px-3 py-2 text-center">
                         <Button
                           size="sm"
@@ -236,10 +247,16 @@ export default function DishBOMPage() {
         {/* Modal Dish BOM */}
         {selectedDish && (
           <DishBOM
-            dish={selectedDish}
-            open={!!selectedDish}
-            onClose={() => setSelectedDish(null)}
-          />
+          dish={selectedDish}
+          open={!!selectedDish}
+          onClose={(updated) => {
+            setSelectedDish(null);
+            if (updated) {
+              // refresh list dishes agar HPP terbaru ikut update
+              fetchDishes();
+            }
+          }}
+        />
         )}
       </CardContent>
     </Card>

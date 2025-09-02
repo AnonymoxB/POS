@@ -37,6 +37,7 @@ export default function DishBOM({ dish, open, onClose }) {
     try {
       await deleteDishBOM(id);
       await loadBOM();
+      onClose(true);
     } catch (err) {
       console.error("Gagal hapus BOM:", err);
     } finally {
@@ -61,6 +62,7 @@ export default function DishBOM({ dish, open, onClose }) {
                 <th className="px-3 py-2 text-left">Bahan</th>
                 <th className="px-3 py-2 text-right">Qty</th>
                 <th className="px-3 py-2 text-left">Unit</th>
+                <th className="px-3 py-2 text-left">Variant</th>
                 <th className="px-3 py-2 text-center">Aksi</th>
               </tr>
             </thead>
@@ -84,6 +86,7 @@ export default function DishBOM({ dish, open, onClose }) {
                     <td className="px-3 py-2">
                       {item.unit?.short || item.unit}
                     </td>
+                    <td className="px-3 py-2">{item.variant}</td>
                     <td className="px-3 py-2 text-center space-x-2">
                       <Button
                         size="sm"
@@ -122,7 +125,7 @@ export default function DishBOM({ dish, open, onClose }) {
           >
             Tambah Bahan
           </Button>
-          <Button className="bg-gray-600 hover:bg-gray-700" onClick={onClose}>
+          <Button className="bg-gray-600 hover:bg-gray-700" onClick={() => onClose(false)}>
             Tutup
           </Button>
         </div>

@@ -8,19 +8,19 @@ const dishSchema = new mongoose.Schema(
     },
     price: {
       hot: {
-      type: Number,
-      required: true,
+        type: Number,
+        default:0,
       },
       ice: {
         type: Number,
-        required: true,
+        default:0,
     }},
     hpp: {
-      hpphot: { type: Number, required: true },
-      hppice: { type: Number, required: true }
+      hpphot: { type: Number, default:0 },
+      hppice: { type: Number, default:0 }
     },
     category: {
-      type: String,
+      type: "Category",
       required: true,
     },
   },

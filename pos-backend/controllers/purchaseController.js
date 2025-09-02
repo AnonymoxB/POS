@@ -3,11 +3,9 @@ const Purchase = require("../models/purchaseModel");
 const Product = require("../models/productModel");
 const StockTransaction = require("../models/stockModel");
 const Unit = require("../models/unitModel");
-const Payment = require("../models/paymentModel"); // <== tambahkan
+const Payment = require("../models/paymentModel");
 const { savePaymentFromPurchase } = require("../helpers/paymentHelper");
 const { updateDishHPP } = require("../helpers/updateDishHPP");
-
-
 
 async function getBaseUnitAndQty(unitId, qty, session) {
   const unitDoc = await Unit.findById(unitId).session(session);
@@ -49,7 +47,6 @@ exports.createPurchase = async (req, res) => {
     session.startTransaction();
 
     const { supplier, items } = req.body;
-
     if (!items || items.length === 0) {
       return res.status(400).json({ success: false, message: "Items tidak boleh kosong" });
     }
@@ -75,12 +72,13 @@ exports.createPurchase = async (req, res) => {
       const { unitBase, qtyBase } = await getBaseUnitAndQty(item.unit, item.quantity, session);
 
       const oldStock = product.stockBase || 0;
-      const oldValue = oldStock * (product.price || 0);
+      const oldValue = oldStock * (product.hpp || 0);
       const newValue = qtyBase * item.price;
       const newStock = oldStock + qtyBase;
 
       product.stockBase = newStock;
-      product.price = newStock > 0 ? (oldValue + newValue) / newStock : item.price;
+      product.hpp = newStock > 0 ? (oldValue + newValue) / newStock : item.price;
+
       await product.save({ session });
       await updateDishHPP(product._id, session);
 
@@ -150,7 +148,7 @@ exports.updatePurchase = async (req, res) => {
       await product.save({ session });
 
       await updateDishHPP(product._id, session);
-      
+
       await StockTransaction.create(
         [
           {
@@ -182,14 +180,16 @@ exports.updatePurchase = async (req, res) => {
       const { unitBase, qtyBase } = await getBaseUnitAndQty(item.unit, item.quantity, session);
 
       const oldStock = product.stockBase || 0;
-      const oldValue = oldStock * (product.price || 0);
+      const oldValue = oldStock * (product.hpp || 0);
       const newValue = qtyBase * item.price;
       const newStock = oldStock + qtyBase;
 
       product.stockBase = newStock;
-      product.price = newStock > 0 ? (oldValue + newValue) / newStock : item.price;
+      product.hpp = newStock > 0 ? (oldValue + newValue) / newStock : item.price;
+
       await product.save({ session });
       await updateDishHPP(product._id, session);
+
       await StockTransaction.create(
         [
           {
@@ -242,7 +242,9 @@ exports.deletePurchase = async (req, res) => {
       const { unitBase, qtyBase } = await getBaseUnitAndQty(item.unit, item.quantity, session);
       product.stockBase -= qtyBase;
       await product.save({ session });
+
       await updateDishHPP(product._id, session);
+
       await StockTransaction.create(
         [
           {
@@ -260,8 +262,6 @@ exports.deletePurchase = async (req, res) => {
     }
 
     await Purchase.deleteOne({ _id: id }, { session });
-
-    // hapus payment juga
     await Payment.deleteMany({ source: id, sourceType: "Purchase" }, { session });
 
     await session.commitTransaction();
