@@ -105,5 +105,6 @@ module.exports = {
   createDish,
   updateDish,
   deleteDish,
-  getDishHPP
+  getDishHPP,
+  calculateDishHPP
 };
