@@ -57,25 +57,31 @@ const deleteDish = async (req, res) => {
 const calculateDishHPP = async (dishId) => {
   const bomItems = await DishBOM.find({ dish: dishId }).populate("product");
 
-  let totalHPP = 0;
+  let totalHot = 0;
+  let totalIce = 0;
 
   bomItems.forEach((item) => {
-    const productHPP = item.product.price || 0; // ambil harga pokok product
-    totalHPP += productHPP * item.qty;
+    const productHPP = item.product.price || 0;
+    if (item.variant === "hot") {
+      totalHot += productHPP * item.qty;
+    } else if (item.variant === "ice") {
+      totalIce += productHPP * item.qty;
+    }
   });
 
-  // Simpan ke Dish (hpphot & hppice sama dulu, bisa dibedakan nanti)
+  // update dish sesuai hasil per variant
   const updatedDish = await Dish.findByIdAndUpdate(
     dishId,
     {
-      "hpp.hpphot": totalHPP,
-      "hpp.hppice": totalHPP,
+      "hpp.hpphot": totalHot,
+      "hpp.hppice": totalIce,
     },
     { new: true }
   );
 
   return updatedDish;
 };
+
 
 // Endpoint khusus untuk hitung HPP dish
 const getDishHPP = async (req, res) => {

@@ -77,9 +77,6 @@ const Purchase = () => {
     queryClient.invalidateQueries(["purchases"]);
   };
 
-  if (isLoading) return <p className="text-[#ababab]">Loading...</p>;
-  if (isError) return <p className="text-red-500">Gagal memuat data purchase</p>;
-
   const purchases = data?.data?.data || [];
 
   // Filter
@@ -149,11 +146,31 @@ const Purchase = () => {
         />
       </div>
 
-      {/* Table */}
-      {currentPurchases.length === 0 ? (
-        <p className="text-[#ababab]">Tidak ada purchase.</p>
-      ) : (
-        <div className="overflow-x-auto">
+      {/* Loading */}
+      {isLoading && (
+        <div className="space-y-2">
+          {[...Array(5)].map((_, i) => (
+            <div
+              key={i}
+              className="h-10 w-full animate-pulse rounded bg-[#333]"
+            ></div>
+          ))}
+        </div>
+      )}
+
+      {/* Error */}
+      {isError && <p className="text-red-500">Gagal memuat data purchase</p>}
+
+      {/* Empty state */}
+      {!isLoading && !isError && currentPurchases.length === 0 && (
+        <p className="text-[#ababab] text-center py-6">
+          Tidak ada purchase. Tambahkan data baru!
+        </p>
+      )}
+
+      {/* Desktop Table */}
+      {!isLoading && currentPurchases.length > 0 && (
+        <div className="overflow-x-auto hidden md:block">
           <table className="w-full border-collapse border border-gray-600 text-sm">
             <thead>
               <tr className="bg-[#333] text-gray-300">
@@ -232,6 +249,52 @@ const Purchase = () => {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Mobile Card View */}
+      {!isLoading && currentPurchases.length > 0 && (
+        <div className="block md:hidden space-y-4">
+          {currentPurchases.map((purchase) => (
+            <Card
+              key={purchase._id}
+              className="bg-[#1f1f1f] border border-gray-700 text-white"
+            >
+              <CardContent className="p-4 space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-gray-400 text-sm">
+                    {new Date(purchase.purchaseDate).toLocaleDateString()}
+                  </span>
+                  <span className="font-bold text-green-400">
+                    {purchase.grandTotal.toLocaleString("id-ID", { style: "currency", currency: "IDR" })}
+                  </span>
+                </div>
+                <p className="font-semibold">{purchase.supplier?.name || "-"}</p>
+                <ul className="text-sm text-gray-300">
+                  {purchase.items.map((i) => (
+                    <li key={i._id}>
+                      {i.product?.name} - {i.quantity} {i.unit?.short} @{" "}
+                      {i.price.toLocaleString("id-ID", { style: "currency", currency: "IDR" })}
+                    </li>
+                  ))}
+                </ul>
+                <div className="flex gap-2 pt-2">
+                  <button
+                    onClick={() => handleEdit(purchase)}
+                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-md text-sm"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(purchase._id)}
+                    className="flex-1 bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-md text-sm"
+                  >
+                    Hapus
+                  </button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       )}
 

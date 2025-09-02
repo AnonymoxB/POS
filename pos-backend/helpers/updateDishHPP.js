@@ -3,39 +3,34 @@ const DishBOM = require("../models/dishBOMModel");
 const Product = require("../models/productModel");
 
 async function updateDishHPP(productId, session) {
-  // cari semua BOM yang pakai product ini
+  // Cari semua BOM yang pakai product ini
   const boms = await DishBOM.find({ product: productId }).session(session);
   if (!boms.length) return;
 
-  // grouping by dish
+  // Grouping by dishId + variant
   const dishMap = {};
   for (const bom of boms) {
-    if (!dishMap[bom.dish]) dishMap[bom.dish] = [];
-    dishMap[bom.dish].push(bom);
+    const key = `${bom.dish}_${bom.variant}`;
+    if (!dishMap[key]) dishMap[key] = { dishId: bom.dish, variant: bom.variant, items: [] };
+    dishMap[key].items.push(bom);
   }
 
-  for (const [dishId, dishBoms] of Object.entries(dishMap)) {
+  // Hitung HPP per dish + variant
+  for (const { dishId, variant, items } of Object.values(dishMap)) {
     let totalHPP = 0;
 
-    for (const bom of dishBoms) {
+    for (const bom of items) {
       const product = await Product.findById(bom.product).session(session);
       if (!product) continue;
 
-      // hitung hpp: qty * harga product terakhir
       totalHPP += bom.qty * (product.price || 0);
     }
 
-    // update Dish HPP → sementara samakan ke hpphot & hppice
-    await Dish.findByIdAndUpdate(
-      dishId,
-      {
-        $set: {
-          "hpp.hpphot": totalHPP,
-          "hpp.hppice": totalHPP,
-        },
-      },
-      { session }
-    );
+    // Update ke field yang sesuai
+    const updateField =
+      variant === "hot" ? { "hpp.hpphot": totalHPP } : { "hpp.hppice": totalHPP };
+
+    await Dish.findByIdAndUpdate(dishId, { $set: updateField }, { session });
   }
 }
 

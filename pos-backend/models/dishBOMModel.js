@@ -21,6 +21,11 @@ const dishBOMSchema = new mongoose.Schema(
       ref: "Unit",
       required: true,
     },
+    variant: {
+      type: String,
+      enum: ["hot", "ice"],
+      required: true,
+    },
   },
   { timestamps: true }
 );
