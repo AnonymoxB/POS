@@ -60,8 +60,8 @@ exports.getBOMByDish = async (req, res) => {
   try {
     const { dishId } = req.params;
     const items = await DishBOM.find({ dish: dishId })
-      .populate("product", "name")
-      .populate("unit", "short");
+      .populate("product", "name hpp")
+      .populate("unit", "short conversion");
 
     res.json({ success: true, data: items });
   } catch (err) {
