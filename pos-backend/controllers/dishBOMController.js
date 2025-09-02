@@ -1,7 +1,38 @@
 const DishBOM = require("../models/dishBOMModel");
 const Dish = require("../models/dishesModel");
 const Product = require("../models/productModel");
-const { calculateDishHPP } = require("./dishesController");
+const Unit = require("../models/unitModel");
+
+const calculateDishHPP = async (dishId) => {
+  const bomItems = await DishBOM.find({ dish: dishId })
+    .populate("product")
+    .populate("unit");
+
+  let totalHot = 0;
+  let totalIce = 0;
+
+  bomItems.forEach((item) => {
+    if (!item.product) return;
+
+    const qty = Number(item.qty) || 0;
+    const conversion = Number(item.unit?.conversion) || 1;
+    const finalQty = qty * conversion;
+
+    const productHPP = Number(item.product.hpp) || 0;
+
+    if (item.variant === "hot") totalHot += productHPP * finalQty;
+    else if (item.variant === "ice") totalIce += productHPP * finalQty;
+  });
+
+  const updatedDish = await Dish.findByIdAndUpdate(
+    dishId,
+    { "hpp.hpphot": totalHot, "hpp.hppice": totalIce },
+    { new: true }
+  );
+
+  return updatedDish;
+};
+
 
 
 // Tambah BOM untuk dish

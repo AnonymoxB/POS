@@ -55,48 +55,6 @@ const deleteDish = async (req, res) => {
   }
 };
 
-const calculateDishHPP = async (dishId) => {
-  const bomItems = await DishBOM.find({ dish: dishId })
-    .populate("product")
-    .populate("unit");
-
-  let totalHot = 0;
-  let totalIce = 0;
-
-  bomItems.forEach((item) => {
-    if (!item.product) return; // skip kalau product null
-
-    const qty = Number(item.qty) || 0;
-    const conversion = Number(item.unit?.conversion) || 1;
-
-    const finalQty = qty * conversion;
-
-    // ambil hpp product sesuai variant
-    const productHPPHot = item.product.hpp?.hpphot || 0;
-    const productHPPIce = item.product.hpp?.hppice || 0;
-
-    if (item.variant === "hot") {
-      totalHot += productHPPHot * finalQty;
-    } else if (item.variant === "ice") {
-      totalIce += productHPPIce * finalQty;
-    }
-  });
-
-  const updatedDish = await Dish.findByIdAndUpdate(
-    dishId,
-    { "hpp.hpphot": totalHot, "hpp.hppice": totalIce },
-    { new: true }
-  );
-
-  return updatedDish;
-};
-
-
-
-
-
-
-
 
 // Endpoint khusus untuk hitung HPP dish
 const getDishHPP = async (req, res) => {
@@ -121,5 +79,4 @@ module.exports = {
   updateDish,
   deleteDish,
   getDishHPP,
-  calculateDishHPP
 };
