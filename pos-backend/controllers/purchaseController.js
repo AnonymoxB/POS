@@ -5,7 +5,7 @@ const StockTransaction = require("../models/stockModel");
 const Unit = require("../models/unitModel");
 const Payment = require("../models/paymentModel");
 const { savePaymentFromPurchase } = require("../helpers/paymentHelper");
-const { updateDishHPP } = require("../helpers/updateDishHPP");
+const { updateDishHPP, getBaseUnitAndQty } = require("../helpers/updateDishHPP");
 
 // ================= UTILS =================
 async function getBaseUnitAndQty(unitId, qty, session) {
@@ -231,6 +231,7 @@ exports.deletePurchase = async (req, res) => {
       return res.status(404).json({ success: false, message: "Purchase not found" });
     }
 
+    // Rollback stock per item
     for (const item of purchase.items) {
       try {
         const product = await Product.findById(item.product).session(session);
@@ -239,9 +240,8 @@ exports.deletePurchase = async (req, res) => {
           continue;
         }
 
-        // Ambil qty base
+        // Hitung qty base
         const { qtyBase } = await getBaseUnitAndQty(item.unit, item.quantity, session);
-
         if (!qtyBase || qtyBase <= 0) {
           console.warn(`qtyBase invalid untuk produk ${product.name}, skip rollback`);
           continue;
@@ -251,8 +251,12 @@ exports.deletePurchase = async (req, res) => {
         product.stockBase = Math.max(0, product.stockBase - qtyBase);
         await product.save({ session });
 
-        // Update HPP dish terkait
-        await updateDishHPP(product._id, session);
+        // Update HPP dish terkait, try/catch per product
+        try {
+          await updateDishHPP(product._id, session);
+        } catch (errHPP) {
+          console.error(`Gagal update HPP untuk produk ${product.name}:`, errHPP.message);
+        }
 
         // Simpan transaksi stok
         await StockTransaction.create(
@@ -274,7 +278,7 @@ exports.deletePurchase = async (req, res) => {
       }
     }
 
-    // Hapus purchase dan payment terkait
+    // Hapus purchase & payment
     await Purchase.deleteOne({ _id: id }, { session });
     await Payment.deleteMany({ source: id, sourceType: "Purchase" }, { session });
 
