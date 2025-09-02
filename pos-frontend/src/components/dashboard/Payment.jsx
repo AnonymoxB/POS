@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { getPayments, deleteMultiplePayments, deletePayment } from "../../https";
+import { getPayments, deleteMultiplePayments } from "../../https";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

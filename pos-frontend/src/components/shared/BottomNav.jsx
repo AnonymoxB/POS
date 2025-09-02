@@ -29,7 +29,7 @@ const BottomNav = () => {
       >
         <FaCashRegister className="mr-2" size={18} /> Orders
       </button>
-      <button
+      {/* <button
         onClick={() => navigate("/tables")}
         className={`flex items-center justify-center font-bold w-[22%] md:w-[120px] rounded-[20px] py-2 text-sm md:text-base ${
           isActive("/tables") ? "text-[#f5f5f5] bg-[#343434]" : "text-[#ababab]"
@@ -42,7 +42,7 @@ const BottomNav = () => {
         disabled
       >
         <CiCircleMore className="mr-2" size={18} /> More
-      </button>
+      </button> */}
 
       {/* Floating Order Button langsung ke menu */}
       <button

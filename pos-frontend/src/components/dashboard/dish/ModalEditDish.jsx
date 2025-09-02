@@ -100,7 +100,7 @@ const ModalEditDish = ({ isOpen, onClose, dish, onUpdated }) => {
                     value={formData.hppHot}
                     onChange={handleChange}
                     className="w-full bg-transparent text-white focus:outline-none"
-                    required
+                    disabled
                   />
                 </div>
               </div>
@@ -113,7 +113,7 @@ const ModalEditDish = ({ isOpen, onClose, dish, onUpdated }) => {
                     value={formData.hppIce}
                     onChange={handleChange}
                     className="w-full bg-transparent text-white focus:outline-none"
-                    required
+                    disabled
                   />
                 </div>
               </div>

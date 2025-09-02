@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { getUnits, getProducts, updatePurchase } from "../../../https";
-import { useSnackbar } from "notistack";
+import { toast } from "sonner";
 
 const EditPurchaseModal = ({ isOpen, onClose, purchase }) => {
-  const { enqueueSnackbar } = useSnackbar();
   const queryClient = useQueryClient();
 
   const { data: units } = useQuery({ queryKey: ["units"], queryFn: getUnits });
@@ -14,29 +13,35 @@ const EditPurchaseModal = ({ isOpen, onClose, purchase }) => {
   const [items, setItems] = useState([]);
 
   useEffect(() => {
-    if (purchase) {
-      setSupplier(purchase.supplier || "");
-      setItems(
-        purchase.items?.map((item) => ({
-          product: item.product?._id || item.product, // jaga-jaga kalau backend return object
-          quantity: item.quantity,
-          unit: item.unit?._id || item.unit,
-          price: item.price,
-          total: item.quantity * item.price,
-        })) || []
-      );
-    }
-  }, [purchase]);
+  if (purchase) {
+    setSupplier(
+      typeof purchase.supplier === "object"
+        ? purchase.supplier.name || ""
+        : purchase.supplier || ""
+    );
 
-  const { mutate } = useMutation({
+    setItems(
+      purchase.items?.map((item) => ({
+        product: item.product?._id || item.product,
+        quantity: item.quantity,
+        unit: item.unit?._id || item.unit,
+        price: item.price,
+        total: (item.quantity || 0) * (item.price || 0),
+      })) || []
+    );
+  }
+}, [purchase]);
+
+
+  const { mutate, isLoading } = useMutation({
     mutationFn: (data) => updatePurchase(purchase._id, data),
     onSuccess: () => {
-      enqueueSnackbar("Purchase berhasil diperbarui", { variant: "success" });
+      toast.success("Purchase berhasil diperbarui");
       queryClient.invalidateQueries(["purchases"]);
       onClose();
     },
     onError: () => {
-      enqueueSnackbar("Gagal update purchase", { variant: "error" });
+      toast.error("Gagal update purchase");
     },
   });
 
@@ -45,9 +50,9 @@ const EditPurchaseModal = ({ isOpen, onClose, purchase }) => {
     newItems[index][field] = value;
 
     if (field === "quantity" || field === "price") {
-      newItems[index].total =
-        (parseFloat(newItems[index].quantity) || 0) *
-        (parseFloat(newItems[index].price) || 0);
+      const qty = parseFloat(newItems[index].quantity) || 0;
+      const price = parseFloat(newItems[index].price) || 0;
+      newItems[index].total = qty * price;
     }
 
     setItems(newItems);
@@ -58,11 +63,13 @@ const EditPurchaseModal = ({ isOpen, onClose, purchase }) => {
     mutate({ supplier, items });
   };
 
+  const totalPurchase = items.reduce((sum, i) => sum + (i.total || 0), 0);
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-[#262626] p-6 rounded-lg w-[600px]">
+    <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
+      <div className="bg-[#262626] p-6 rounded-xl w-[650px] shadow-lg">
         <h2 className="text-lg font-bold mb-4 text-white">Edit Purchase</h2>
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
           <input
@@ -78,9 +85,7 @@ const EditPurchaseModal = ({ isOpen, onClose, purchase }) => {
             <div key={idx} className="flex gap-2">
               <select
                 value={item.product}
-                onChange={(e) =>
-                  handleItemChange(idx, "product", e.target.value)
-                }
+                onChange={(e) => handleItemChange(idx, "product", e.target.value)}
                 className="px-3 py-2 rounded bg-[#333] text-white flex-1"
                 required
               >
@@ -91,15 +96,15 @@ const EditPurchaseModal = ({ isOpen, onClose, purchase }) => {
                   </option>
                 ))}
               </select>
+
               <input
                 type="number"
                 placeholder="Qty"
                 value={item.quantity}
-                onChange={(e) =>
-                  handleItemChange(idx, "quantity", e.target.value)
-                }
+                onChange={(e) => handleItemChange(idx, "quantity", e.target.value)}
                 className="w-20 px-3 py-2 rounded bg-[#333] text-white"
               />
+
               <select
                 value={item.unit}
                 onChange={(e) => handleItemChange(idx, "unit", e.target.value)}
@@ -113,20 +118,27 @@ const EditPurchaseModal = ({ isOpen, onClose, purchase }) => {
                   </option>
                 ))}
               </select>
+
               <input
                 type="number"
                 placeholder="Harga"
                 value={item.price}
-                onChange={(e) =>
-                  handleItemChange(idx, "price", e.target.value)
-                }
+                onChange={(e) => handleItemChange(idx, "price", e.target.value)}
                 className="w-24 px-3 py-2 rounded bg-[#333] text-white"
               />
+
               <span className="w-24 text-white text-right self-center">
-                {item.total}
+                {item.total?.toLocaleString()}
               </span>
             </div>
           ))}
+
+          <div className="flex justify-between items-center text-white mt-4">
+            <span className="font-semibold">Total:</span>
+            <span className="font-bold text-lg">
+              {totalPurchase.toLocaleString()}
+            </span>
+          </div>
 
           <div className="flex justify-end gap-2 mt-4">
             <button
@@ -138,9 +150,10 @@ const EditPurchaseModal = ({ isOpen, onClose, purchase }) => {
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-green-600 text-white rounded-md"
+              disabled={isLoading}
+              className="px-4 py-2 bg-green-600 text-white rounded-md disabled:opacity-50"
             >
-              Update
+              {isLoading ? "Menyimpan..." : "Update"}
             </button>
           </div>
         </form>

@@ -118,6 +118,17 @@ const Dish = () => {
     enqueueSnackbar("Menu berhasil diperbarui", { variant: "success" });
   };
 
+  const formatRupiah = (number) => {
+  if (typeof number !== "number") return "-";
+  return new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    minimumFractionDigits: 0,
+  }).format(number);
+};
+
+  
+
   return (
     <Card className="bg-[#262626] text-white">
       <CardContent className="p-6">
@@ -188,6 +199,8 @@ const Dish = () => {
                     <th className="border border-gray-600 px-3 py-2">HPP Ice</th>
                     <th className="border border-gray-600 px-3 py-2">Harga Hot</th>
                     <th className="border border-gray-600 px-3 py-2">Harga Ice</th>
+                    <th className="border border-gray-600 px-3 py-2">Profit Hot (%)</th>
+                    <th className="border border-gray-600 px-3 py-2">Profit Ice (%)</th>
                     <th className="border border-gray-600 px-3 py-2">Create</th>
                     <th className="border border-gray-600 px-3 py-2">Update</th>
                     <th className="border border-gray-600 px-3 py-2 text-center w-40">
@@ -207,17 +220,28 @@ const Dish = () => {
                       <td className="border border-gray-600 px-3 py-2">{dish.name}</td>
                       <td className="border border-gray-600 px-3 py-2">{dish.category}</td>
                       <td className="border border-gray-600 px-3 py-2">
-                        {dish.hpp?.hpphot ? `Rp ${dish.hpp.hpphot}` : "-"}
+                        {dish.hpp?.hpphot ? formatRupiah(dish.hpp.hpphot) : "-"}
                       </td>
                       <td className="border border-gray-600 px-3 py-2">
-                        {dish.hpp?.hppice ? `Rp ${dish.hpp.hppice}` : "-"}
+                        {dish.hpp?.hppice ? formatRupiah(dish.hpp.hppice) : "-"}
                       </td>
                       <td className="border border-gray-600 px-3 py-2">
-                        {dish.price?.hot ? `Rp ${dish.price.hot}` : "-"}
+                        {dish.price?.hot ? formatRupiah(dish.price.hot) : "-"}
                       </td>
                       <td className="border border-gray-600 px-3 py-2">
-                        {dish.price?.ice ? `Rp ${dish.price.ice}` : "-"}
+                        {dish.price?.ice ? formatRupiah(dish.price.ice) : "-"}
                       </td>
+                      <td className="border border-gray-600 px-3 py-2">
+                        {dish.hpp?.hpphot && dish.price?.hot
+                          ? `${(((dish.price.hot - dish.hpp.hpphot) / dish.hpp.hpphot) * 100).toFixed(1)}%`
+                          : "-"}
+                      </td>
+                      <td className="border border-gray-600 px-3 py-2">
+                        {dish.hpp?.hppice && dish.price?.ice
+                          ? `${(((dish.price.ice - dish.hpp.hppice) / dish.hpp.hppice) * 100).toFixed(1)}%`
+                          : "-"}
+                      </td>
+
                       <td className="border border-gray-600 px-3 py-2">
                         {dish.createdAt
                           ? new Date(dish.createdAt).toLocaleString("id-ID")

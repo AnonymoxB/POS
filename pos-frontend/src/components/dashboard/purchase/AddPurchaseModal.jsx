@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { getUnits, getProducts, getSuppliers, createPurchase } from "../../../https";
 import { useSnackbar } from "notistack";
@@ -50,6 +50,16 @@ const AddPurchaseModal = ({ isOpen, onClose }) => {
     { product: null, quantity: 1, unit: "", price: 0, total: 0 },
   ]);
 
+  // refs untuk auto fokus ke qty terakhir
+  const qtyRefs = useRef([]);
+
+  useEffect(() => {
+    if (qtyRefs.current.length > 0) {
+      const lastRef = qtyRefs.current[qtyRefs.current.length - 1];
+      if (lastRef) lastRef.focus();
+    }
+  }, [items.length]);
+
   const { mutate } = useMutation({
     mutationFn: createPurchase,
     onSuccess: () => {
@@ -81,30 +91,26 @@ const AddPurchaseModal = ({ isOpen, onClose }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-  
+
     const unitList = units?.data?.data || units?.data || [];
-  
+
     const payload = {
       supplier: supplier?.value,
       items: items.map((i) => {
         const selectedUnit = unitList.find((u) => u._id === i.unit);
-  
+
         return {
           product: i.product?.value,
           quantity: Number(i.quantity) || 0,
           unit: i.unit,
           price: Number(i.price) || 0,
           total: Number(i.total) || 0,
-  
-          // fallback biar gak pernah undefined
           unitBase: selectedUnit?._id || i.unit,
           qtyBase: Number(i.quantity) || 0,
         };
       }),
     };
-  
-    console.log("Payload dikirim ke backend:", JSON.stringify(payload, null, 2));
-  
+
     if (!payload.supplier) {
       enqueueSnackbar("Supplier wajib dipilih", { variant: "warning" });
       return;
@@ -113,17 +119,17 @@ const AddPurchaseModal = ({ isOpen, onClose }) => {
       enqueueSnackbar("Produk & Unit wajib dipilih", { variant: "warning" });
       return;
     }
-  
+
     mutate(payload);
   };
-  
-  
+
+  const grandTotal = items.reduce((sum, i) => sum + (i.total || 0), 0);
 
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-[#262626] p-6 rounded-lg w-[650px]">
+      <div className="bg-[#262626] p-6 rounded-lg w-[700px]">
         <h2 className="text-lg font-bold mb-4 text-white">Tambah Purchase</h2>
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
           {/* Supplier */}
@@ -139,8 +145,9 @@ const AddPurchaseModal = ({ isOpen, onClose }) => {
             isSearchable
           />
 
+          {/* Items */}
           {items.map((item, idx) => (
-            <div key={idx} className="flex gap-2">
+            <div key={idx} className="flex gap-2 items-center">
               {/* Produk */}
               <div className="flex-1">
                 <Select
@@ -159,10 +166,9 @@ const AddPurchaseModal = ({ isOpen, onClose }) => {
               <input
                 type="number"
                 placeholder="Qty"
+                ref={(el) => (qtyRefs.current[idx] = el)}
                 value={item.quantity}
-                onChange={(e) =>
-                  handleItemChange(idx, "quantity", e.target.value)
-                }
+                onChange={(e) => handleItemChange(idx, "quantity", e.target.value)}
                 className="w-20 px-3 py-2 rounded bg-[#333] text-white"
               />
 
@@ -184,19 +190,48 @@ const AddPurchaseModal = ({ isOpen, onClose }) => {
                 type="number"
                 placeholder="Harga"
                 value={item.price}
-                onChange={(e) =>
-                  handleItemChange(idx, "price", e.target.value)
-                }
+                onChange={(e) => handleItemChange(idx, "price", e.target.value)}
                 className="w-24 px-3 py-2 rounded bg-[#333] text-white"
               />
 
-              <span className="w-24 text-white text-right self-center">
+              <span className="w-28 text-white text-right self-center">
                 Rp {item.total.toLocaleString("id-ID")}
               </span>
+
+              {/* Hapus row */}
+              {items.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => setItems(items.filter((_, i) => i !== idx))}
+                  className="text-red-400 hover:text-red-600 px-2"
+                >
+                  ✕
+                </button>
+              )}
             </div>
           ))}
 
-          <div className="flex justify-end gap-2">
+          {/* Tombol tambah barang */}
+          <button
+            type="button"
+            onClick={() =>
+              setItems([
+                ...items,
+                { product: null, quantity: 1, unit: "", price: 0, total: 0 },
+              ])
+            }
+            className="mt-2 px-3 py-1 bg-blue-600 text-white rounded"
+          >
+            + Tambah Barang
+          </button>
+
+          {/* Grand total */}
+          <div className="flex justify-end mt-4 text-lg font-semibold text-white">
+            Total: Rp {grandTotal.toLocaleString("id-ID")}
+          </div>
+
+          {/* Action button */}
+          <div className="flex justify-end gap-2 mt-4">
             <button
               type="button"
               onClick={onClose}

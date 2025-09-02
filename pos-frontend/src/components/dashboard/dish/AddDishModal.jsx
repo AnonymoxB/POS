@@ -8,73 +8,74 @@ import { addDish } from "../../../https";
 const AddDishModal = ({ setIsAddModalOpen, onClose, onAdded }) => {
   const [dishData, setDishData] = useState({
     name: "",
-    hpp: {
-      hpphot:"",
-      hppice:"",
-    },
-    price: {
-        hot: "",
-        ice: ""
-    },
+    hpp: { hpphot: 0, hppice: 0 },
+    price: { hot: 0, ice: 0 },
     category: "",
-    });
+  });
+
+  // Input handlers
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setDishData((prev) => ({ ...prev, [name]: value }));
+  };
 
   const handlePriceChange = (e) => {
-  const { name, value } = e.target;
-  setDishData((prev) => ({
-    ...prev,
-    price: {
-      ...prev.price,
-      [name]: value === "" ? "" : Number(value),
-    },
-  }));
-};
-
-const handleHPPPriceChange = (e) => {
-  const { name, value } = e.target;
-  setDishData((prev) => ({
-    ...prev,
-    hpp: {
-      ...prev.hpp,
-      [name]: value === "" ? "" : Number(value),
-    },
-  }));
-};
-
-
-  const handleInputChange = (e) => {
-  const { name, value } = e.target;
-  setDishData((prev) => ({
-    ...prev,
-    [name]: value,
-  }));
-};
-
-
-  const handleCloseModal = () => {
-    onClose(false);
+    const { name, value } = e.target;
+    setDishData((prev) => ({
+      ...prev,
+      price: { ...prev.price, [name]: Number(value) || 0 },
+    }));
   };
+
+  const handleHPPPriceChange = (e) => {
+    const { name, value } = e.target;
+    setDishData((prev) => ({
+      ...prev,
+      hpp: { ...prev.hpp, [name]: Number(value) || 0 },
+    }));
+  };
+
+  // Mutation
+  const dishMutation = useMutation({
+  mutationFn: (reqData) => addDish(reqData),
+  onSuccess: (res) => {
+    setIsAddModalOpen(false);
+    const message = res?.data?.message ?? res?.message ?? "Menu berhasil ditambahkan";
+    enqueueSnackbar(message, { variant: "success" });
+    if (onAdded) onAdded();
+  },
+  onError: (err) => {
+    const status = err?.response?.status;
+    if (status >= 200 && status < 300) {
+      // Backend sukses tapi axios menganggap error
+      setIsAddModalOpen(false);
+      enqueueSnackbar("Menu berhasil ditambahkan", { variant: "success" });
+      if (onAdded) onAdded();
+    } else {
+      const message = err?.response?.data?.message ?? "Gagal menambahkan menu";
+      enqueueSnackbar(message, { variant: "error" });
+    }
+  },
+});
+
+
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    dishMutation.mutate(dishData);
+    // pastikan semua angka valid
+    const payload = {
+      ...dishData,
+      price: {
+        hot: Number(dishData.price.hot) || 0,
+        ice: Number(dishData.price.ice) || 0,
+      },
+      hpp: {
+        hpphot: Number(dishData.hpp.hpphot) || 0,
+        hppice: Number(dishData.hpp.hppice) || 0,
+      },
+    };
+    dishMutation.mutate(payload);
   };
-
-  const dishMutation = useMutation({
-    mutationFn: (reqData) => addDish(reqData),
-    onSuccess: (res) => {
-      setIsAddModalOpen(false);
-      enqueueSnackbar(res.data.message || "Menu berhasil ditambahkan", {
-        variant: "success",
-      });
-      if (onAdded) onAdded();
-    },
-    onError: (err) => {
-      enqueueSnackbar(err.response?.data?.message || "Gagal menambahkan menu", {
-        variant: "error",
-      });
-    },
-  });
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -88,7 +89,7 @@ const handleHPPPriceChange = (e) => {
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-[#f5f5f5] text-xl font-semibold">Tambah Menu</h2>
           <button
-            onClick={handleCloseModal}
+            onClick={() => onClose(false)}
             className="text-[#f5f5f5] hover:text-red-500"
           >
             <IoMdClose size={24} />
@@ -96,6 +97,7 @@ const handleHPPPriceChange = (e) => {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4 mt-6">
+          {/* Nama Menu */}
           <div>
             <label className="block text-[#ababab] mb-2 text-sm font-medium">
               Nama Menu
@@ -111,84 +113,84 @@ const handleHPPPriceChange = (e) => {
               />
             </div>
           </div>
-          
+
+          {/* HPP */}
           <div>
             <label className="block text-[#ababab] mb-2 text-sm font-medium">
-              HPP Price
+              HPP
             </label>
             <div className="flex gap-2">
-                {/* HPP Hot price */}
-                <div className="flex flex-col w-1/2">
+              {/* Hot */}
+              <div className="flex flex-col w-1/2">
                 <span className="text-sm text-gray-400 mb-1">Hot</span>
                 <div className="bg-[#1f1f1f] rounded-lg px-3 py-2">
-                    <input
+                  <input
                     type="number"
                     name="hpphot"
                     value={dishData.hpp.hpphot}
                     onChange={handleHPPPriceChange}
-                    placeholder="HPP Hot price"
                     className="w-full bg-transparent text-white focus:outline-none"
-                    required
-                    />
+                    disabled
+                  />
                 </div>
-                </div>
+              </div>
 
-                {/* Ice price */}
-                <div className="flex flex-col w-1/2">
+              {/* Ice */}
+              <div className="flex flex-col w-1/2">
                 <span className="text-sm text-gray-400 mb-1">Ice</span>
                 <div className="bg-[#1f1f1f] rounded-lg px-3 py-2">
-                    <input
+                  <input
                     type="number"
                     name="hppice"
                     value={dishData.hpp.hppice}
                     onChange={handleHPPPriceChange}
-                    placeholder="HPP Ice price"
                     className="w-full bg-transparent text-white focus:outline-none"
-                    required
-                    />
+                    disabled
+                  />
                 </div>
-                </div>
+              </div>
             </div>
           </div>
 
+          {/* Price */}
           <div>
             <label className="block text-[#ababab] mb-2 text-sm font-medium">
-                Price
+              Price
             </label>
             <div className="flex gap-2">
-                {/* Hot price */}
-                <div className="flex flex-col w-1/2">
+              {/* Hot */}
+              <div className="flex flex-col w-1/2">
                 <span className="text-sm text-gray-400 mb-1">Hot</span>
                 <div className="bg-[#1f1f1f] rounded-lg px-3 py-2">
-                    <input
+                  <input
                     type="number"
                     name="hot"
                     value={dishData.price.hot}
                     onChange={handlePriceChange}
-                    placeholder="Hot price"
                     className="w-full bg-transparent text-white focus:outline-none"
                     required
-                    />
+                  />
                 </div>
-                </div>
+              </div>
 
-                {/* Ice price */}
-                <div className="flex flex-col w-1/2">
+              {/* Ice */}
+              <div className="flex flex-col w-1/2">
                 <span className="text-sm text-gray-400 mb-1">Ice</span>
                 <div className="bg-[#1f1f1f] rounded-lg px-3 py-2">
-                    <input
+                  <input
                     type="number"
                     name="ice"
                     value={dishData.price.ice}
                     onChange={handlePriceChange}
-                    placeholder="Ice price"
                     className="w-full bg-transparent text-white focus:outline-none"
                     required
-                    />
+                  />
                 </div>
-                </div>
+              </div>
             </div>
           </div>
+
+          {/* Category */}
           <div>
             <label className="block text-[#ababab] mb-2 text-sm font-medium">
               Category
@@ -212,7 +214,7 @@ const handleHPPPriceChange = (e) => {
             Add Dish
           </button>
         </form>
-      </motion.div>
+      </motion.div> 
     </div>
   );
 };
