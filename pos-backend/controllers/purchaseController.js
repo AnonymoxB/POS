@@ -227,33 +227,54 @@ exports.deletePurchase = async (req, res) => {
 
     const { id } = req.params;
     const purchase = await Purchase.findById(id).session(session);
-    if (!purchase) return res.status(404).json({ success: false, message: "Purchase not found" });
-
-    for (const item of purchase.items) {
-      const product = await Product.findById(item.product).session(session);
-      if (!product) continue;
-
-      const { qtyBase } = await getBaseUnitAndQty(item.unit, item.quantity, session);
-      product.stockBase -= qtyBase;
-      await product.save({ session });
-
-      await updateDishHPP(product._id, session);
-
-      await StockTransaction.create(
-        [
-          {
-            product: product._id,
-            type: "OUT",
-            qty: item.quantity,
-            unit: item.unit,
-            qtyBase,
-            note: "Purchase Deleted",
-          },
-        ],
-        { session }
-      );
+    if (!purchase) {
+      return res.status(404).json({ success: false, message: "Purchase not found" });
     }
 
+    for (const item of purchase.items) {
+      try {
+        const product = await Product.findById(item.product).session(session);
+        if (!product) {
+          console.warn(`Product ${item.product} tidak ditemukan, skip rollback`);
+          continue;
+        }
+
+        // Ambil qty base
+        const { qtyBase } = await getBaseUnitAndQty(item.unit, item.quantity, session);
+
+        if (!qtyBase || qtyBase <= 0) {
+          console.warn(`qtyBase invalid untuk produk ${product.name}, skip rollback`);
+          continue;
+        }
+
+        // Update stock, jangan sampai negatif
+        product.stockBase = Math.max(0, product.stockBase - qtyBase);
+        await product.save({ session });
+
+        // Update HPP dish terkait
+        await updateDishHPP(product._id, session);
+
+        // Simpan transaksi stok
+        await StockTransaction.create(
+          [
+            {
+              product: product._id,
+              type: "OUT",
+              qty: item.quantity,
+              unit: item.unit,
+              qtyBase,
+              note: "Purchase Deleted",
+            },
+          ],
+          { session }
+        );
+      } catch (errItem) {
+        console.error(`Gagal rollback item ${item._id}:`, errItem.message);
+        throw errItem; // biar transaksi abort
+      }
+    }
+
+    // Hapus purchase dan payment terkait
     await Purchase.deleteOne({ _id: id }, { session });
     await Payment.deleteMany({ source: id, sourceType: "Purchase" }, { session });
 
@@ -261,8 +282,10 @@ exports.deletePurchase = async (req, res) => {
     res.json({ success: true, message: "Purchase deleted successfully" });
   } catch (error) {
     if (session.inTransaction()) await session.abortTransaction();
+    console.error("DELETE PURCHASE ERROR:", error);
     res.status(500).json({ success: false, message: error.message });
   } finally {
     session.endSession();
   }
 };
+
