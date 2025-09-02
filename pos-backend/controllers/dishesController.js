@@ -58,25 +58,24 @@ const deleteDish = async (req, res) => {
 const calculateDishHPP = async (dishId) => {
   const bomItems = await DishBOM.find({ dish: dishId })
     .populate("product")
-    .populate("unit");
+    .populate("unit"); // ambil info unit
 
   let totalHot = 0;
   let totalIce = 0;
 
-  for (const item of bomItems) {
-    if (!item.product || !item.unit) continue;
+  bomItems.forEach((item) => {
+    // Ambil HPP sesuai variant
+    const productHPP = item.variant === "hot" ? item.product.hpp.hpphot : item.product.hpp.hppice || 0;
 
-    // HPP dasar product
-    const hppHot = item.product.hpp?.hpphot || 0;
-    const hppIce = item.product.hpp?.hppice || 0;
+    // Konversi qty ke base unit
+    const qty = item.qty * (item.unit.conversion || 1);
 
-    // Konversi qty ke unit dasar
-    const factor = item.unit.conversion || 1; // misal 1 kg = 1000 gram
-    const qtyInBase = item.qty * factor;
-
-    if (item.variant === "hot") totalHot += hppHot * qtyInBase;
-    if (item.variant === "ice") totalIce += hppIce * qtyInBase;
-  }
+    if (item.variant === "hot") {
+      totalHot += productHPP * qty;
+    } else if (item.variant === "ice") {
+      totalIce += productHPP * qty;
+    }
+  });
 
   const updatedDish = await Dish.findByIdAndUpdate(
     dishId,
@@ -89,6 +88,7 @@ const calculateDishHPP = async (dishId) => {
 
   return updatedDish;
 };
+
 
 
 
