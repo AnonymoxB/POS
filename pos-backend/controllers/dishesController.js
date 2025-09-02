@@ -1,6 +1,7 @@
 const Dish = require("../models/dishesModel");
 const DishBOM = require("../models/dishBOMModel");
 const Product = require("../models/productModel");
+const Unit = require("../models/unitModel");
 
 // GET all dishes
 const getAllDishes = async (req, res) => {
@@ -55,19 +56,27 @@ const deleteDish = async (req, res) => {
 };
 
 const calculateDishHPP = async (dishId) => {
-  const bomItems = await DishBOM.find({ dish: dishId }).populate("product");
+  const bomItems = await DishBOM.find({ dish: dishId })
+    .populate("product")
+    .populate("unit");
 
   let totalHot = 0;
   let totalIce = 0;
 
-  bomItems.forEach((item) => {
-    const productHPP = item.product.hpp || 0;
-    if (item.variant === "hot") {
-      totalHot += productHPP * item.qty;
-    } else if (item.variant === "ice") {
-      totalIce += productHPP * item.qty;
-    }
-  });
+  for (const item of bomItems) {
+    if (!item.product || !item.unit) continue;
+
+    // HPP dasar product
+    const hppHot = item.product.hpp?.hpphot || 0;
+    const hppIce = item.product.hpp?.hppice || 0;
+
+    // Konversi qty ke unit dasar
+    const factor = item.unit.conversion || 1; // misal 1 kg = 1000 gram
+    const qtyInBase = item.qty * factor;
+
+    if (item.variant === "hot") totalHot += hppHot * qtyInBase;
+    if (item.variant === "ice") totalIce += hppIce * qtyInBase;
+  }
 
   const updatedDish = await Dish.findByIdAndUpdate(
     dishId,
@@ -80,6 +89,7 @@ const calculateDishHPP = async (dishId) => {
 
   return updatedDish;
 };
+
 
 
 
