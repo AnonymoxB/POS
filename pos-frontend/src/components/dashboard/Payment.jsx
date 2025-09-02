@@ -1,18 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { getPayments } from "../../https";
+import { getPayments, deleteMultiplePayments } from "../../https";
 import DatePicker from "react-datepicker";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-} from "recharts";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,6 +15,8 @@ const Payment = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [selectedPayments, setSelectedPayments] = useState(new Set());
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     const fetchPayments = async () => {
@@ -34,7 +24,7 @@ const Payment = () => {
         const response = await getPayments();
         setPayments(response.data.data);
       } catch (error) {
-        console.error("Error fetching payments", error);
+        console.error(error);
         setError("Gagal memuat data pembayaran");
       } finally {
         setLoading(false);
@@ -44,8 +34,11 @@ const Payment = () => {
     fetchPayments();
   }, []);
 
+
   if (loading) return <p className="text-[#ababab]">Loading...</p>;
   if (error) return <p className="text-red-500">{error}</p>;
+
+  
 
   // Filter by search
   const filteredPayments = payments.filter(
@@ -54,6 +47,41 @@ const Payment = () => {
       pay.sourceType?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       pay.method?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleSelect = (id) => {
+    const newSet = new Set(selectedPayments);
+    if (newSet.has(id)) newSet.delete(id);
+    else newSet.add(id);
+    setSelectedPayments(newSet);
+  };
+
+  const handleSelectAll = () => {
+    const currentIds = currentPayments.map((p) => p._id);
+    const allSelected = currentIds.every((id) => selectedPayments.has(id));
+    const newSet = new Set(selectedPayments);
+
+    if (allSelected) currentIds.forEach((id) => newSet.delete(id));
+    else currentIds.forEach((id) => newSet.add(id));
+
+    setSelectedPayments(newSet);
+  };
+
+  const handleDeleteSelected = async () => {
+    if (selectedPayments.size === 0) return;
+    if (!window.confirm(`Hapus ${selectedPayments.size} payment terpilih?`)) return;
+
+    try {
+      setDeleting(true);
+      await deleteMultiplePayments(Array.from(selectedPayments));
+      setPayments((prev) => prev.filter((p) => !selectedPayments.has(p._id)));
+      setSelectedPayments(new Set());
+    } catch (err) {
+      console.error(err);
+      alert("Gagal menghapus payment");
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   const summary = payments.reduce(
   (acc, pay) => {
@@ -111,6 +139,14 @@ const Payment = () => {
       <CardContent className="p-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
           <h2 className="text-xl font-bold">Daftar Payment</h2>
+          <Button
+            size="sm"
+            variant="destructive"
+            onClick={handleDeleteSelected}
+            disabled={selectedPayments.size === 0 || deleting}
+          >
+            Hapus Terpilih
+          </Button> 
         </div>
 
         {/* Summary jumlah per tipe */}
@@ -147,6 +183,13 @@ const Payment = () => {
             <table className="w-full border-collapse border border-gray-600 text-sm">
               <thead>
                 <tr className="bg-[#333] text-gray-300">
+                  <th className="border border-gray-600 px-3 py-2">
+                    <input
+                      type="checkbox"
+                      onChange={handleSelectAll}
+                      checked={currentPayments.every((p) => selectedPayments.has(p._id))}
+                    />
+                  </th>
                   <th className="border border-gray-600 px-3 py-2">#</th>
                   <th className="border border-gray-600 px-3 py-2">Payment ID</th>
                   <th className="border border-gray-600 px-3 py-2">Tanggal</th>
@@ -163,6 +206,13 @@ const Payment = () => {
                     key={pay?._id || index}
                     className="border-t border-gray-700 hover:bg-[#333]/50"
                   >
+                    <td className="border border-gray-600 px-3 py-2 text-center">
+                      <input
+                        type="checkbox"
+                        checked={selectedPayments.has(pay._id)}
+                        onChange={() => handleSelect(pay._id)}
+                      />
+                    </td>
                     <td className="border border-gray-600 px-3 py-2 text-center">
                       {indexOfFirstItem + index + 1}
                     </td>

@@ -58,6 +58,12 @@ export const deleteDishBOM = (id) => api.delete(`/api/dish-bom/${id}`);
 
 // Payment Endpoints
 export const getPayments = () => api.get("/api/payments");
+// Delete single payment
+export const deletePayment = (id) => api.delete(`/api/payments/${id}`);
+
+// Delete multiple payments
+export const deleteMultiplePayments = (ids) =>
+  api.delete("/api/payments/bulk", { data: { ids } });
 
 
 

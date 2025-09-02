@@ -102,6 +102,21 @@ const deletePayment = async (req, res, next) => {
   }
 };
 
+// DELETE multiple payments
+const deleteMultiplePayments = async (req, res, next) => {
+  try {
+    const { ids } = req.body; // array of payment _id
+    if (!ids || !ids.length)
+      return res.status(400).json({ success: false, message: "No IDs provided" });
+
+    await Payment.deleteMany({ _id: { $in: ids } });
+    res.status(200).json({ success: true, message: `${ids.length} payment berhasil dihapus` });
+  } catch (error) {
+    next(error);
+  }
+};
+
+
 
 //simpan payment dari Order
 const savePaymentFromOrder = async (order, userId) => {
@@ -228,4 +243,5 @@ module.exports = {
   savePaymentFromPurchase,
   savePaymentFromExpense,
   getPaymentsSummary,
+  deleteMultiplePayments
 };
