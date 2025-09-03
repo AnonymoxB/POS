@@ -6,9 +6,7 @@ import { updateCategory } from "../../../https";
 
 const EditCategoryModal = ({ isOpen, onClose, category, onUpdated }) => {
   const { enqueueSnackbar } = useSnackbar();
-  const [formData, setFormData] = useState({
-    name: "",
-  });
+  const [formData, setFormData] = useState({ name: "" });
 
   useEffect(() => {
     if (category) {
@@ -45,20 +43,22 @@ const EditCategoryModal = ({ isOpen, onClose, category, onUpdated }) => {
     <Dialog open={isOpen} onClose={onClose} className="relative z-50">
       <div className="fixed inset-0 bg-black/40" aria-hidden="true" />
       <div className="fixed inset-0 flex items-center justify-center p-4">
-        <Dialog.Panel className="bg-[#262626] text-white rounded-lg p-6 w-full max-w-md">
+        <Dialog.Panel className="bg-white dark:bg-[#262626] text-gray-900 dark:text-white rounded-lg p-6 w-full max-w-md">
           <Dialog.Title className="text-xl font-semibold mb-4">
             Edit Kategori
           </Dialog.Title>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="text-sm text-[#ababab]">Nama Kategori</label>
-              <div className="bg-[#1f1f1f] rounded-lg px-4 py-2">
+              <label className="text-sm text-gray-700 dark:text-[#ababab]">
+                Nama Kategori
+              </label>
+              <div className="bg-gray-100 dark:bg-[#1f1f1f] rounded-lg px-4 py-2">
                 <input
                   type="text"
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
-                  className="w-full bg-transparent text-white focus:outline-none"
+                  className="w-full bg-transparent text-gray-900 dark:text-white focus:outline-none"
                   required
                 />
               </div>
@@ -68,14 +68,14 @@ const EditCategoryModal = ({ isOpen, onClose, category, onUpdated }) => {
               <button
                 type="button"
                 onClick={onClose}
-                className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg"
+                className="bg-gray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-700 text-gray-800 dark:text-white px-4 py-2 rounded-lg"
               >
                 Batal
               </button>
               <button
                 type="submit"
                 disabled={mutation.isLoading}
-                className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-semibold px-4 py-2 rounded-lg"
+                className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-semibold px-4 py-2 rounded-lg disabled:opacity-70"
               >
                 {mutation.isLoading ? "Menyimpan..." : "Simpan"}
               </button>

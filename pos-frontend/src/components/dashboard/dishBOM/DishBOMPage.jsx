@@ -32,7 +32,6 @@ export default function DishBOMPage() {
     fetchDishes();
   }, [fetchDishes]);
 
-
   // Filter berdasarkan search
   const filteredDishes = dishes.filter(
     (dish) =>
@@ -81,7 +80,7 @@ export default function DishBOMPage() {
   };
 
   return (
-    <Card className="bg-[#262626] text-white">
+    <Card className="bg-white dark:bg-[#262626] text-gray-900 dark:text-white">
       <CardContent className="p-6">
         <h1 className="text-xl font-bold mb-4">Dish BOM</h1>
 
@@ -94,7 +93,7 @@ export default function DishBOMPage() {
               setSearchTerm(e.target.value);
               setCurrentPage(1); // reset ke page 1 kalau search berubah
             }}
-            className="bg-[#333] text-white border-gray-600"
+            className="bg-gray-100 dark:bg-[#333] text-gray-900 dark:text-white border-gray-300 dark:border-gray-600"
           />
         </div>
 
@@ -102,21 +101,24 @@ export default function DishBOMPage() {
           <p>Loading...</p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full border-collapse border border-gray-600 text-sm">
+            <table className="w-full border-collapse border border-gray-300 dark:border-gray-600 text-sm">
               <thead>
-                <tr className="bg-[#333] text-gray-300">
-                  <th className="border border-gray-600 px-3 py-2 text-left">
+                <tr className="bg-gray-100 dark:bg-[#333] text-gray-700 dark:text-gray-300">
+                  <th className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-left">
                     Nama Dish
                   </th>
-                  <th className="border border-gray-600 px-3 py-2 text-left">
+                  <th className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-left">
                     Kategori
                   </th>
-                  <th className="border border-gray-600 px-3 py-2 text-right">HPP Hot</th>
-                  <th className="border border-gray-600 px-3 py-2 text-right">HPP Ice</th>
-                  <th className="border border-gray-600 px-3 py-2 text-center">
+                  <th className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-right">
+                    HPP Hot
+                  </th>
+                  <th className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-right">
+                    HPP Ice
+                  </th>
+                  <th className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-center">
                     Aksi
                   </th>
-                  
                 </tr>
               </thead>
               <tbody>
@@ -124,25 +126,25 @@ export default function DishBOMPage() {
                   currentDishes.map((dish) => (
                     <tr
                       key={dish._id}
-                      className="border-t border-gray-700 hover:bg-[#333]/50"
+                      className="border-t border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[#333]/50"
                     >
-                      <td className="border border-gray-600 px-3 py-2 text-left">
+                      <td className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-left">
                         {dish.name}
                       </td>
-                      <td className="border border-gray-600 px-3 py-2 text-left">
+                      <td className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-left">
                         {dish.category || "-"}
                       </td>
-                      <td className="border border-gray-600 px-3 py-2 text-right">
+                      <td className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-right">
                         Rp {dish.hpp?.hpphot?.toLocaleString() || 0}
                       </td>
-                      <td className="border border-gray-600 px-3 py-2 text-right">
+                      <td className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-right">
                         Rp {dish.hpp?.hppice?.toLocaleString() || 0}
                       </td>
 
-                      <td className="border border-gray-600 px-3 py-2 text-center">
+                      <td className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-center">
                         <Button
                           size="sm"
-                          className="bg-green-600 hover:bg-green-700"
+                          className="bg-green-600 hover:bg-green-700 text-white"
                           onClick={() => setSelectedDish(dish)}
                         >
                           Lihat BOM
@@ -153,8 +155,8 @@ export default function DishBOMPage() {
                 ) : (
                   <tr>
                     <td
-                      colSpan="3"
-                      className="border border-gray-600 px-3 py-4 text-center text-gray-400"
+                      colSpan="5"
+                      className="border border-gray-300 dark:border-gray-600 px-3 py-4 text-center text-gray-500 dark:text-gray-400"
                     >
                       Tidak ada dish
                     </td>
@@ -166,7 +168,7 @@ export default function DishBOMPage() {
             {/* Pagination Controls */}
             <div className="flex flex-col sm:flex-row justify-between items-center gap-3 mt-4">
               {/* Info jumlah data */}
-              <div className="text-gray-400 text-sm">
+              <div className="text-gray-500 dark:text-gray-400 text-sm">
                 {filteredDishes.length > 0 && (
                   <span>
                     Menampilkan <b>{indexOfFirstItem + 1}</b>–
@@ -181,13 +183,13 @@ export default function DishBOMPage() {
               </div>
 
               {/* Dropdown items per page */}
-              <div className="flex items-center gap-2 text-gray-300">
+              <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
                 <label htmlFor="itemsPerPage">Tampilkan</label>
                 <select
                   id="itemsPerPage"
                   value={itemsPerPage}
                   onChange={handleItemsPerPageChange}
-                  className="bg-[#333] text-white border border-gray-600 rounded px-2 py-1"
+                  className="bg-gray-100 dark:bg-[#333] text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded px-2 py-1"
                 >
                   <option value={5}>5</option>
                   <option value={10}>10</option>
@@ -221,7 +223,7 @@ export default function DishBOMPage() {
                       className={`${
                         currentPage === page
                           ? "bg-green-600 text-white"
-                        : "bg-[#333] text-gray-300 hover:bg-gray-700"
+                          : "bg-gray-100 dark:bg-[#333] text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
                       }`}
                       onClick={() => setCurrentPage(page)}
                     >
@@ -240,22 +242,21 @@ export default function DishBOMPage() {
                 </Button>
               </div>
             </div>
-
           </div>
         )}
 
         {/* Modal Dish BOM */}
         {selectedDish && (
           <DishBOM
-          dish={selectedDish}
-          open={!!selectedDish}
-          onClose={(updated) => {
-            setSelectedDish(null);
-            if (updated) {
-              fetchDishes();
-            }
-          }}
-        />
+            dish={selectedDish}
+            open={!!selectedDish}
+            onClose={(updated) => {
+              setSelectedDish(null);
+              if (updated) {
+                fetchDishes();
+              }
+            }}
+          />
         )}
       </CardContent>
     </Card>

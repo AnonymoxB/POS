@@ -11,7 +11,6 @@ import { enqueueSnackbar } from "notistack"
 import {
   Card,
   CardContent,
-  CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
@@ -23,9 +22,6 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart"
 
-
-
-
 export default function PopularDishesChart() {
   const [data, setData] = useState([])
   const [loading, setLoading] = useState(false)
@@ -35,18 +31,15 @@ export default function PopularDishesChart() {
     try {
       const response = await getPopularDishes()
       const dishes = response?.data?.data || []
-     
-
 
       const chartReady = dishes
-      .filter((dish) => dish.totalOrders > 0)
-      .sort((a, b) => b.totalOrders - a.totalOrders)
-      .map((dish, index) => ({
-        name: dish.name,
-        totalOrders: Number(dish.totalOrders),
-        fill: `hsl(var(--chart-${(index % 20) + 1}))`,
-      }))
-
+        .filter((dish) => dish.totalOrders > 0)
+        .sort((a, b) => b.totalOrders - a.totalOrders)
+        .map((dish, index) => ({
+          name: dish.name,
+          totalOrders: Number(dish.totalOrders),
+          fill: `hsl(var(--chart-${(index % 20) + 1}))`,
+        }))
 
       setData(chartReady)
     } catch {
@@ -61,19 +54,21 @@ export default function PopularDishesChart() {
   }, [])
 
   return (
-    <Card className='bg-[#1a1a1a] border-none'>
-      <CardHeader className=''>
-        <CardTitle className='text-white text-lg font-semibold mb-4'>Menu Terpopuler</CardTitle>
-        {/* <CardDescription>Dalam 6 bulan terakhir</CardDescription> */}
+    <Card className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-sm">
+      <CardHeader>
+        <CardTitle className="text-gray-900 dark:text-gray-100 text-lg font-semibold mb-2">
+          Menu Terpopuler
+        </CardTitle>
       </CardHeader>
-      <CardContent className=''>
+
+      <CardContent>
         {loading ? (
-          <p className="text-sm text-muted-foreground">Memuat data...</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Memuat data...</p>
         ) : data.length > 0 ? (
           <ChartContainer config={{ totalOrders: { label: "Total Order" } }}>
             <BarChart
               width={100}
-              height={data.length*40}
+              height={data.length * 40}
               data={data}
               layout="vertical"
               margin={{ left: 30, right: 30 }}
@@ -84,7 +79,7 @@ export default function PopularDishesChart() {
                 tickLine={false}
                 tickMargin={10}
                 axisLine={false}
-                tick={{ fontWeight: "bold", }}
+                tick={{ fontWeight: "bold", fill: "currentColor" }}
               />
               <XAxis dataKey="totalOrders" type="number" hide />
               <ChartTooltip
@@ -108,20 +103,19 @@ export default function PopularDishesChart() {
               </Bar>
             </BarChart>
           </ChartContainer>
-
         ) : (
-          <p className="text-sm text-muted-foreground">Belum ada data.</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Belum ada data.</p>
         )}
       </CardContent>
+
       <CardFooter className="flex-col items-start gap-2 text-sm">
-        <div className="flex gap-2 leading-none font-medium text-white text-lg">
+        <div className="flex gap-2 leading-none font-medium text-gray-900 dark:text-gray-100 text-base">
           Berdasarkan pesanan tertinggi <TrendingUp className="h-4 w-4" />
         </div>
-        <div className="text-muted-foreground leading-none">
+        <div className="text-gray-500 dark:text-gray-400 leading-none">
           Data diambil dari menu yang paling sering dipesan
         </div>
       </CardFooter>
     </Card>
   )
 }
-

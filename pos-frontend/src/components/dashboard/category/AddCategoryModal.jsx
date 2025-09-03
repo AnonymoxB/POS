@@ -14,7 +14,7 @@ const AddCategoryModal = ({ isOpen, onClose, onCreated }) => {
       enqueueSnackbar(res?.data?.message || "Kategori berhasil ditambahkan", {
         variant: "success",
       });
-      onClose(); // tutup modal
+      onClose();
       setCategoryData({ name: "", icon: "" });
       if (onCreated) onCreated();
     },
@@ -44,27 +44,29 @@ const AddCategoryModal = ({ isOpen, onClose, onCreated }) => {
     categoryMutation.mutate(categoryData);
   };
 
-  if (!isOpen) return null; // modal tidak dirender kalau isOpen = false
+  if (!isOpen) return null;
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-      onClick={onClose} // klik luar modal tutup
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+      onClick={onClose}
     >
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.9 }}
         transition={{ duration: 0.3, ease: "easeInOut" }}
-        className="bg-[#262626] p-6 rounded-lg shadow-lg w-96"
-        onClick={(e) => e.stopPropagation()} // biar klik dalam modal tidak nutup
+        className="bg-white dark:bg-[#262626] p-6 rounded-lg shadow-lg w-96"
+        onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-[#f5f5f5] text-xl font-semibold">Add Category</h2>
+          <h2 className="text-gray-900 dark:text-[#f5f5f5] text-xl font-semibold">
+            Add Category
+          </h2>
           <button
             onClick={onClose}
-            className="text-[#f5f5f5] hover:text-red-500"
+            className="text-gray-700 dark:text-[#f5f5f5] hover:text-red-500"
           >
             <IoMdClose size={24} />
           </button>
@@ -73,7 +75,7 @@ const AddCategoryModal = ({ isOpen, onClose, onCreated }) => {
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4 mt-6">
           <div>
-            <label className="block text-[#ababab] mb-2 text-sm font-medium">
+            <label className="block text-gray-600 dark:text-[#ababab] mb-2 text-sm font-medium">
               Category Name
             </label>
             <input
@@ -81,12 +83,12 @@ const AddCategoryModal = ({ isOpen, onClose, onCreated }) => {
               name="name"
               value={categoryData.name}
               onChange={handleInputChange}
-              className="w-full rounded-lg px-4 py-3 bg-[#1f1f1f] text-white focus:outline-none"
+              className="w-full rounded-lg px-4 py-3 bg-gray-100 dark:bg-[#1f1f1f] text-gray-900 dark:text-white focus:outline-none"
               required
             />
           </div>
           <div>
-            <label className="block text-[#ababab] mb-2 text-sm font-medium">
+            <label className="block text-gray-600 dark:text-[#ababab] mb-2 text-sm font-medium">
               Icon (Emoji)
             </label>
             <input
@@ -95,7 +97,7 @@ const AddCategoryModal = ({ isOpen, onClose, onCreated }) => {
               placeholder="🍲"
               value={categoryData.icon}
               onChange={handleInputChange}
-              className="w-full rounded-lg px-4 py-3 bg-[#1f1f1f] text-white focus:outline-none"
+              className="w-full rounded-lg px-4 py-3 bg-gray-100 dark:bg-[#1f1f1f] text-gray-900 dark:text-white focus:outline-none"
               required
             />
           </div>
@@ -111,6 +113,5 @@ const AddCategoryModal = ({ isOpen, onClose, onCreated }) => {
     </div>
   );
 };
-
 
 export default AddCategoryModal;

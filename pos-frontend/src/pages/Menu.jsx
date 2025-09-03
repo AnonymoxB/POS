@@ -9,52 +9,50 @@ import Bill from "../components/menu/Bill";
 import { useSelector } from "react-redux";
 
 const Menu = () => {
-
-    useEffect(() => {
-      document.title = "POS | Menu"
-    }, [])
+  useEffect(() => {
+    document.title = "POS | Menu";
+  }, []);
 
   const customerData = useSelector((state) => state.customer);
 
   return (
-    <section className="bg-[#1f1f1f] min-h-[calc(100vh-5rem)] flex flex-col lg:flex-row gap-3 overflow-hidden px-2 lg:px-0">
-  {/* Left Div */}
-  <div className="flex-[3] w-full lg:w-auto">
-    <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between px-4 lg:px-10 py-4 gap-4">
-      <div className="flex items-center gap-4">
-        <BckButton />
-        <h1 className="text-[#f5f5f5] text-2xl font-bold tracking-wider">
-          Menu
-        </h1>
-      </div>
-      <div className="flex items-center gap-3 cursor-pointer">
-        <MdRestaurantMenu className="text-[#f5f5f5] text-4xl" />
-        <div className="flex flex-col items-start">
-          <h1 className="text-md text-[#f5f5f5] font-semibold tracking-wide">
-            {customerData.customerName || "Customer Name"}
-          </h1>
-          <p className="text-xs text-[#ababab] font-medium">
-            Table: {customerData.table?.tableNo || "N/A"}
-          </p>
+    <section className="bg-gray-50 dark:bg-[#1f1f1f] min-h-[calc(100vh-5rem)] flex flex-col lg:flex-row gap-3 overflow-hidden px-2 lg:px-0 transition-colors">
+      {/* Left Div */}
+      <div className="flex-[3] w-full lg:w-auto">
+        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between px-4 lg:px-10 py-4 gap-4">
+          <div className="flex items-center gap-4">
+            <BckButton />
+            <h1 className="text-gray-900 dark:text-[#f5f5f5] text-2xl font-bold tracking-wider">
+              Menu
+            </h1>
+          </div>
+          <div className="flex items-center gap-3 cursor-pointer">
+            <MdRestaurantMenu className="text-gray-800 dark:text-[#f5f5f5] text-4xl" />
+            <div className="flex flex-col items-start">
+              <h1 className="text-md text-gray-900 dark:text-[#f5f5f5] font-semibold tracking-wide">
+                {customerData.customerName || "Customer Name"}
+              </h1>
+              <p className="text-xs text-gray-500 dark:text-[#ababab] font-medium">
+                Table: {customerData.table?.tableNo || "N/A"}
+              </p>
+            </div>
+          </div>
         </div>
+
+        <MenuContainer />
       </div>
-    </div>
 
-    <MenuContainer />
-  </div>
+      {/* Right Div */}
+      <div className="flex-[1] w-full lg:w-auto bg-white dark:bg-[#1a1a1a] rounded-lg pt-2 lg:mt-4 lg:mr-3 flex flex-col max-h-[calc(100vh-6rem)] overflow-y-auto shadow-md dark:shadow-none border border-gray-200 dark:border-[#2a2a2a] transition-colors">
+        <CustomerInfo />
+        <hr className="border-gray-200 dark:border-[#2a2a2a]" />
+        <CartInfo />
+        <hr className="border-gray-200 dark:border-[#2a2a2a]" />
+        <Bill />
+      </div>
 
-  {/* Right Div */}
-  <div className="flex-[1] w-full lg:w-auto bg-[#1a1a1a] rounded-lg pt-2 lg:mt-4 lg:mr-3 flex flex-col max-h-[calc(100vh-6rem)] overflow-y-auto">
-    <CustomerInfo />
-    <hr className="border-[#2a2a2a] border-t-2" />
-    <CartInfo />
-    <hr className="border-[#2a2a2a] border-t-2" />
-    <Bill />
-  </div>
-
-  <BottomNav />
-</section>
-
+      <BottomNav />
+    </section>
   );
 };
 

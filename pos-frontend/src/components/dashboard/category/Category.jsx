@@ -5,7 +5,7 @@ import { Pencil, Trash2 } from "lucide-react";
 import AddCategoryModal from "./AddCategoryModal";
 import EditCategoryModal from "./EditCategoryModal";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input"
+import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 
 const Category = () => {
@@ -52,9 +52,13 @@ const Category = () => {
               try {
                 await deleteCategory(id);
                 setCategories((prev) => prev.filter((c) => c._id !== id));
-                enqueueSnackbar("Kategori berhasil dihapus", { variant: "success" });
+                enqueueSnackbar("Kategori berhasil dihapus", {
+                  variant: "success",
+                });
               } catch {
-                enqueueSnackbar("Gagal menghapus kategori", { variant: "error" });
+                enqueueSnackbar("Gagal menghapus kategori", {
+                  variant: "error",
+                });
               } finally {
                 closeSnackbar(key);
               }
@@ -65,7 +69,7 @@ const Category = () => {
           </button>
           <button
             onClick={() => closeSnackbar(key)}
-            className="text-gray-300 font-semibold"
+            className="text-gray-500 dark:text-gray-300 font-semibold"
           >
             Batal
           </button>
@@ -96,7 +100,10 @@ const Category = () => {
   // pagination
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = filteredCategories.slice(indexOfFirstItem, indexOfLastItem);
+  const currentItems = filteredCategories.slice(
+    indexOfFirstItem,
+    indexOfLastItem
+  );
   const totalPages = Math.ceil(filteredCategories.length / itemsPerPage);
 
   const handleItemsPerPageChange = (e) => {
@@ -121,100 +128,111 @@ const Category = () => {
   };
 
   return (
-    <Card className="bg-[#262626] text-white">
+    <Card className="bg-white dark:bg-[#1f1f1f] text-gray-900 dark:text-white shadow-lg">
       <CardContent className="p-6">
-      
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
           <h1 className="text-xl font-bold mb-4">Daftar Kategori</h1>
-          <button
-              onClick={() => setIsAddModalOpen(true)}
-              className="rounded-md bg-green-600 px-4 py-2 text-sm text-white hover:bg-green-700"
-            >
-              + Tambah Kategori
-          </button>
+          <Button
+            onClick={() => setIsAddModalOpen(true)}
+            className="bg-green-600 hover:bg-green-700 text-white"
+          >
+            + Tambah Kategori
+          </Button>
         </div>
+
         <div className="mb-4">
           <Input
-              type="text"
-              placeholder="Cari kategori..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="rounded-md bg-[#333] px-3 py-2 text-sm text-white placeholder-gray-400 focus:outline-none"
-            />
+            type="text"
+            placeholder="Cari kategori..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="bg-gray-100 dark:bg-[#333] text-gray-900 dark:text-white placeholder-gray-400"
+          />
         </div>
-            
-           
+
         {/* Tabel */}
         {error ? (
           <p className="text-red-500">{error}</p>
         ) : loading ? (
-          <p className="text-[#ababab]">Loading...</p>
+          <p className="text-gray-500 dark:text-gray-400">Loading...</p>
         ) : filteredCategories.length === 0 ? (
-          <p className="text-[#ababab]">Tidak ada kategori yang tersedia.</p>
+          <p className="text-gray-500 dark:text-gray-400">
+            Tidak ada kategori yang tersedia.
+          </p>
         ) : (
           <div className="overflow-x-auto">
-            
-              <table className="w-full border-collapse border border-gray-600 text-sm">
-                <thead>
-                  <tr className="bg-[#333] text-gray-300">
-                    <th className="border border-gray-600 px-3 py-2 text-left">#</th>
-                    <th className="border border-gray-600 px-3 py-2 text-left">Nama Kategori</th>
-                    <th className="border border-gray-600 px-1 py-2 text-center">Icon</th>
-                    <th className="border border-gray-600 px-3 py-2 text-left">Dibuat</th>
-                    <th className="border border-gray-600 px-3 py-2 text-left">Diupdate</th>
-                    <th className="border border-gray-600 px-3 py-2 text-center">Action</th>
+            <table className="w-full border-collapse text-sm">
+              <thead>
+                <tr className="bg-gray-200 dark:bg-[#333] text-gray-700 dark:text-gray-300">
+                  <th className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-left">
+                    #
+                  </th>
+                  <th className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-left">
+                    Nama Kategori
+                  </th>
+                  <th className="border border-gray-300 dark:border-gray-600 px-1 py-2 text-center">
+                    Icon
+                  </th>
+                  <th className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-left">
+                    Dibuat
+                  </th>
+                  <th className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-left">
+                    Diupdate
+                  </th>
+                  <th className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-center">
+                    Action
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {currentItems.map((cat, index) => (
+                  <tr
+                    key={cat._id}
+                    className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-[#2a2a2a]"
+                  >
+                    <td className="p-4 text-center">
+                      {indexOfFirstItem + index + 1}
+                    </td>
+                    <td className="px-3 py-2">{cat.name}</td>
+                    <td className="px-3 py-2 text-center">{cat.icon || "-"}</td>
+                    <td className="px-3 py-2">
+                      {cat.createdAt
+                        ? new Date(cat.createdAt).toLocaleString("id-ID")
+                        : "-"}
+                    </td>
+                    <td className="px-3 py-2">
+                      {cat.updatedAt
+                        ? new Date(cat.updatedAt).toLocaleString("id-ID")
+                        : "-"}
+                    </td>
+                    <td className="px-3 py-2 text-center">
+                      <div className="flex justify-center gap-2">
+                        <Button
+                          size="sm"
+                          className="bg-blue-600 hover:bg-blue-700 text-white"
+                          onClick={() => handleEdit(cat)}
+                        >
+                          <Pencil size={16} /> Edit
+                        </Button>
+                        <Button
+                          size="sm"
+                          className="bg-red-600 hover:bg-red-700 text-white"
+                          onClick={() => handleDelete(cat._id)}
+                        >
+                          <Trash2 size={16} /> Hapus
+                        </Button>
+                      </div>
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {currentItems.map((cat, index) => (
-                    <tr
-                      key={cat._id}
-                      className="border-b border-gray-700 hover:bg-[#333]"
-                    >
-                      <td className="p-4 text-center">
-                        {indexOfFirstItem + index + 1}
-                      </td>
-                      <td className="border border-gray-600 px-3 py-2 text-left">{cat.name}</td>
-                      <td className="border border-gray-600 px-3 py-2 text-center">{cat.icon || "-"}</td>
-                      <td className="border border-gray-600 px-3 py-2 text-left">
-                        {cat.createdAt
-                          ? new Date(cat.createdAt).toLocaleString("id-ID")
-                          : "-"}
-                      </td>
-                      <td className="p-4">
-                        {cat.updatedAt
-                          ? new Date(cat.updatedAt).toLocaleString("id-ID")
-                          : "-"}
-                      </td>
-                      <td className="border border-gray-600 px-3 py-2 text-center">
-                        <div className="flex justify-center gap-2">
-                          <button
-                            onClick={() => handleEdit(cat)}
-                            className="flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-md text-sm"
-                          >
-                            <Pencil size={16} />
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => handleDelete(cat._id)}
-                            className="flex items-center gap-1 bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-md text-sm"
-                          >
-                            <Trash2 size={16} />
-                            Hapus
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            
+                ))}
+              </tbody>
+            </table>
 
             {/* Pagination Controls */}
             <div className="flex flex-col sm:flex-row justify-between items-center gap-3 mt-4">
               {/* Info jumlah data */}
-              <div className="text-gray-400 text-sm">
+              <div className="text-gray-600 dark:text-gray-400 text-sm">
                 {filteredCategories.length > 0 && (
                   <span>
                     Menampilkan <b>{indexOfFirstItem + 1}</b>–
@@ -229,13 +247,13 @@ const Category = () => {
               </div>
 
               {/* Dropdown items per page */}
-              <div className="flex items-center gap-2 text-gray-300">
+              <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
                 <label htmlFor="itemsPerPage">Tampilkan</label>
                 <select
                   id="itemsPerPage"
                   value={itemsPerPage}
                   onChange={handleItemsPerPageChange}
-                  className="bg-[#333] text-white border border-gray-600 rounded px-2 py-1"
+                  className="bg-gray-100 dark:bg-[#333] border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded px-2 py-1"
                 >
                   <option value={5}>5</option>
                   <option value={10}>10</option>
@@ -269,7 +287,7 @@ const Category = () => {
                       className={`${
                         currentPage === page
                           ? "bg-green-600 text-white"
-                          : "bg-[#333] text-gray-300 hover:bg-gray-700"
+                          : "bg-gray-100 dark:bg-[#333] text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
                       }`}
                       onClick={() => setCurrentPage(page)}
                     >
@@ -306,7 +324,6 @@ const Category = () => {
             onCreated={handleUpdateSuccess}
           />
         )}
-      
       </CardContent>
     </Card>
   );

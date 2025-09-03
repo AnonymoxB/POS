@@ -25,7 +25,6 @@ export default function DishBOM({ dish, open, onClose }) {
     }
   }, [dish?._id]);
 
-  // Reload BOM saat modal dibuka atau dish berubah
   useEffect(() => {
     if (open && dish?._id) loadBOM();
   }, [open, dish, loadBOM]);
@@ -46,14 +45,16 @@ export default function DishBOM({ dish, open, onClose }) {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
-      <div className="bg-[#262626] text-white rounded-lg p-6 w-full max-w-3xl shadow-lg">
-        <h2 className="text-lg font-bold mb-4">BOM untuk {dish?.name}</h2>
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+      <div className="bg-white dark:bg-[#262626] text-gray-900 dark:text-white rounded-lg p-6 w-full max-w-3xl shadow-lg">
+        <h2 className="text-lg font-bold mb-4">
+          BOM untuk {dish?.name}
+        </h2>
 
-        <div className="overflow-x-auto rounded border border-gray-700 mb-4">
+        <div className="overflow-x-auto rounded border border-gray-300 dark:border-gray-700 mb-4">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-[#333] text-gray-300">
+              <tr className="bg-gray-100 dark:bg-[#333] text-gray-700 dark:text-gray-300">
                 <th className="px-3 py-2 text-left">Bahan</th>
                 <th className="px-3 py-2 text-right">Qty</th>
                 <th className="px-3 py-2 text-left">Unit</th>
@@ -65,7 +66,10 @@ export default function DishBOM({ dish, open, onClose }) {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan="6" className="text-center py-4 text-gray-400">
+                  <td
+                    colSpan="6"
+                    className="text-center py-4 text-gray-500 dark:text-gray-400"
+                  >
                     Loading...
                   </td>
                 </tr>
@@ -79,18 +83,24 @@ export default function DishBOM({ dish, open, onClose }) {
                     <tr
                       key={item._id}
                       className={`${
-                        idx % 2 === 0 ? "bg-[#2e2e2e]" : "bg-[#262626]"
-                      } border-t border-gray-700`}
+                        idx % 2 === 0
+                          ? "bg-gray-50 dark:bg-[#2e2e2e]"
+                          : "bg-white dark:bg-[#262626]"
+                      } border-t border-gray-200 dark:border-gray-700`}
                     >
                       <td className="px-3 py-2">{item.product?.name}</td>
                       <td className="px-3 py-2 text-right">{item.qty}</td>
-                      <td className="px-3 py-2">{item.unit?.short || item.unit}</td>
+                      <td className="px-3 py-2">
+                        {item.unit?.short || item.unit}
+                      </td>
                       <td className="px-3 py-2">{item.variant}</td>
-                      <td className="px-3 py-2 text-right">Rp {totalHPP}</td>
+                      <td className="px-3 py-2 text-right">
+                        Rp {totalHPP}
+                      </td>
                       <td className="px-3 py-2 text-center space-x-2">
                         <Button
                           size="sm"
-                          className="bg-yellow-600 hover:bg-yellow-700"
+                          className="bg-yellow-600 hover:bg-yellow-700 text-white"
                           onClick={() => setEditItem(item)}
                         >
                           Edit
@@ -98,10 +108,12 @@ export default function DishBOM({ dish, open, onClose }) {
                         <Button
                           size="sm"
                           disabled={deletingId === item._id}
-                          className="bg-red-600 hover:bg-red-700"
+                          className="bg-red-600 hover:bg-red-700 text-white"
                           onClick={() => handleDelete(item._id)}
                         >
-                          {deletingId === item._id ? "Menghapus..." : "Hapus"}
+                          {deletingId === item._id
+                            ? "Menghapus..."
+                            : "Hapus"}
                         </Button>
                       </td>
                     </tr>
@@ -109,7 +121,10 @@ export default function DishBOM({ dish, open, onClose }) {
                 })
               ) : (
                 <tr>
-                  <td colSpan="6" className="text-center py-4 text-gray-400">
+                  <td
+                    colSpan="6"
+                    className="text-center py-4 text-gray-500 dark:text-gray-400"
+                  >
                     Belum ada bahan
                   </td>
                 </tr>
@@ -120,13 +135,13 @@ export default function DishBOM({ dish, open, onClose }) {
 
         <div className="flex justify-between">
           <Button
-            className="bg-green-600 hover:bg-green-700"
+            className="bg-green-600 hover:bg-green-700 text-white"
             onClick={() => setAddOpen(true)}
           >
             Tambah Bahan
           </Button>
           <Button
-            className="bg-gray-600 hover:bg-gray-700"
+            className="bg-gray-600 hover:bg-gray-700 text-white"
             onClick={() => onClose(false)}
           >
             Tutup
@@ -134,15 +149,17 @@ export default function DishBOM({ dish, open, onClose }) {
         </div>
       </div>
 
+      {/* Modal Tambah */}
       <AddDishBOMModal
         dish={dish}
         isOpen={addOpen}
         onClose={() => {
           setAddOpen(false);
-          loadBOM(); // reload otomatis
+          loadBOM();
         }}
       />
 
+      {/* Modal Edit */}
       <EditDishBOMModal
         item={editItem}
         isOpen={!!editItem}

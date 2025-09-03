@@ -11,7 +11,7 @@ const EditDishBOMModal = ({ item, isOpen, onClose }) => {
   const [units, setUnits] = useState([]);
   const [form, setForm] = useState({ product: "", qty: 1, unit: "", variant: "ice" });
 
-  // 🔹 Load products & units saat modal terbuka
+  // Load products & units saat modal terbuka
   useEffect(() => {
     if (isOpen && item) {
       setForm({
@@ -31,7 +31,7 @@ const EditDishBOMModal = ({ item, isOpen, onClose }) => {
     }
   }, [isOpen, item]);
 
-  // 🔹 Mutation untuk update BOM
+  // Mutation untuk update BOM
   const { mutate, isLoading } = useMutation({
     mutationFn: async () => updateDishBOM(item._id, form),
     onSuccess: () => {
@@ -52,9 +52,9 @@ const EditDishBOMModal = ({ item, isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-[#262626] p-6 rounded-lg w-full max-w-md">
-        <h2 className="text-lg font-semibold text-white mb-4">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div className="bg-white dark:bg-[#262626] text-gray-900 dark:text-white p-6 rounded-lg w-full max-w-md shadow-lg">
+        <h2 className="text-lg font-semibold mb-4">
           Edit Bahan {item?.product?.name}
         </h2>
 
@@ -63,7 +63,7 @@ const EditDishBOMModal = ({ item, isOpen, onClose }) => {
           <select
             value={form.product}
             onChange={(e) => setForm({ ...form, product: e.target.value })}
-            className="w-full p-2 rounded bg-[#333] text-white"
+            className="w-full p-2 rounded bg-gray-100 dark:bg-[#333] text-gray-900 dark:text-white"
             required
           >
             <option value="">-- pilih bahan --</option>
@@ -79,7 +79,7 @@ const EditDishBOMModal = ({ item, isOpen, onClose }) => {
             type="number"
             value={form.qty}
             onChange={(e) => setForm({ ...form, qty: e.target.value })}
-            className="w-full p-2 rounded bg-[#333] text-white"
+            className="w-full p-2 rounded bg-gray-100 dark:bg-[#333] text-gray-900 dark:text-white"
             required
           />
 
@@ -87,7 +87,7 @@ const EditDishBOMModal = ({ item, isOpen, onClose }) => {
           <select
             value={form.unit}
             onChange={(e) => setForm({ ...form, unit: e.target.value })}
-            className="w-full p-2 rounded bg-[#333] text-white"
+            className="w-full p-2 rounded bg-gray-100 dark:bg-[#333] text-gray-900 dark:text-white"
             required
           >
             <option value="">-- pilih unit --</option>
@@ -102,7 +102,7 @@ const EditDishBOMModal = ({ item, isOpen, onClose }) => {
           <select
             value={form.variant || ""}
             onChange={(e) => setForm({ ...form, variant: e.target.value })}
-            className="w-full p-2 rounded bg-[#333] text-white"
+            className="w-full p-2 rounded bg-gray-100 dark:bg-[#333] text-gray-900 dark:text-white"
             required
           >
             <option value="">-- pilih variant --</option>
@@ -110,18 +110,19 @@ const EditDishBOMModal = ({ item, isOpen, onClose }) => {
             <option value="ice">Ice</option>
           </select>
 
+          {/* Buttons */}
           <div className="flex justify-end gap-2">
             <button
               type="button"
               onClick={onClose}
-              className="bg-gray-600 px-4 py-2 rounded text-white hover:bg-gray-700"
+              className="bg-gray-400 dark:bg-gray-600 px-4 py-2 rounded text-white hover:bg-gray-500 dark:hover:bg-gray-700"
             >
               Batal
             </button>
             <button
               type="submit"
               disabled={isLoading}
-              className="bg-yellow-600 px-4 py-2 rounded text-white hover:bg-yellow-700"
+              className="bg-yellow-600 hover:bg-yellow-700 px-4 py-2 rounded text-white"
             >
               {isLoading ? "Menyimpan..." : "Simpan"}
             </button>

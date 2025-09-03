@@ -25,7 +25,7 @@ const MenuContainer = () => {
   // Set default kategori saat pertama load
   useEffect(() => {
     if (categories.length > 0) {
-      const defaultCategory = categories.find(cat => cat.name === "Add On") || categories[0];
+      const defaultCategory = categories.find((cat) => cat.name === "Add On") || categories[0];
       setSelectedCategory(defaultCategory.name);
     }
   }, [categories]);
@@ -33,8 +33,7 @@ const MenuContainer = () => {
   const filteredDishes = selectedCategory
     ? dishes.filter(
         (dish) =>
-          dish.category?.trim().toLowerCase() ===
-          selectedCategory.trim().toLowerCase()
+          dish.category?.trim().toLowerCase() === selectedCategory.trim().toLowerCase()
       )
     : dishes;
 
@@ -75,37 +74,40 @@ const MenuContainer = () => {
   return (
     <>
       {/* Categories */}
-      <div className="grid grid-cols-4 gap-4 px-10 py-4">
+      <div className="grid grid-cols-4 gap-4 px-6 py-4">
         {categories.map((cat, index) => {
           const colors = [
-            "bg-green-700",
-            "bg-blue-700",
-            "bg-red-700",
-            "bg-yellow-700",
-            "bg-purple-700",
-            "bg-pink-700",
-            "bg-orange-700",
+            "bg-green-600",
+            "bg-blue-600",
+            "bg-red-600",
+            "bg-yellow-600",
+            "bg-purple-600",
+            "bg-pink-600",
+            "bg-orange-600",
           ];
 
-          const bg = selectedCategory === cat.name ? colors[index % colors.length] : "bg-[#3f3f46]";
+          const bg =
+            selectedCategory === cat.name
+              ? colors[index % colors.length]
+              : "bg-gray-200 dark:bg-[#3f3f46]";
 
           return (
             <div
               key={cat._id}
               onClick={() => setSelectedCategory(cat.name)}
-              className={`p-4 rounded-lg cursor-pointer flex flex-col justify-between h-[100px] ${bg}`}
+              className={`p-4 rounded-lg cursor-pointer flex flex-col justify-between h-[100px] ${bg} transition`}
             >
               <div className="flex justify-between items-center">
                 <h1 className="text-white text-lg font-semibold">{cat.name}</h1>
-                {selectedCategory === cat.name && (
-                  <GrRadialSelected className="text-white" size={20} />
-                )}
+                {selectedCategory === cat.name && <GrRadialSelected className="text-white" size={20} />}
               </div>
-              <p className="text-sm text-gray-400">
-                {dishes.filter(
-                  (dish) =>
-                    dish.category?.trim().toLowerCase() === cat.name.trim().toLowerCase()
-                ).length}{" "}
+              <p className="text-sm text-gray-100 dark:text-gray-400">
+                {
+                  dishes.filter(
+                    (dish) =>
+                      dish.category?.trim().toLowerCase() === cat.name.trim().toLowerCase()
+                  ).length
+                }{" "}
                 Item
               </p>
             </div>
@@ -113,7 +115,7 @@ const MenuContainer = () => {
         })}
       </div>
 
-      <hr className="border-gray-700 border-t-2 mt-4" />
+      <hr className="border-gray-300 dark:border-gray-700 border-t-2 mt-4" />
 
       {/* Dishes */}
       <div className="flex-1 overflow-y-auto px-2 sm:px-4">
@@ -121,13 +123,15 @@ const MenuContainer = () => {
           {filteredDishes.map((dish) => (
             <div
               key={dish._id}
-              className="flex flex-col justify-between p-3 sm:p-4 rounded-lg hover:bg-[#2a2a2a] bg-[#1a1a1a] transition-all duration-200 w-full"
+              className="flex flex-col justify-between p-3 sm:p-4 rounded-lg bg-white dark:bg-[#1a1a1a] hover:bg-gray-100 dark:hover:bg-[#2a2a2a] transition-all duration-200 w-full shadow-sm"
             >
               <div className="flex items-start justify-between w-full">
-                <h1 className="text-white text-sm sm:text-base md:text-lg font-semibold">{dish.name}</h1>
+                <h1 className="text-gray-900 dark:text-white text-sm sm:text-base md:text-lg font-semibold">
+                  {dish.name}
+                </h1>
                 <button
                   onClick={() => handleAddToCart(dish)}
-                  className="bg-[#2e4a40] text-[#02ca3a] p-1 sm:p-2 rounded-lg"
+                  className="bg-green-100 dark:bg-[#2e4a40] text-green-600 dark:text-[#02ca3a] p-1 sm:p-2 rounded-lg"
                 >
                   <FaShoppingCart size={18} />
                 </button>
@@ -137,17 +141,29 @@ const MenuContainer = () => {
                 <select
                   value={selectedTypes[dish._id] || "hot"}
                   onChange={(e) => handleTypeChange(dish._id, e.target.value)}
-                  className="bg-[#1f1f1f] text-white px-2 py-1 rounded-md text-xs sm:text-sm mt-2 w-full"
+                  className="bg-gray-100 dark:bg-[#1f1f1f] text-gray-900 dark:text-white px-2 py-1 rounded-md text-xs sm:text-sm mt-2 w-full"
                 >
                   <option value="hot">Hot</option>
                   <option value="ice">Ice</option>
                 </select>
               )}
 
-              <div className="flex items-center justify-between bg-[#1f1f1f] px-3 sm:px-4 py-2 rounded-lg gap-3 sm:gap-4 w-full mt-2">
-                <button onClick={() => decrement(dish._id)} className="text-yellow-500 text-lg sm:text-2xl">&minus;</button>
-                <span className="text-white text-sm sm:text-base">{itemCounts[dish._id] || 0}</span>
-                <button onClick={() => increment(dish._id)} className="text-yellow-500 text-lg sm:text-2xl">&#43;</button>
+              <div className="flex items-center justify-between bg-gray-100 dark:bg-[#1f1f1f] px-3 sm:px-4 py-2 rounded-lg gap-3 sm:gap-4 w-full mt-2">
+                <button
+                  onClick={() => decrement(dish._id)}
+                  className="text-yellow-600 dark:text-yellow-500 text-lg sm:text-2xl"
+                >
+                  &minus;
+                </button>
+                <span className="text-gray-900 dark:text-white text-sm sm:text-base">
+                  {itemCounts[dish._id] || 0}
+                </span>
+                <button
+                  onClick={() => increment(dish._id)}
+                  className="text-yellow-600 dark:text-yellow-500 text-lg sm:text-2xl"
+                >
+                  &#43;
+                </button>
               </div>
             </div>
           ))}

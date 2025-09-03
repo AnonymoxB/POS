@@ -7,7 +7,6 @@ import { Pencil, Trash2, Search } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
-
 const Dish = () => {
   const [dishes, setDishes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -23,7 +22,7 @@ const Dish = () => {
 
   // pagination
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(5); // default 5
+  const [itemsPerPage, setItemsPerPage] = useState(5);
 
   // search & filter
   const [searchQuery, setSearchQuery] = useState("");
@@ -73,13 +72,11 @@ const Dish = () => {
     startIndex + itemsPerPage
   );
 
-  // handle edit
   const handleEdit = (dish) => {
     setSelectedDish(dish);
     setIsEditModalOpen(true);
   };
 
-  // handle delete
   const handleDelete = (id) => {
     enqueueSnackbar("Yakin ingin menghapus menu ini?", {
       variant: "warning",
@@ -103,7 +100,7 @@ const Dish = () => {
           </button>
           <button
             onClick={() => closeSnackbar(key)}
-            className="text-gray-300 font-semibold"
+            className="text-gray-500 dark:text-gray-300 font-semibold"
           >
             Batal
           </button>
@@ -112,32 +109,29 @@ const Dish = () => {
     });
   };
 
-  // setelah update / tambah
   const handleUpdateSuccess = () => {
     fetchDishes();
     enqueueSnackbar("Menu berhasil diperbarui", { variant: "success" });
   };
 
   const formatRupiah = (number) => {
-  if (typeof number !== "number") return "-";
-  return new Intl.NumberFormat("id-ID", {
-    style: "currency",
-    currency: "IDR",
-    minimumFractionDigits: 0,
-  }).format(number);
-};
-
-  
+    if (typeof number !== "number") return "-";
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      minimumFractionDigits: 0,
+    }).format(number);
+  };
 
   return (
-    <Card className="bg-[#262626] text-white">
+    <Card className="bg-white dark:bg-[#262626] text-gray-900 dark:text-white">
       <CardContent className="p-6">
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-center mb-4 gap-2">
           <h1 className="text-xl font-bold">Daftar Menu</h1>
           <Button
             onClick={() => setIsAddModalOpen(true)}
-            className="bg-green-600 hover:bg-green-700"
+            className="bg-green-600 hover:bg-green-700 text-white"
           >
             + Tambah Menu
           </Button>
@@ -158,7 +152,7 @@ const Dish = () => {
                 setSearchQuery(e.target.value);
                 setCurrentPage(1);
               }}
-              className="w-full pl-10 pr-3 py-2 rounded bg-[#333] text-white focus:outline-none focus:ring-2 focus:ring-green-600"
+              className="w-full pl-10 pr-3 py-2 rounded bg-gray-100 dark:bg-[#333] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-600"
             />
           </div>
 
@@ -168,7 +162,7 @@ const Dish = () => {
               setSelectedCategory(e.target.value);
               setCurrentPage(1);
             }}
-            className="w-full md:w-1/4 p-2 rounded bg-[#333] text-white"
+            className="w-full md:w-1/4 p-2 rounded bg-gray-100 dark:bg-[#333] text-gray-900 dark:text-white"
           >
             <option value="">Semua Kategori</option>
             {categories.map((cat) => (
@@ -183,27 +177,51 @@ const Dish = () => {
         {error ? (
           <p className="text-red-500">{error}</p>
         ) : loading ? (
-          <p className="text-gray-400">Loading...</p>
+          <p className="text-gray-500 dark:text-gray-400">Loading...</p>
         ) : filteredDishes.length === 0 ? (
-          <p className="text-gray-400">Tidak ada menu yang cocok.</p>
+          <p className="text-gray-500 dark:text-gray-400">
+            Tidak ada menu yang cocok.
+          </p>
         ) : (
           <div className="overflow-x-auto">
-            <div className="overflow-y-auto max-h-[500px] scrollbar-thin scrollbar-thumb-gray-600 scrollbar-hide rounded-md">
-              <table className="w-full border-collapse border border-gray-600 text-sm">
+            <div className="overflow-y-auto max-h-[500px] scrollbar-thin scrollbar-thumb-gray-400 dark:scrollbar-thumb-gray-600 scrollbar-hide rounded-md">
+              <table className="w-full border-collapse border border-gray-300 dark:border-gray-600 text-sm">
                 <thead>
-                  <tr className="bg-[#333] text-gray-300 sticky top-0 z-10">
-                    <th className="border border-gray-600 px-3 py-2">#</th>
-                    <th className="border border-gray-600 px-3 py-2">Nama</th>
-                    <th className="border border-gray-600 px-3 py-2">Kategori</th>
-                    <th className="border border-gray-600 px-3 py-2">HPP Hot</th>
-                    <th className="border border-gray-600 px-3 py-2">HPP Ice</th>
-                    <th className="border border-gray-600 px-3 py-2">Harga Hot</th>
-                    <th className="border border-gray-600 px-3 py-2">Harga Ice</th>
-                    <th className="border border-gray-600 px-3 py-2">Profit Hot (%)</th>
-                    <th className="border border-gray-600 px-3 py-2">Profit Ice (%)</th>
-                    <th className="border border-gray-600 px-3 py-2">Create</th>
-                    <th className="border border-gray-600 px-3 py-2">Update</th>
-                    <th className="border border-gray-600 px-3 py-2 text-center w-40">
+                  <tr className="bg-gray-200 dark:bg-[#333] text-gray-700 dark:text-gray-300 sticky top-0 z-10">
+                    <th className="border border-gray-300 dark:border-gray-600 px-3 py-2">
+                      #
+                    </th>
+                    <th className="border border-gray-300 dark:border-gray-600 px-3 py-2">
+                      Nama
+                    </th>
+                    <th className="border border-gray-300 dark:border-gray-600 px-3 py-2">
+                      Kategori
+                    </th>
+                    <th className="border border-gray-300 dark:border-gray-600 px-3 py-2">
+                      HPP Hot
+                    </th>
+                    <th className="border border-gray-300 dark:border-gray-600 px-3 py-2">
+                      HPP Ice
+                    </th>
+                    <th className="border border-gray-300 dark:border-gray-600 px-3 py-2">
+                      Harga Hot
+                    </th>
+                    <th className="border border-gray-300 dark:border-gray-600 px-3 py-2">
+                      Harga Ice
+                    </th>
+                    <th className="border border-gray-300 dark:border-gray-600 px-3 py-2">
+                      Profit Hot (%)
+                    </th>
+                    <th className="border border-gray-300 dark:border-gray-600 px-3 py-2">
+                      Profit Ice (%)
+                    </th>
+                    <th className="border border-gray-300 dark:border-gray-600 px-3 py-2">
+                      Create
+                    </th>
+                    <th className="border border-gray-300 dark:border-gray-600 px-3 py-2">
+                      Update
+                    </th>
+                    <th className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-center w-40">
                       Aksi
                     </th>
                   </tr>
@@ -212,51 +230,62 @@ const Dish = () => {
                   {paginatedData.map((dish, index) => (
                     <tr
                       key={dish._id}
-                      className="border-t border-gray-700 hover:bg-[#333]/50"
+                      className="border-t border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-[#333]/50"
                     >
-                      <td className="border border-gray-600 px-3 py-2 text-center">
+                      <td className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-center">
                         {startIndex + index + 1}
                       </td>
-                      <td className="border border-gray-600 px-3 py-2">{dish.name}</td>
-                      <td className="border border-gray-600 px-3 py-2">{dish.category}</td>
-                      <td className="border border-gray-600 px-3 py-2">
+                      <td className="border border-gray-300 dark:border-gray-600 px-3 py-2">
+                        {dish.name}
+                      </td>
+                      <td className="border border-gray-300 dark:border-gray-600 px-3 py-2">
+                        {dish.category}
+                      </td>
+                      <td className="border border-gray-300 dark:border-gray-600 px-3 py-2">
                         {dish.hpp?.hpphot ? formatRupiah(dish.hpp.hpphot) : "-"}
                       </td>
-                      <td className="border border-gray-600 px-3 py-2">
+                      <td className="border border-gray-300 dark:border-gray-600 px-3 py-2">
                         {dish.hpp?.hppice ? formatRupiah(dish.hpp.hppice) : "-"}
                       </td>
-                      <td className="border border-gray-600 px-3 py-2">
+                      <td className="border border-gray-300 dark:border-gray-600 px-3 py-2">
                         {dish.price?.hot ? formatRupiah(dish.price.hot) : "-"}
                       </td>
-                      <td className="border border-gray-600 px-3 py-2">
+                      <td className="border border-gray-300 dark:border-gray-600 px-3 py-2">
                         {dish.price?.ice ? formatRupiah(dish.price.ice) : "-"}
                       </td>
-                      <td className="border border-gray-600 px-3 py-2">
+                      <td className="border border-gray-300 dark:border-gray-600 px-3 py-2">
                         {dish.hpp?.hpphot && dish.price?.hot
-                          ? `${(((dish.price.hot - dish.hpp.hpphot) / dish.hpp.hpphot) * 100).toFixed(1)}%`
+                          ? `${(
+                              ((dish.price.hot - dish.hpp.hpphot) /
+                                dish.hpp.hpphot) *
+                              100
+                            ).toFixed(1)}%`
                           : "-"}
                       </td>
-                      <td className="border border-gray-600 px-3 py-2">
+                      <td className="border border-gray-300 dark:border-gray-600 px-3 py-2">
                         {dish.hpp?.hppice && dish.price?.ice
-                          ? `${(((dish.price.ice - dish.hpp.hppice) / dish.hpp.hppice) * 100).toFixed(1)}%`
+                          ? `${(
+                              ((dish.price.ice - dish.hpp.hppice) /
+                                dish.hpp.hppice) *
+                              100
+                            ).toFixed(1)}%`
                           : "-"}
                       </td>
-
-                      <td className="border border-gray-600 px-3 py-2">
+                      <td className="border border-gray-300 dark:border-gray-600 px-3 py-2">
                         {dish.createdAt
                           ? new Date(dish.createdAt).toLocaleString("id-ID")
                           : "-"}
                       </td>
-                      <td className="border border-gray-600 px-3 py-2">
+                      <td className="border border-gray-300 dark:border-gray-600 px-3 py-2">
                         {dish.updatedAt
                           ? new Date(dish.updatedAt).toLocaleString("id-ID")
                           : "-"}
                       </td>
-                      <td className="border border-gray-600 px-3 py-2 text-center">
+                      <td className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-center">
                         <div className="flex justify-center gap-2">
                           <Button
                             size="sm"
-                            className="bg-blue-600 hover:bg-blue-700"
+                            className="bg-blue-600 hover:bg-blue-700 text-white"
                             onClick={() => handleEdit(dish)}
                           >
                             <Pencil size={14} /> Edit
@@ -264,7 +293,7 @@ const Dish = () => {
                           <Button
                             size="sm"
                             variant="destructive"
-                            className="bg-red-600 hover:bg-red-700"
+                            className="bg-red-600 hover:bg-red-700 text-white"
                             onClick={() => handleDelete(dish._id)}
                           >
                             <Trash2 size={14} /> Hapus
@@ -279,8 +308,7 @@ const Dish = () => {
 
             {/* Pagination */}
             <div className="flex flex-col md:flex-row justify-between items-center mt-4 gap-3">
-              {/* Info jumlah data */}
-              <p className="text-gray-400 text-sm">
+              <p className="text-gray-600 dark:text-gray-400 text-sm">
                 Menampilkan{" "}
                 <span className="font-semibold">
                   {totalItems === 0 ? 0 : startIndex + 1}
@@ -292,16 +320,17 @@ const Dish = () => {
                 dari <span className="font-semibold">{totalItems}</span> data
               </p>
 
-              {/* Controls */}
               <div className="flex items-center gap-2">
-                <label className="text-gray-300 text-sm">Tampilkan</label>
+                <label className="text-gray-700 dark:text-gray-300 text-sm">
+                  Tampilkan
+                </label>
                 <select
                   value={itemsPerPage}
                   onChange={(e) => {
                     setItemsPerPage(Number(e.target.value));
                     setCurrentPage(1);
                   }}
-                  className="p-1 rounded bg-[#333] text-white text-sm"
+                  className="p-1 rounded bg-gray-100 dark:bg-[#333] text-gray-900 dark:text-white text-sm"
                 >
                   {[5, 10, 20, 50].map((num) => (
                     <option key={num} value={num}>
@@ -309,7 +338,9 @@ const Dish = () => {
                     </option>
                   ))}
                 </select>
-                <span className="text-gray-300 text-sm">/ halaman</span>
+                <span className="text-gray-700 dark:text-gray-300 text-sm">
+                  / halaman
+                </span>
               </div>
 
               <div className="flex items-center gap-2">
@@ -318,7 +349,6 @@ const Dish = () => {
                   variant="outline"
                   disabled={currentPage === 1}
                   onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-                  
                 >
                   Prev
                 </Button>
@@ -333,7 +363,7 @@ const Dish = () => {
                       className={`${
                         currentPage === page
                           ? "bg-green-600 text-white"
-                          : "bg-[#333] text-gray-300 hover:bg-gray-700"
+                          : "bg-gray-100 dark:bg-[#333] text-gray-900 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
                       }`}
                       onClick={() => setCurrentPage(page)}
                     >
@@ -349,7 +379,6 @@ const Dish = () => {
                   onClick={() =>
                     setCurrentPage((p) => Math.min(p + 1, totalPages))
                   }
-                  
                 >
                   Next
                 </Button>
@@ -382,5 +411,3 @@ const Dish = () => {
 };
 
 export default Dish;
-
-
