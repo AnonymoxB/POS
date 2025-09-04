@@ -50,8 +50,7 @@ const AddDishModal = ({ setIsAddModalOpen, onClose, onAdded }) => {
       mutationFn: (reqData) => addDish(reqData),
       onSuccess: (res) => {
         console.log("✅ onSuccess:", res);
-        setIsAddModalOpen(false);
-        enqueueSnackbar(res?.message ?? "Menu berhasil ditambahkan", {
+        enqueueSnackbar(res?.data?.message ?? "Menu berhasil ditambahkan", {
           variant: "success",
         });
         if (onAdded) onAdded();

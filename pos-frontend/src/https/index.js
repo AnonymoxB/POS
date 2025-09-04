@@ -37,8 +37,7 @@ export const updateCategory = (id, categoryData) => api.put(`/api/category/${id}
 
 // dish
 export const addDish = async (dishData) => {
-  const res = await api.post("/api/dish", dishData);
-  return res.data;
+  return api.post("/api/dish", dishData);
 };
 export const getDishes = async () => {
   const res = await api.get("/api/dish");

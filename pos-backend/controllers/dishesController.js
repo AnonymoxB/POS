@@ -21,7 +21,6 @@ const createDish = async (req, res) => {
     const { name, price, hpp, category } = req.body;
     const newDish = new Dish({ name, price, hpp, category });
     await newDish.save();
-
     return res
       .status(201)
       .json({ success: true, data: newDish });
