@@ -24,7 +24,7 @@ const createDish = async (req, res) => {
 
     return res
       .status(201)
-      .json({ success: true, message: "Hidangan berhasil ditambahkan", data: newDish });
+      .json({ success: true, data: newDish });
   } catch (error) {
     return res
       .status(400)
