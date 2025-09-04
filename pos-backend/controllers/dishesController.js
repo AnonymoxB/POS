@@ -6,7 +6,7 @@ const Unit = require("../models/unitModel");
 // GET all dishes
 const getAllDishes = async (req, res) => {
   try {
-    const dishes = await Dish.find().sort({ createdAt: -1 });
+    const dishes = await Dish.find().populate("category", "name").sort({ createdAt: -1 });
     res.json({ data: dishes });
   } catch (error) {
     res.status(500).json({ message: "Gagal mengambil data hidangan", error });
@@ -21,6 +21,10 @@ const createDish = async (req, res) => {
     const { name, price, hpp, category } = req.body;
     const newDish = new Dish({ name, price, hpp, category });
     await newDish.save();
+
+    const populatedDish = await Dish.findById(newDish._id)
+      .populate("category", "name");
+      
     return res.status(201).json({
       success: true,
       message: "Menu berhasil ditambahkan",

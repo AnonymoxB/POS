@@ -5,7 +5,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { enqueueSnackbar } from "notistack";
 import { addDish, getCategories } from "../../../https";
 
-const AddDishModal = ({ setIsAddModalOpen, onClose, onAdded }) => {
+const AddDishModal = ({ onClose, onAdded }) => {
   const [dishData, setDishData] = useState({
     name: "",
     hpp: { hpphot: 0, hppice: 0 },
