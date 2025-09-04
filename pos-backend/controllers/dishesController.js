@@ -21,9 +21,12 @@ const createDish = async (req, res) => {
     const { name, price, hpp, category } = req.body;
     const newDish = new Dish({ name, price, hpp, category });
     await newDish.save();
-    return res
-      .status(201)
-      .json({ success: true, data: newDish });
+    return res.status(201).json({
+      success: true,
+      message: "Menu berhasil ditambahkan",
+      data: newDish,
+    });
+
   } catch (error) {
     return res
       .status(400)
