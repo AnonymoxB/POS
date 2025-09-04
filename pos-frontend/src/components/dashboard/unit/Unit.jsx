@@ -61,7 +61,7 @@ const Unit = () => {
           </button>
           <button
             onClick={() => closeSnackbar(key)}
-            className="text-gray-300 font-semibold"
+            className="text-gray-500 dark:text-gray-300 font-semibold"
           >
             Batal
           </button>
@@ -79,7 +79,7 @@ const Unit = () => {
     queryClient.invalidateQueries(["units"]);
   };
 
-  if (isLoading) return <p className="text-[#ababab]">Loading...</p>;
+  if (isLoading) return <p className="text-gray-500 dark:text-[#ababab]">Loading...</p>;
   if (isError) return <p className="text-red-500">Gagal memuat data unit</p>;
 
   const units = data?.data || [];
@@ -118,13 +118,13 @@ const Unit = () => {
   };
 
   return (
-    <Card className="bg-[#262626] text-white">
+    <Card className="bg-white text-black dark:bg-[#262626] dark:text-white">
       <CardContent className="p-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
           <h2 className="text-xl font-bold">Daftar Unit</h2>
           <Button
             onClick={() => setOpenAddModal(true)}
-            className="bg-green-600 hover:bg-green-700"
+            className="bg-green-600 hover:bg-green-700 text-white"
           >
             + Tambah Unit
           </Button>
@@ -139,30 +139,30 @@ const Unit = () => {
               setSearchTerm(e.target.value);
               setCurrentPage(1);
             }}
-            className="bg-[#333] text-white border-gray-600"
+            className="bg-gray-100 text-black border-gray-300 dark:bg-[#333] dark:text-white dark:border-gray-600"
           />
         </div>
 
         {currentUnits.length === 0 ? (
-          <p className="text-gray-400">Tidak ada unit yang tersedia.</p>
+          <p className="text-gray-500 dark:text-gray-400">Tidak ada unit yang tersedia.</p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full border-collapse border border-gray-600 text-sm">
+            <table className="w-full border-collapse border border-gray-300 dark:border-gray-600 text-sm">
               <thead>
-                <tr className="bg-[#333] text-gray-300">
-                  <th className="border border-gray-600 px-3 py-2 text-left">
+                <tr className="bg-gray-100 dark:bg-[#333] text-gray-700 dark:text-gray-300">
+                  <th className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-left">
                     Nama
                   </th>
-                  <th className="border border-gray-600 px-3 py-2 text-left">
+                  <th className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-left">
                     Singkatan
                   </th>
-                  <th className="border border-gray-600 px-3 py-2 text-left">
+                  <th className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-left">
                     Base Unit
                   </th>
-                  <th className="border border-gray-600 px-3 py-2 text-left">
+                  <th className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-left">
                     Konversi
                   </th>
-                  <th className="border border-gray-600 px-3 py-2 text-center">
+                  <th className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-center">
                     Aksi
                   </th>
                 </tr>
@@ -171,31 +171,31 @@ const Unit = () => {
                 {currentUnits.map((unit) => (
                   <tr
                     key={unit._id}
-                    className="border-t border-gray-700 hover:bg-[#333]/50"
+                    className="border-t border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[#333]/50"
                   >
-                    <td className="border border-gray-600 px-3 py-2">
+                    <td className="border border-gray-300 dark:border-gray-600 px-3 py-2">
                       {unit.name}
                     </td>
-                    <td className="border border-gray-600 px-3 py-2">
+                    <td className="border border-gray-300 dark:border-gray-600 px-3 py-2">
                       {unit.short}
                     </td>
-                    <td className="border border-gray-600 px-3 py-2">
+                    <td className="border border-gray-300 dark:border-gray-600 px-3 py-2">
                       {unit.baseUnit?.name || "-"}
                     </td>
-                    <td className="border border-gray-600 px-3 py-2">
+                    <td className="border border-gray-300 dark:border-gray-600 px-3 py-2">
                       {unit.conversion}
                     </td>
-                    <td className="border border-gray-600 px-3 py-2 text-center flex gap-2 justify-center">
+                    <td className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-center flex gap-2 justify-center">
                       <Button
                         size="sm"
-                        className="bg-blue-600 hover:bg-blue-700"
+                        className="bg-blue-600 hover:bg-blue-700 text-white"
                         onClick={() => handleEdit(unit)}
                       >
                         Edit
                       </Button>
                       <Button
                         size="sm"
-                        className="bg-red-600 hover:bg-red-700"
+                        className="bg-red-600 hover:bg-red-700 text-white"
                         onClick={() => handleDelete(unit._id)}
                       >
                         Hapus
@@ -209,7 +209,7 @@ const Unit = () => {
             {/* Pagination */}
             <div className="flex flex-col sm:flex-row justify-between items-center gap-3 mt-4">
               {/* Info jumlah data */}
-              <div className="text-gray-400 text-sm">
+              <div className="text-gray-600 dark:text-gray-400 text-sm">
                 {filteredUnits.length > 0 && (
                   <span>
                     Menampilkan{" "}
@@ -225,7 +225,7 @@ const Unit = () => {
               </div>
 
               {/* Items per page */}
-              <div className="flex items-center gap-2 text-gray-300">
+              <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
                 <label htmlFor="itemsPerPage">Tampilkan</label>
                 <select
                   id="itemsPerPage"
@@ -234,7 +234,7 @@ const Unit = () => {
                     setItemsPerPage(Number(e.target.value));
                     setCurrentPage(1);
                   }}
-                  className="bg-[#333] text-white border border-gray-600 rounded px-2 py-1"
+                  className="bg-gray-100 text-black dark:bg-[#333] dark:text-white border border-gray-300 dark:border-gray-600 rounded px-2 py-1"
                 >
                   <option value={5}>5</option>
                   <option value={10}>10</option>
@@ -268,7 +268,7 @@ const Unit = () => {
                       className={`${
                         currentPage === page
                           ? "bg-green-600 text-white"
-                          : "bg-[#333] text-gray-300 hover:bg-gray-700"
+                          : "bg-gray-100 dark:bg-[#333] text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
                       }`}
                       onClick={() => setCurrentPage(page)}
                     >

@@ -57,14 +57,14 @@ const Header = () => {
     </div>
 
     {/* Search */}
-    <div className="flex-1 max-w-xl w-full bg-gray-100 dark:bg-gray-800 rounded-[20px] flex items-center px-4 py-2 gap-3">
+    {/* <div className="flex-1 max-w-xl w-full bg-gray-100 dark:bg-gray-800 rounded-[20px] flex items-center px-4 py-2 gap-3">
       <FaSearch className="text-gray-500 dark:text-gray-400" />
       <input
         type="text"
         placeholder="Search"
         className="bg-transparent outline-none w-full text-gray-800 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400"
       />
-    </div>
+    </div> */}
 
     {/* Right Side */}
     <div className="flex items-center gap-4">

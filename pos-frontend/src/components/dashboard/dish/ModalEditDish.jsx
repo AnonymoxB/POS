@@ -122,7 +122,7 @@ const ModalEditDish = ({ isOpen, onClose, dish, onUpdated }) => {
                   value={formData.hpp.hpphot}
                   onChange={handleChange}
                   className="w-full bg-gray-100 dark:bg-[#1f1f1f] rounded-lg px-3 py-2 text-gray-900 dark:text-white focus:outline-none"
-                  required
+                  disabled
                 />
               </div>
               <div className="w-1/2">
@@ -135,7 +135,7 @@ const ModalEditDish = ({ isOpen, onClose, dish, onUpdated }) => {
                   value={formData.hpp.hppice}
                   onChange={handleChange}
                   className="w-full bg-gray-100 dark:bg-[#1f1f1f] rounded-lg px-3 py-2 text-gray-900 dark:text-white focus:outline-none"
-                  required
+                  disabled
                 />
               </div>
             </div>

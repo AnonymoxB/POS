@@ -21,11 +21,17 @@ const createDish = async (req, res) => {
     const { name, price, hpp, category } = req.body;
     const newDish = new Dish({ name, price, hpp, category });
     await newDish.save();
-    res.status(201).json({ message: "Hidangan berhasil ditambahkan", data: newDish });
+
+    return res
+      .status(201)
+      .json({ success: true, message: "Hidangan berhasil ditambahkan", data: newDish });
   } catch (error) {
-    res.status(500).json({ message: "Gagal menambahkan hidangan", error });
+    return res
+      .status(400)
+      .json({ success: false, message: error.message });
   }
 };
+
 
 // PUT update dish
 const updateDish = async (req, res) => {

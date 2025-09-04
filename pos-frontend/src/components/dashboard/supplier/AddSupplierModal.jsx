@@ -21,9 +21,10 @@ const AddSupplierModal = ({ isOpen, onClose }) => {
       onClose();
     },
     onError: (err) => {
-      enqueueSnackbar(err?.response?.data?.message || "Gagal menambah supplier", {
-        variant: "error",
-      });
+      enqueueSnackbar(
+        err?.response?.data?.message || "Gagal menambah supplier",
+        { variant: "error" }
+      );
     },
   });
 
@@ -36,15 +37,17 @@ const AddSupplierModal = ({ isOpen, onClose }) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-[#262626] p-6 rounded-lg w-full max-w-md">
-        <h2 className="text-lg font-semibold text-white mb-4">Tambah Supplier</h2>
+      <div className="bg-white dark:bg-[#262626] p-6 rounded-lg w-full max-w-md shadow-lg">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          Tambah Supplier
+        </h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <input
             type="text"
             placeholder="Nama Supplier"
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
-            className="w-full p-2 rounded bg-[#333] text-white"
+            className="w-full p-2 rounded bg-gray-100 dark:bg-[#333] text-gray-900 dark:text-white placeholder-gray-400"
             required
           />
           <input
@@ -52,27 +55,27 @@ const AddSupplierModal = ({ isOpen, onClose }) => {
             placeholder="Nomor Telepon"
             value={form.phone}
             onChange={(e) => setForm({ ...form, phone: e.target.value })}
-            className="w-full p-2 rounded bg-[#333] text-white"
+            className="w-full p-2 rounded bg-gray-100 dark:bg-[#333] text-gray-900 dark:text-white placeholder-gray-400"
           />
           <textarea
             placeholder="Alamat"
             value={form.address}
             onChange={(e) => setForm({ ...form, address: e.target.value })}
-            className="w-full p-2 rounded bg-[#333] text-white"
+            className="w-full p-2 rounded bg-gray-100 dark:bg-[#333] text-gray-900 dark:text-white placeholder-gray-400"
           />
 
           <div className="flex justify-end gap-2">
             <button
               type="button"
               onClick={onClose}
-              className="bg-gray-600 px-4 py-2 rounded text-white hover:bg-gray-700"
+              className="bg-gray-300 dark:bg-gray-600 px-4 py-2 rounded text-gray-900 dark:text-white hover:bg-gray-400 dark:hover:bg-gray-700"
             >
               Batal
             </button>
             <button
               type="submit"
               disabled={isLoading}
-              className="bg-green-600 px-4 py-2 rounded text-white hover:bg-green-700"
+              className="bg-green-600 px-4 py-2 rounded text-white hover:bg-green-700 disabled:opacity-70"
             >
               {isLoading ? "Menyimpan..." : "Simpan"}
             </button>

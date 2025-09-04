@@ -3,7 +3,6 @@ import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { useSnackbar } from "notistack";
 import { addProduct, getProductCategories, getUnits } from "../../../https";
 
-
 const AddProductModal = ({ isOpen, onClose }) => {
   const { enqueueSnackbar } = useSnackbar();
   const queryClient = useQueryClient();
@@ -20,15 +19,13 @@ const AddProductModal = ({ isOpen, onClose }) => {
     queryKey: ["categories"],
     queryFn: getProductCategories,
   });
+  const categories = categoriesRes?.data?.data || [];
 
   // ambil data units
   const { data: unitsRes } = useQuery({
     queryKey: ["units"],
     queryFn: getUnits,
   });
-
-  // pastikan array
-  const categories = categoriesRes?.data?.data || [];
   const units = unitsRes?.data || [];
 
   const mutation = useMutation({
@@ -37,6 +34,7 @@ const AddProductModal = ({ isOpen, onClose }) => {
       enqueueSnackbar("Produk berhasil ditambahkan", { variant: "success" });
       queryClient.invalidateQueries(["products"]);
       onClose();
+      setForm({ name: "", category: "", defaultUnit: "", price: 0 }); // reset form
     },
     onError: (err) => {
       enqueueSnackbar(err.message || "Gagal menambahkan produk", {
@@ -46,45 +44,55 @@ const AddProductModal = ({ isOpen, onClose }) => {
   });
 
   const handleSubmit = (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  if (!form.name || !form.category || !form.defaultUnit) {
-    enqueueSnackbar("Nama, kategori, dan unit wajib diisi", { variant: "error" });
-    return;
-  }
+    if (!form.name || !form.category || !form.defaultUnit) {
+      enqueueSnackbar("Nama, kategori, dan unit wajib diisi", {
+        variant: "error",
+      });
+      return;
+    }
 
-  const payload = {
-    name: form.name,
-    category: form.category,
-    defaultUnit: form.defaultUnit,
-    price: Number(form.price),
+    const payload = {
+      name: form.name,
+      category: form.category,
+      defaultUnit: form.defaultUnit,
+      price: Number(form.price),
+    };
+
+    mutation.mutate(payload);
   };
-
-  mutation.mutate(payload);
-};
-
-
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
-      <div className="bg-[#262626] p-6 rounded-lg w-full max-w-md">
-        <h2 className="text-lg font-bold text-white mb-4">Tambah Produk</h2>
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white dark:bg-[#262626] p-6 rounded-xl shadow-lg w-full max-w-md"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+          Tambah Produk
+        </h2>
+
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
           <input
             type="text"
             placeholder="Nama produk"
-            className="p-2 rounded bg-[#333] text-white"
+            className="p-2 rounded bg-gray-100 dark:bg-[#333] text-gray-900 dark:text-white"
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
             required
           />
 
           <select
-            className="p-2 rounded bg-[#333] text-white"
+            className="p-2 rounded bg-gray-100 dark:bg-[#333] text-gray-900 dark:text-white"
             value={form.category}
             onChange={(e) => setForm({ ...form, category: e.target.value })}
+            required
           >
             <option value="">Pilih kategori</option>
             {categories.map((c) => (
@@ -95,11 +103,10 @@ const AddProductModal = ({ isOpen, onClose }) => {
           </select>
 
           <select
-            className="p-2 rounded bg-[#333] text-white"
+            className="p-2 rounded bg-gray-100 dark:bg-[#333] text-gray-900 dark:text-white"
             value={form.defaultUnit}
-            onChange={(e) =>
-              setForm({ ...form, defaultUnit: e.target.value })
-            }
+            onChange={(e) => setForm({ ...form, defaultUnit: e.target.value })}
+            required
           >
             <option value="">Pilih unit</option>
             {units.map((u) => (
@@ -112,13 +119,13 @@ const AddProductModal = ({ isOpen, onClose }) => {
           <input
             type="number"
             placeholder="Harga"
-            className="p-2 rounded bg-[#333] text-white"
+            className="p-2 rounded bg-gray-100 dark:bg-[#333] text-gray-900 dark:text-white"
             value={form.price}
             onChange={(e) => setForm({ ...form, price: e.target.value })}
             required
           />
 
-          <div className="flex justify-end gap-2">
+          <div className="flex justify-end gap-2 mt-2">
             <button
               type="button"
               onClick={onClose}
@@ -129,8 +136,9 @@ const AddProductModal = ({ isOpen, onClose }) => {
             <button
               type="submit"
               className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+              disabled={mutation.isLoading}
             >
-              Simpan
+              {mutation.isLoading ? "Menyimpan..." : "Simpan"}
             </button>
           </div>
         </form>

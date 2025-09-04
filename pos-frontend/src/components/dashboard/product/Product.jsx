@@ -15,7 +15,7 @@ const Product = () => {
   const [openAddModal, setOpenAddModal] = useState(false);
   const [editData, setEditData] = useState(null);
 
-  // Pagination + Search state
+  // Pagination + Search
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
@@ -29,14 +29,19 @@ const Product = () => {
     queryKey: ["summary"],
     queryFn: getStockSummary,
   });
+
   const summaryMap = Object.fromEntries(
     (summaryData?.data?.data || []).map((s) => [
       s.productId,
-      { unit: s.unit || "-", baseUnit: s.baseUnit || "-", totalIn: s.totalIn, totalOut: s.totalOut, balance: s.balance },
+      {
+        unit: s.unit || "-",
+        baseUnit: s.baseUnit || "-",
+        totalIn: s.totalIn,
+        totalOut: s.totalOut,
+        balance: s.balance,
+      },
     ])
   );
-  
-  
 
   const deleteMutation = useMutation({
     mutationFn: deleteProduct,
@@ -51,17 +56,15 @@ const Product = () => {
     },
   });
 
-  if (isLoading) return <p className="text-[#ababab]">Loading...</p>;
+  if (isLoading) return <p className="text-gray-600 dark:text-gray-300">Loading...</p>;
   if (isError) return <p className="text-red-500">Gagal memuat data produk</p>;
 
   const products = data?.data || [];
 
-  
+  // Filter
   const filteredProducts = products.filter((p) =>
- ( p?.name|| "").toLowerCase().includes((searchTerm || "").toLowerCase())
-);
-
-
+    (p?.name || "").toLowerCase().includes((searchTerm || "").toLowerCase())
+  );
 
   // Pagination
   const totalItems = filteredProducts.length;
@@ -83,7 +86,15 @@ const Product = () => {
       if (currentPage <= 4) {
         pages.push(1, 2, 3, 4, 5, "...", totalPages);
       } else if (currentPage >= totalPages - 3) {
-        pages.push(1, "...", totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+        pages.push(
+          1,
+          "...",
+          totalPages - 4,
+          totalPages - 3,
+          totalPages - 2,
+          totalPages - 1,
+          totalPages
+        );
       } else {
         pages.push(1, "...", currentPage - 1, currentPage, currentPage + 1, "...", totalPages);
       }
@@ -92,58 +103,70 @@ const Product = () => {
   };
 
   return (
-    <Card className="bg-[#262626] text-white">
-    <CardContent className="p-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
-        <h2 className="text-xl font-semibold text-[#f5f5f5]">Daftar Produk</h2>
-        <button
+    <Card className="bg-white dark:bg-[#262626] text-gray-900 dark:text-white">
+      <CardContent className="p-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
+          <h2 className="text-xl font-semibold">Daftar Produk</h2>
+          <button
             onClick={() => setOpenAddModal(true)}
             className="rounded-md bg-green-600 px-4 py-2 text-sm text-white hover:bg-green-700"
           >
             + Tambah Produk
           </button>
-      </div>
+        </div>
+
+        {/* Search */}
         <div className="mb-4">
           <Input
             type="text"
             placeholder="Cari produk..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="rounded-md border border-gray-600 bg-[#333] px-3 py-2 text-sm text-white focus:outline-none"
+            className="rounded-md border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-[#333] px-3 py-2 text-sm text-gray-900 dark:text-white placeholder-gray-400"
           />
-          
         </div>
-      
 
-      {filteredProducts.length === 0 ? (
-        <p className="text-[#ababab]">Tidak ada produk tersedia.</p>
-      ) : (
-        <div className="overflow-x-auto">
-            <table className="w-full border-collapse border border-gray-600 text-sm">
+        {filteredProducts.length === 0 ? (
+          <p className="text-gray-500 dark:text-gray-400">Tidak ada produk tersedia.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse border border-gray-300 dark:border-gray-600 text-sm">
               <thead>
-                <tr className="bg-[#333] text-gray-300">
-                  <th className="border border-gray-600 px-3 py-2 text-left">#</th>
-                  <th className="border border-gray-600 px-3 py-2 text-left">Nama</th>
-                  <th className="border border-gray-600 px-3 py-2 text-left">Kategori</th>
-                  <th className="border border-gray-600 px-3 py-2 text-center">Unit</th>
-                  <th className="border border-gray-600 px-3 py-2 text-right">HPP</th>
-                  <th className="border border-gray-600 px-3 py-2 text-right">Harga</th>
-                  <th className="border border-gray-600 px-3 py-2 text-center">Aksi</th>
+                <tr className="bg-gray-200 dark:bg-[#333] text-gray-700 dark:text-gray-300">
+                  <th className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-left">#</th>
+                  <th className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-left">Nama</th>
+                  <th className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-left">Kategori</th>
+                  <th className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-center">Unit</th>
+                  <th className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-right">HPP</th>
+                  <th className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-right">Harga</th>
+                  <th className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-center">Aksi</th>
                 </tr>
               </thead>
-              <tbody className="text-white">
+              <tbody>
                 {currentItems.map((p, idx) => (
                   <tr
                     key={p._id}
-                    className="border-b border-gray-700 hover:bg-[#333]"
+                    className="border-t border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-[#333]"
                   >
-                    <td className="border border-gray-600 px-3 py-2 text-center">{indexOfFirstItem + idx + 1}</td>
-                    <td className="border border-gray-600 px-3 py-2 text-left">{p.name}</td>
-                    <td className="border border-gray-600 px-3 py-2 text-left">{p.category?.name || "-"}</td>
-                    <td className="border border-gray-600 px-3 py-2 text-center">{summaryMap[p._id]?.unit || "-"}</td>
-                    <td className="border border-gray-600 px-3 py-2 text-right">Rp {p.hpp?.toLocaleString("id-ID")}</td>
-                    <td className="border border-gray-600 px-3 py-2 text-right">Rp {p.price?.toLocaleString("id-ID")}</td>
-                    <td className="p-3 flex gap-2 justify-center ">
+                    <td className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-center">
+                      {indexOfFirstItem + idx + 1}
+                    </td>
+                    <td className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-left">
+                      {p.name}
+                    </td>
+                    <td className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-left">
+                      {p.category?.name || "-"}
+                    </td>
+                    <td className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-center">
+                      {summaryMap[p._id]?.unit || "-"}
+                    </td>
+                    <td className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-right">
+                      Rp {p.hpp?.toLocaleString("id-ID")}
+                    </td>
+                    <td className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-right">
+                      Rp {p.price?.toLocaleString("id-ID")}
+                    </td>
+                    <td className="p-3 flex gap-2 justify-center">
                       <button
                         onClick={() => setEditData(p)}
                         className="flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-md text-sm"
@@ -163,102 +186,93 @@ const Product = () => {
                 ))}
               </tbody>
             </table>
-        
 
-          {/* Pagination Controls */}
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-3 mt-4">
-            <div className="text-gray-400 text-sm">
-              {filteredProducts.length > 0 && (
-                <span>
-                  Menampilkan{" "}
-                  <b>{indexOfFirstItem + 1}</b>–
-                  <b>
-                    {indexOfLastItem > filteredProducts.length
-                      ? filteredProducts.length
-                      : indexOfLastItem}
-                  </b>{" "}
-                  dari <b>{filteredProducts.length}</b> produk
-                </span>
-              )}
-            </div>
-
-            <div className="flex items-center gap-2 text-gray-300">
-              <label htmlFor="itemsPerPage">Tampilkan</label>
-              <select
-                id="itemsPerPage"
-                value={itemsPerPage}
-                onChange={handleItemsPerPageChange}
-                className="bg-[#333] text-white border border-gray-600 rounded px-2 py-1"
-              >
-                <option value={5}>5</option>
-                <option value={10}>10</option>
-                <option value={20}>20</option>
-                <option value={50}>50</option>
-              </select>
-              <span>per halaman</span>
-            </div>
-
-            <div className="flex items-center gap-1">
-              <Button
-                size="sm"
-                variant="outline"
-                disabled={currentPage === 1}
-                onClick={() => setCurrentPage((prev) => prev - 1)}
-              >
-                Prev
-              </Button>
-
-              {getPagination().map((page, idx) =>
-                page === "..." ? (
-                  <span key={idx} className="px-2 text-gray-400">
-                    ...
+            {/* Pagination */}
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-3 mt-4">
+              <div className="text-gray-600 dark:text-gray-400 text-sm">
+                {filteredProducts.length > 0 && (
+                  <span>
+                    Menampilkan <b>{indexOfFirstItem + 1}</b>–
+                    <b>
+                      {indexOfLastItem > filteredProducts.length
+                        ? filteredProducts.length
+                        : indexOfLastItem}
+                    </b>{" "}
+                    dari <b>{filteredProducts.length}</b> produk
                   </span>
-                ) : (
-                  <Button
-                    key={page}
-                    size="sm"
+                )}
+              </div>
+
+              <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                <label htmlFor="itemsPerPage">Tampilkan</label>
+                <select
+                  id="itemsPerPage"
+                  value={itemsPerPage}
+                  onChange={handleItemsPerPageChange}
+                  className="bg-gray-100 dark:bg-[#333] text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded px-2 py-1"
+                >
+                  <option value={5}>5</option>
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                </select>
+                <span>per halaman</span>
+              </div>
+
+              <div className="flex items-center gap-1">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage((prev) => prev - 1)}
+                >
+                  Prev
+                </Button>
+
+                {getPagination().map((page, idx) =>
+                  page === "..." ? (
+                    <span key={idx} className="px-2 text-gray-500 dark:text-gray-400">
+                      ...
+                    </span>
+                  ) : (
+                    <Button
+                      key={page}
+                      size="sm"
                       variant={currentPage === page ? "default" : "outline"}
                       className={`${
                         currentPage === page
                           ? "bg-green-600 text-white"
-                          : "bg-[#333] text-gray-300 hover:bg-gray-700"
-                    }`}
-                    onClick={() => setCurrentPage(page)}
-                  >
-                    {page}
-                  </Button>
-                )
-              )}
+                          : "bg-gray-100 dark:bg-[#333] text-gray-900 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
+                      }`}
+                      onClick={() => setCurrentPage(page)}
+                    >
+                      {page}
+                    </Button>
+                  )
+                )}
 
-              <Button
-                size="sm"
-                variant="outline"
-                disabled={currentPage === totalPages}
-                onClick={() => setCurrentPage((prev) => prev + 1)}
-              >
-                Next
-              </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={currentPage === totalPages}
+                  onClick={() => setCurrentPage((prev) => prev + 1)}
+                >
+                  Next
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {openAddModal && (
-        <AddProductModal
-          isOpen={openAddModal}
-          onClose={() => setOpenAddModal(false)}
-        />
-      )}
+        {openAddModal && (
+          <AddProductModal isOpen={openAddModal} onClose={() => setOpenAddModal(false)} />
+        )}
 
-      {editData && (
-        <EditProductModal
-          isOpen={!!editData}
-          onClose={() => setEditData(null)}
-          product={editData}
-        />
-      )}
-    </CardContent>
-  </Card>
+        {editData && (
+          <EditProductModal isOpen={!!editData} onClose={() => setEditData(null)} product={editData} />
+        )}
+      </CardContent>
+    </Card>
   );
 };
 

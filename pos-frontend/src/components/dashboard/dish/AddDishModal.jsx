@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { IoMdClose } from "react-icons/io";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { enqueueSnackbar } from "notistack";
-import { addDish } from "../../../https";
+import { addDish, getCategories } from "../../../https";
 
 const AddDishModal = ({ setIsAddModalOpen, onClose, onAdded }) => {
   const [dishData, setDishData] = useState({
@@ -12,6 +12,15 @@ const AddDishModal = ({ setIsAddModalOpen, onClose, onAdded }) => {
     price: { hot: 0, ice: 0 },
     category: "",
   });
+
+  
+  // Ambil data kategori
+    const { data: categories = [], isLoading: catLoading } = useQuery({
+      queryKey: ["categories"],
+      queryFn: getCategories,
+    });
+
+
 
   // Input handlers
   const handleInputChange = (e) => {
@@ -36,28 +45,25 @@ const AddDishModal = ({ setIsAddModalOpen, onClose, onAdded }) => {
   };
 
   // Mutation
-  const dishMutation = useMutation({
-    mutationFn: (reqData) => addDish(reqData),
-    onSuccess: (res) => {
-      setIsAddModalOpen(false);
-      const message =
-        res?.data?.message ?? res?.message ?? "Menu berhasil ditambahkan";
-      enqueueSnackbar(message, { variant: "success" });
-      if (onAdded) onAdded();
-    },
-    onError: (err) => {
-      const status = err?.response?.status;
-      if (status >= 200 && status < 300) {
+  
+    const dishMutation = useMutation({
+      mutationFn: (reqData) => addDish(reqData),
+      onSuccess: (res) => {
+        console.log("✅ onSuccess:", res);
         setIsAddModalOpen(false);
-        enqueueSnackbar("Menu berhasil ditambahkan", { variant: "success" });
+        enqueueSnackbar(res?.message ?? "Menu berhasil ditambahkan", {
+          variant: "success",
+        });
         if (onAdded) onAdded();
-      } else {
+      },
+      onError: (err) => {
+        console.error("❌ onError:", err);
         const message =
           err?.response?.data?.message ?? "Gagal menambahkan menu";
         enqueueSnackbar(message, { variant: "error" });
-      }
-    },
-  });
+      },
+    });
+
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -200,14 +206,22 @@ const AddDishModal = ({ setIsAddModalOpen, onClose, onAdded }) => {
               Category
             </label>
             <div className="flex items-center rounded-lg px-4 bg-gray-100 dark:bg-[#1f1f1f]">
-              <input
-                type="text"
+              <select
                 name="category"
                 value={dishData.category}
                 onChange={handleInputChange}
                 className="bg-transparent flex-1 text-gray-900 dark:text-white p-4 focus:outline-none"
                 required
-              />
+              >
+                <option value="">Pilih kategori</option>
+                {catLoading && <option>Loading...</option>}
+                {!catLoading &&
+                  categories.map((cat) => (
+                    <option key={cat._id} value={cat._id}>
+                      {cat.name}
+                    </option>
+                  ))}
+              </select>
             </div>
           </div>
 
