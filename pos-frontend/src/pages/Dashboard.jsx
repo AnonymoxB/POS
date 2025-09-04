@@ -46,7 +46,7 @@ const tabGroups = [
   {
     group: "Master Data",
     items: [
-      { name: "Table", icon: TableIcon },
+      // { name: "Table", icon: TableIcon },
       { name: "Category", icon: List },
       { name: "Dish", icon: UtensilsCrossed },
       { name: "Dish BOM", icon: Wheat },
@@ -182,7 +182,7 @@ const Dashboard = () => {
         {activeTab === "Payments" && <Payment />}
         {activeTab === "Dish" && <Dish />}
         {activeTab === "Category" && <Category />}
-        {activeTab === "Table" && <Table />}
+        {/* {activeTab === "Table" && <Table />} */}
         {activeTab === "Unit" && <Unit />}
         {activeTab === "Product" && <Product />}
         {activeTab === "Product Category" && <ProductCategoryPage />}

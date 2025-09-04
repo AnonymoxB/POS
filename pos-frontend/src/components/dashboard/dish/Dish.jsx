@@ -51,16 +51,20 @@ const Dish = () => {
   }, []);
 
   // kategori unik
-  const categories = [
-    ...new Set(dishes.map((dish) => dish.category).filter(Boolean)),
-  ];
+  const categories = dishes
+    .map((dish) => dish.category)
+    .filter(Boolean)
+    .filter(
+      (cat, index, self) =>
+        index === self.findIndex((c) => c._id === cat._id)
+    );
 
   // filter
   const filteredDishes = dishes.filter(
     (dish) =>
       (dish.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        dish.category?.toLowerCase().includes(searchQuery.toLowerCase())) &&
-      (selectedCategory ? dish.category === selectedCategory : true)
+        dish.category?.name?.toLowerCase().includes(searchQuery.toLowerCase())) &&
+      (selectedCategory ? dish.category?._id === selectedCategory : true)
   );
 
   // pagination logic
@@ -166,8 +170,8 @@ const Dish = () => {
           >
             <option value="">Semua Kategori</option>
             {categories.map((cat) => (
-              <option key={cat} value={cat}>
-                {cat}
+              <option key={cat._id} value={cat._id}>
+                {cat.name}
               </option>
             ))}
           </select>
@@ -188,100 +192,55 @@ const Dish = () => {
               <table className="w-full border-collapse border border-gray-300 dark:border-gray-600 text-sm">
                 <thead>
                   <tr className="bg-gray-200 dark:bg-[#333] text-gray-700 dark:text-gray-300 sticky top-0 z-10">
-                    <th className="border border-gray-300 dark:border-gray-600 px-3 py-2">
-                      #
-                    </th>
-                    <th className="border border-gray-300 dark:border-gray-600 px-3 py-2">
-                      Nama
-                    </th>
-                    <th className="border border-gray-300 dark:border-gray-600 px-3 py-2">
-                      Kategori
-                    </th>
-                    <th className="border border-gray-300 dark:border-gray-600 px-3 py-2">
-                      HPP Hot
-                    </th>
-                    <th className="border border-gray-300 dark:border-gray-600 px-3 py-2">
-                      HPP Ice
-                    </th>
-                    <th className="border border-gray-300 dark:border-gray-600 px-3 py-2">
-                      Harga Hot
-                    </th>
-                    <th className="border border-gray-300 dark:border-gray-600 px-3 py-2">
-                      Harga Ice
-                    </th>
-                    <th className="border border-gray-300 dark:border-gray-600 px-3 py-2">
-                      Profit Hot (%)
-                    </th>
-                    <th className="border border-gray-300 dark:border-gray-600 px-3 py-2">
-                      Profit Ice (%)
-                    </th>
-                    <th className="border border-gray-300 dark:border-gray-600 px-3 py-2">
-                      Create
-                    </th>
-                    <th className="border border-gray-300 dark:border-gray-600 px-3 py-2">
-                      Update
-                    </th>
-                    <th className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-center w-40">
-                      Aksi
-                    </th>
+                    <th className="border px-3 py-2">#</th>
+                    <th className="border px-3 py-2">Nama</th>
+                    <th className="border px-3 py-2">Kategori</th>
+                    <th className="border px-3 py-2">HPP Hot</th>
+                    <th className="border px-3 py-2">HPP Ice</th>
+                    <th className="border px-3 py-2">Harga Hot</th>
+                    <th className="border px-3 py-2">Harga Ice</th>
+                    <th className="border px-3 py-2">Profit Hot (%)</th>
+                    <th className="border px-3 py-2">Profit Ice (%)</th>
+                    <th className="border px-3 py-2">Create</th>
+                    <th className="border px-3 py-2">Update</th>
+                    <th className="border px-3 py-2 text-center w-40">Aksi</th>
                   </tr>
                 </thead>
                 <tbody>
                   {paginatedData.map((dish, index) => (
-                    <tr
-                      key={dish._id}
-                      className="border-t border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-[#333]/50"
-                    >
-                      <td className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-center">
-                        {startIndex + index + 1}
-                      </td>
-                      <td className="border border-gray-300 dark:border-gray-600 px-3 py-2">
-                        {dish.name}
-                      </td>
-                      <td className="border border-gray-300 dark:border-gray-600 px-3 py-2">
-                        {dish.category}
-                      </td>
-                      <td className="border border-gray-300 dark:border-gray-600 px-3 py-2">
+                    <tr key={dish._id} className="hover:bg-gray-100 dark:hover:bg-[#333]/50">
+                      <td className="border px-3 py-2 text-center">{startIndex + index + 1}</td>
+                      <td className="border px-3 py-2">{dish.name}</td>
+                      <td className="border px-3 py-2">{dish.category?.name ?? "-"}</td>
+                      <td className="border px-3 py-2">
                         {dish.hpp?.hpphot ? formatRupiah(dish.hpp.hpphot) : "-"}
                       </td>
-                      <td className="border border-gray-300 dark:border-gray-600 px-3 py-2">
+                      <td className="border px-3 py-2">
                         {dish.hpp?.hppice ? formatRupiah(dish.hpp.hppice) : "-"}
                       </td>
-                      <td className="border border-gray-300 dark:border-gray-600 px-3 py-2">
+                      <td className="border px-3 py-2">
                         {dish.price?.hot ? formatRupiah(dish.price.hot) : "-"}
                       </td>
-                      <td className="border border-gray-300 dark:border-gray-600 px-3 py-2">
+                      <td className="border px-3 py-2">
                         {dish.price?.ice ? formatRupiah(dish.price.ice) : "-"}
                       </td>
-                      <td className="border border-gray-300 dark:border-gray-600 px-3 py-2">
+                      <td className="border px-3 py-2">
                         {dish.hpp?.hpphot && dish.price?.hot
-                          ? `${(
-                              ((dish.price.hot - dish.hpp.hpphot) /
-                                dish.hpp.hpphot) *
-                              100
-                            ).toFixed(1)}%`
+                          ? `${(((dish.price.hot - dish.hpp.hpphot) / dish.hpp.hpphot) * 100).toFixed(1)}%`
                           : "-"}
                       </td>
-                      <td className="border border-gray-300 dark:border-gray-600 px-3 py-2">
+                      <td className="border px-3 py-2">
                         {dish.hpp?.hppice && dish.price?.ice
-                          ? `${(
-                              ((dish.price.ice - dish.hpp.hppice) /
-                                dish.hpp.hppice) *
-                              100
-                            ).toFixed(1)}%`
+                          ? `${(((dish.price.ice - dish.hpp.hppice) / dish.hpp.hppice) * 100).toFixed(1)}%`
                           : "-"}
                       </td>
-                      <td className="border border-gray-300 dark:border-gray-600 px-3 py-2">
-                        {dish.createdAt
-                          ? new Date(dish.createdAt).toLocaleString("id-ID")
-                          : "-"}
+                      <td className="border px-3 py-2">
+                        {dish.createdAt ? new Date(dish.createdAt).toLocaleString("id-ID") : "-"}
                       </td>
-                      <td className="border border-gray-300 dark:border-gray-600 px-3 py-2">
-                        {dish.updatedAt
-                          ? new Date(dish.updatedAt).toLocaleString("id-ID")
-                          : "-"}
+                      <td className="border px-3 py-2">
+                        {dish.updatedAt ? new Date(dish.updatedAt).toLocaleString("id-ID") : "-"}
                       </td>
-                      <td className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-center">
+                      <td className="border px-3 py-2 text-center">
                         <div className="flex justify-center gap-2">
                           <Button
                             size="sm"

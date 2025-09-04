@@ -33,7 +33,8 @@ const MenuContainer = () => {
   const filteredDishes = selectedCategory
     ? dishes.filter(
         (dish) =>
-          dish.category?.trim().toLowerCase() === selectedCategory.trim().toLowerCase()
+          (dish.category?.name ?? "").toLowerCase() === selectedCategory.toLowerCase()
+
       )
     : dishes;
 
@@ -98,14 +99,28 @@ const MenuContainer = () => {
               className={`p-4 rounded-lg cursor-pointer flex flex-col justify-between h-[100px] ${bg} transition`}
             >
               <div className="flex justify-between items-center">
-                <h1 className="text-white text-lg font-semibold">{cat.name}</h1>
+                <h1
+                  className={`text-lg font-semibold ${
+                    selectedCategory === cat.name
+                      ? "text-white"
+                      : "text-gray-900 dark:text-white"
+                  }`}
+                >
+                  {cat.name}
+                </h1>
                 {selectedCategory === cat.name && <GrRadialSelected className="text-white" size={20} />}
               </div>
-              <p className="text-sm text-gray-100 dark:text-gray-400">
+              <p
+              className={`text-sm ${
+                selectedCategory === cat.name
+                  ? "text-gray-100 dark:text-gray-300"
+                  : "text-gray-600 dark:text-gray-400"
+              }`}
+              >
                 {
                   dishes.filter(
                     (dish) =>
-                      dish.category?.trim().toLowerCase() === cat.name.trim().toLowerCase()
+                      (dish.category?.name ?? "").toLowerCase() === cat.name.toLowerCase()
                   ).length
                 }{" "}
                 Item

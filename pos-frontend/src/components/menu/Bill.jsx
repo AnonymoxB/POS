@@ -75,20 +75,28 @@ const Bill = () => {
 
 
   const orderMutation = useMutation({
-    mutationFn: (reqData) => addOrder(reqData),
-    onSuccess: (resData) => {
-      const { data } = resData.data;
-      setOrderInfo(data);
-      enqueueSnackbar("Order Placed!", { variant: "success" });
-      setShowInvoice(true);
-      dispatch(removeAllItems());
-      setCashGiven(0);
-    },
-    onError: (error) => {
-      console.error(error);
-      enqueueSnackbar("Gagal membuat order!", { variant: "error" });
-    },
-  });
+  mutationFn: (reqData) => {
+    console.log("📦 Payload dikirim ke API:", reqData); // Debug request
+    return addOrder(reqData);
+  },
+  onSuccess: (resData) => {
+    console.log("✅ Response sukses:", resData);
+    const { data } = resData.data;
+    setOrderInfo(data);
+    enqueueSnackbar("✅ Order berhasil dibuat!", { variant: "success" });
+    setShowInvoice(true);
+    dispatch(removeAllItems());
+    setCashGiven(0);
+  },
+  onError: (error) => {
+    console.error("❌ Error detail:", error.response?.data || error.message);
+    enqueueSnackbar(
+      `Gagal membuat order: ${error.response?.data?.message || error.message}`,
+      { variant: "error" }
+    );
+  },
+});
+
 
   return (
     <>

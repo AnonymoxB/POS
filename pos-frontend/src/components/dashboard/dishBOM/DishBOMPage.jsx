@@ -17,6 +17,13 @@ export default function DishBOMPage() {
   // Search state
   const [searchTerm, setSearchTerm] = useState("");
 
+  const formatRupiah = (num) =>
+    new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      minimumFractionDigits: 0,
+    }).format(num || 0);
+
   const fetchDishes = useCallback(async () => {
     try {
       const data = await getDishes();
@@ -36,7 +43,8 @@ export default function DishBOMPage() {
   const filteredDishes = dishes.filter(
     (dish) =>
       dish.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      dish.category?.toLowerCase().includes(searchTerm.toLowerCase())
+      (typeof dish.category === "string" &&
+        dish.category.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   // Hitung data untuk halaman aktif
@@ -91,7 +99,7 @@ export default function DishBOMPage() {
             value={searchTerm}
             onChange={(e) => {
               setSearchTerm(e.target.value);
-              setCurrentPage(1); // reset ke page 1 kalau search berubah
+              setCurrentPage(1);
             }}
             className="bg-gray-100 dark:bg-[#333] text-gray-900 dark:text-white border-gray-300 dark:border-gray-600"
           />
@@ -104,21 +112,11 @@ export default function DishBOMPage() {
             <table className="w-full border-collapse border border-gray-300 dark:border-gray-600 text-sm">
               <thead>
                 <tr className="bg-gray-100 dark:bg-[#333] text-gray-700 dark:text-gray-300">
-                  <th className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-left">
-                    Nama Dish
-                  </th>
-                  <th className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-left">
-                    Kategori
-                  </th>
-                  <th className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-right">
-                    HPP Hot
-                  </th>
-                  <th className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-right">
-                    HPP Ice
-                  </th>
-                  <th className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-center">
-                    Aksi
-                  </th>
+                  <th className="border px-3 py-2 text-left">Nama Dish</th>
+                  <th className="border px-3 py-2 text-left">Kategori</th>
+                  <th className="border px-3 py-2 text-right">HPP Hot</th>
+                  <th className="border px-3 py-2 text-right">HPP Ice</th>
+                  <th className="border px-3 py-2 text-center">Aksi</th>
                 </tr>
               </thead>
               <tbody>
@@ -128,20 +126,21 @@ export default function DishBOMPage() {
                       key={dish._id}
                       className="border-t border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[#333]/50"
                     >
-                      <td className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-left">
+                      <td className="border px-3 py-2 text-left">
                         {dish.name}
                       </td>
-                      <td className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-left">
-                        {dish.category || "-"}
+                      <td className="border px-3 py-2 text-left">
+                        {typeof dish.category === "object"
+                          ? dish.category?.name || "-"
+                          : dish.category || "-"}
                       </td>
-                      <td className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-right">
-                        Rp {dish.hpp?.hpphot?.toLocaleString() || 0}
+                      <td className="border px-3 py-2 text-right">
+                        {formatRupiah(dish.hpp?.hpphot)}
                       </td>
-                      <td className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-right">
-                        Rp {dish.hpp?.hppice?.toLocaleString() || 0}
+                      <td className="border px-3 py-2 text-right">
+                        {formatRupiah(dish.hpp?.hppice)}
                       </td>
-
-                      <td className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-center">
+                      <td className="border px-3 py-2 text-center">
                         <Button
                           size="sm"
                           className="bg-green-600 hover:bg-green-700 text-white"
@@ -156,7 +155,7 @@ export default function DishBOMPage() {
                   <tr>
                     <td
                       colSpan="5"
-                      className="border border-gray-300 dark:border-gray-600 px-3 py-4 text-center text-gray-500 dark:text-gray-400"
+                      className="border px-3 py-4 text-center text-gray-500 dark:text-gray-400"
                     >
                       Tidak ada dish
                     </td>
@@ -167,7 +166,6 @@ export default function DishBOMPage() {
 
             {/* Pagination Controls */}
             <div className="flex flex-col sm:flex-row justify-between items-center gap-3 mt-4">
-              {/* Info jumlah data */}
               <div className="text-gray-500 dark:text-gray-400 text-sm">
                 {filteredDishes.length > 0 && (
                   <span>
@@ -182,7 +180,6 @@ export default function DishBOMPage() {
                 )}
               </div>
 
-              {/* Dropdown items per page */}
               <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
                 <label htmlFor="itemsPerPage">Tampilkan</label>
                 <select
@@ -199,7 +196,6 @@ export default function DishBOMPage() {
                 <span>per halaman</span>
               </div>
 
-              {/* Numbered Pagination with Ellipsis */}
               <div className="flex items-center gap-1">
                 <Button
                   size="sm"

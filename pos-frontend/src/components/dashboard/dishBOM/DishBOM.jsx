@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import AddDishBOMModal from "./AddDishBOMModal";
 import EditDishBOMModal from "./EditDishBOMModal";
 import { getDishBOMs, deleteDishBOM } from "../../../https";
+import { useSnackbar } from "notistack";
 
 export default function DishBOM({ dish, open, onClose }) {
   const [bom, setBOM] = useState([]);
@@ -10,6 +11,14 @@ export default function DishBOM({ dish, open, onClose }) {
   const [addOpen, setAddOpen] = useState(false);
   const [editItem, setEditItem] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
+  const { enqueueSnackbar } = useSnackbar();
+
+  const formatRupiah = (num) =>
+    new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      minimumFractionDigits: 0,
+    }).format(num || 0);
 
   const loadBOM = useCallback(async () => {
     if (!dish?._id) return;
@@ -30,13 +39,14 @@ export default function DishBOM({ dish, open, onClose }) {
   }, [open, dish, loadBOM]);
 
   const handleDelete = async (id) => {
-    if (!confirm("Yakin hapus bahan ini?")) return;
     setDeletingId(id);
     try {
       await deleteDishBOM(id);
+      enqueueSnackbar("Bahan berhasil dihapus", { variant: "success" });
       await loadBOM();
     } catch (err) {
       console.error("Gagal hapus BOM:", err);
+      enqueueSnackbar("Gagal menghapus bahan", { variant: "error" });
     } finally {
       setDeletingId(null);
     }
@@ -51,6 +61,7 @@ export default function DishBOM({ dish, open, onClose }) {
           BOM untuk {dish?.name}
         </h2>
 
+        {/* Table */}
         <div className="overflow-x-auto rounded border border-gray-300 dark:border-gray-700 mb-4">
           <table className="w-full text-sm">
             <thead>
@@ -88,14 +99,20 @@ export default function DishBOM({ dish, open, onClose }) {
                           : "bg-white dark:bg-[#262626]"
                       } border-t border-gray-200 dark:border-gray-700`}
                     >
-                      <td className="px-3 py-2">{item.product?.name}</td>
+                      <td className="px-3 py-2">
+                        {typeof item.product === "object"
+                          ? item.product?.name
+                          : item.product}
+                      </td>
                       <td className="px-3 py-2 text-right">{item.qty}</td>
                       <td className="px-3 py-2">
-                        {item.unit?.short || item.unit}
+                        {typeof item.unit === "object"
+                          ? item.unit?.short ?? item.unit?.name
+                          : item.unit}
                       </td>
                       <td className="px-3 py-2">{item.variant}</td>
                       <td className="px-3 py-2 text-right">
-                        Rp {totalHPP}
+                        {formatRupiah(totalHPP)}
                       </td>
                       <td className="px-3 py-2 text-center space-x-2">
                         <Button
@@ -111,9 +128,7 @@ export default function DishBOM({ dish, open, onClose }) {
                           className="bg-red-600 hover:bg-red-700 text-white"
                           onClick={() => handleDelete(item._id)}
                         >
-                          {deletingId === item._id
-                            ? "Menghapus..."
-                            : "Hapus"}
+                          {deletingId === item._id ? "Menghapus..." : "Hapus"}
                         </Button>
                       </td>
                     </tr>
@@ -133,6 +148,7 @@ export default function DishBOM({ dish, open, onClose }) {
           </table>
         </div>
 
+        {/* Buttons */}
         <div className="flex justify-between">
           <Button
             className="bg-green-600 hover:bg-green-700 text-white"

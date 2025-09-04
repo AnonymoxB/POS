@@ -13,14 +13,11 @@ const AddDishModal = ({ onClose, onAdded }) => {
     category: "",
   });
 
-  
   // Ambil data kategori
-    const { data: categories = [], isLoading: catLoading } = useQuery({
-      queryKey: ["categories"],
-      queryFn: getCategories,
-    });
-
-
+  const { data: categories = [], isLoading: catLoading } = useQuery({
+    queryKey: ["categories"],
+    queryFn: getCategories,
+  });
 
   // Input handlers
   const handleInputChange = (e) => {
@@ -45,24 +42,20 @@ const AddDishModal = ({ onClose, onAdded }) => {
   };
 
   // Mutation
-  
-    const dishMutation = useMutation({
-      mutationFn: (reqData) => addDish(reqData),
-      onSuccess: (res) => {
-        console.log("✅ onSuccess:", res);
-        enqueueSnackbar(res?.data?.message ?? "Menu berhasil ditambahkan", {
-          variant: "success",
-        });
-        if (onAdded) onAdded();
-      },
-      onError: (err) => {
-        console.error("❌ onError:", err);
-        const message =
-          err?.response?.data?.message ?? "Gagal menambahkan menu";
-        enqueueSnackbar(message, { variant: "error" });
-      },
-    });
-
+  const dishMutation = useMutation({
+    mutationFn: (reqData) => addDish(reqData),
+    onSuccess: (res) => {
+      enqueueSnackbar(res?.data?.message ?? "Menu berhasil ditambahkan", {
+        variant: "success",
+      });
+      if (onAdded) onAdded();
+      onClose(false);
+    },
+    onError: (err) => {
+      const message = err?.response?.data?.message ?? "Gagal menambahkan menu";
+      enqueueSnackbar(message, { variant: "error" });
+    },
+  });
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -209,17 +202,15 @@ const AddDishModal = ({ onClose, onAdded }) => {
                 name="category"
                 value={dishData.category}
                 onChange={handleInputChange}
-                className="bg-transparent flex-1 text-gray-900 dark:text-white p-4 focus:outline-none"
+                className="w-full p-2 rounded bg-gray-100 dark:bg-[#333] text-gray-900 dark:text-white"
                 required
               >
-                <option value="">Pilih kategori</option>
-                {catLoading && <option>Loading...</option>}
-                {!catLoading &&
-                  categories.map((cat) => (
-                    <option key={cat._id} value={cat._id}>
-                      {cat.name}
-                    </option>
-                  ))}
+                <option value="">Pilih Kategori</option>
+                {categories.map((cat) => (
+                  <option key={cat._id} value={cat._id}>
+                    {cat.name}
+                  </option>
+                ))}
               </select>
             </div>
           </div>

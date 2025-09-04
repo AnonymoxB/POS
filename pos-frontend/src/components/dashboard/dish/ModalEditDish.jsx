@@ -1,8 +1,8 @@
 import { Dialog } from "@headlessui/react";
 import React, { useState, useEffect } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { enqueueSnackbar } from "notistack";
-import { updateDish } from "../../../https";
+import { updateDish, getCategories } from "../../../https";
 
 const ModalEditDish = ({ isOpen, onClose, dish, onUpdated }) => {
   const [formData, setFormData] = useState({
@@ -12,11 +12,17 @@ const ModalEditDish = ({ isOpen, onClose, dish, onUpdated }) => {
     price: { hot: 0, ice: 0 },
   });
 
+  // Ambil kategori dari API
+  const { data: categories = [], isLoading: catLoading } = useQuery({
+    queryKey: ["categories"],
+    queryFn: getCategories,
+  });
+
   useEffect(() => {
     if (dish) {
       setFormData({
         name: dish.name || "",
-        category: dish.category || "",
+        category: dish.category?._id || dish.category || "",
         hpp: {
           hpphot: dish.hpp?.hpphot || 0,
           hppice: dish.hpp?.hppice || 0,
@@ -99,14 +105,20 @@ const ModalEditDish = ({ isOpen, onClose, dish, onUpdated }) => {
                 Category
               </label>
               <div className="bg-gray-100 dark:bg-[#1f1f1f] rounded-lg px-4 py-2">
-                <input
-                  type="text"
+                <select
                   name="category"
                   value={formData.category}
                   onChange={handleChange}
                   className="w-full bg-transparent text-gray-900 dark:text-white focus:outline-none"
                   required
-                />
+                >
+                  <option value="">Pilih Kategori</option>
+                  {categories.map((cat) => (
+                    <option key={cat._id} value={cat._id}>
+                      {cat.name}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
 
