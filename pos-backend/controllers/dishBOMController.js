@@ -2,7 +2,7 @@ const DishBOM = require("../models/dishBOMModel");
 const Dish = require("../models/dishesModel");
 const Unit = require("../models/unitModel");
 const Product = require("../models/productModel"); // ✅ Tambahin ini
-const { getBaseUnitAndQty, getBaseUnitAndHPP } = require("../helpers/unitConversion");
+const { getBaseUnitAndQty, getBaseUnitAndHPP } = require("../helpers/getBaseUnitAndQty");
 const { validateUnitForProduct } = require("../helpers/unitValidation");
 
 // Hitung HPP dish otomatis
