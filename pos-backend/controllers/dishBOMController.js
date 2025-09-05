@@ -1,6 +1,8 @@
 const DishBOM = require("../models/dishBOMModel");
 const Dish = require("../models/dishesModel");
 const Unit = require("../models/unitModel");
+const { getBaseUnitAndQty, getBaseUnitAndHPP } = require("../helpers/unitConversion");
+const { validateUnitForProduct } = require("../helpers/unitValidation");
 
 // Fungsi rekursif untuk dapatkan root unit dan qty
 async function getBaseUnitAndQty(unitId, qty, session = null) {
@@ -24,7 +26,7 @@ async function getBaseUnitAndQty(unitId, qty, session = null) {
 // Hitung HPP dish otomatis
 const calculateDishHPP = async (dishId) => {
   const bomItems = await DishBOM.find({ dish: dishId })
-    .populate("product")
+    .populate("product") // pastikan product punya hpp & unit
     .populate("unit");
 
   let totalHot = 0;
@@ -33,12 +35,19 @@ const calculateDishHPP = async (dishId) => {
   for (const item of bomItems) {
     if (!item.product || !item.unit) continue;
 
+    // konversi qty ke base unit
     const { qtyBase } = await getBaseUnitAndQty(item.unit._id, Number(item.qty) || 0);
 
-    const productHPP = Number(item.product.hpp) || 0;
+    // konversi HPP produk ke base unit
+    const { hppBase } = await getBaseUnitAndHPP(
+      item.product.unit, // unit default produk
+      Number(item.product.hpp) || 0
+    );
 
-    if (item.variant === "hot") totalHot += productHPP * qtyBase;
-    else if (item.variant === "ice") totalIce += productHPP * qtyBase;
+    const total = hppBase * qtyBase;
+
+    if (item.variant === "hot") totalHot += total;
+    else if (item.variant === "ice") totalIce += total;
   }
 
   return await Dish.findByIdAndUpdate(
@@ -58,6 +67,20 @@ exports.addBOMItem = async (req, res) => {
       return res.status(400).json({ success: false, message: "All fields are required" });
     }
 
+    // cek apakah unit valid untuk produk
+    const productDoc = await Product.findById(product);
+    if (!productDoc) {
+      return res.status(404).json({ success: false, message: "Product not found" });
+    }
+
+    const isValidUnit = await validateUnitForProduct(productDoc.unit, unit);
+    if (!isValidUnit) {
+      return res.status(400).json({
+        success: false,
+        message: "Unit tidak sesuai dengan unit dasar produk",
+      });
+    }
+
     const newItem = await DishBOM.create({ dish: dishId, product, qty, unit, variant });
 
     // Hitung ulang HPP otomatis
@@ -69,6 +92,7 @@ exports.addBOMItem = async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 };
+
 
 // Ambil semua BOM untuk dish
 exports.getBOMByDish = async (req, res) => {

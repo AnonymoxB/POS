@@ -75,7 +75,10 @@ export default function DishBOM({ dish, open, onClose }) {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan="6" className="text-center py-4 text-gray-500 dark:text-gray-400">
+                  <td
+                    colSpan="6"
+                    className="text-center py-4 text-gray-500 dark:text-gray-400"
+                  >
                     Loading...
                   </td>
                 </tr>
@@ -90,14 +93,22 @@ export default function DishBOM({ dish, open, onClose }) {
                     <tr
                       key={item._id}
                       className={`${
-                        idx % 2 === 0 ? "bg-gray-50 dark:bg-[#2e2e2e]" : "bg-white dark:bg-[#262626]"
+                        idx % 2 === 0
+                          ? "bg-gray-50 dark:bg-[#2e2e2e]"
+                          : "bg-white dark:bg-[#262626]"
                       } border-t border-gray-200 dark:border-gray-700`}
                     >
                       <td className="px-3 py-2">{item.product?.name || "-"}</td>
                       <td className="px-3 py-2 text-right">{qty}</td>
-                      <td className="px-3 py-2">{item.unit?.short || item.unit?.name || "-"}</td>
-                      <td className="px-3 py-2">{item.variant}</td>
-                      <td className="px-3 py-2 text-right">{formatRupiah(totalHPP)}</td>
+                      <td className="px-3 py-2">
+                        {item.unit?.short || item.unit?.name || "-"}
+                      </td>
+                      <td className="px-3 py-2 capitalize">
+                        {item.variant || "-"}
+                      </td>
+                      <td className="px-3 py-2 text-right">
+                        {formatRupiah(totalHPP)}
+                      </td>
                       <td className="px-3 py-2 text-center space-x-2">
                         <Button
                           size="sm"
@@ -120,7 +131,10 @@ export default function DishBOM({ dish, open, onClose }) {
                 })
               ) : (
                 <tr>
-                  <td colSpan="6" className="text-center py-4 text-gray-500 dark:text-gray-400">
+                  <td
+                    colSpan="6"
+                    className="text-center py-4 text-gray-500 dark:text-gray-400"
+                  >
                     Belum ada bahan
                   </td>
                 </tr>

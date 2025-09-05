@@ -25,11 +25,13 @@ export default function DishBOMPage() {
     }).format(num || 0);
 
   const fetchDishes = useCallback(async () => {
+    setLoading(true);
     try {
       const data = await getDishes();
-      setDishes(data);
+      setDishes(data || []);
     } catch (err) {
       console.error("Gagal fetch dishes:", err);
+      setDishes([]);
     } finally {
       setLoading(false);
     }
@@ -43,12 +45,13 @@ export default function DishBOMPage() {
   const filteredDishes = dishes.filter(
     (dish) =>
       dish.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (typeof dish.category === "string" &&
-        dish.category.toLowerCase().includes(searchTerm.toLowerCase()))
+      (typeof dish.category === "string"
+        ? dish.category.toLowerCase().includes(searchTerm.toLowerCase())
+        : dish.category?.name?.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   // Hitung data untuk halaman aktif
-  const totalPages = Math.ceil(filteredDishes.length / itemsPerPage);
+  const totalPages = Math.ceil(filteredDishes.length / itemsPerPage) || 1;
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentDishes = filteredDishes.slice(indexOfFirstItem, indexOfLastItem);
@@ -127,7 +130,7 @@ export default function DishBOMPage() {
                       className="border-t border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-[#333]/50"
                     >
                       <td className="border px-3 py-2 text-left">
-                        {dish.name}
+                        {dish.name || "-"}
                       </td>
                       <td className="border px-3 py-2 text-left">
                         {typeof dish.category === "object"
@@ -135,10 +138,10 @@ export default function DishBOMPage() {
                           : dish.category || "-"}
                       </td>
                       <td className="border px-3 py-2 text-right">
-                        {formatRupiah(dish.hpp?.hpphot)}
+                        {formatRupiah(dish.hpp?.hpphot || 0)}
                       </td>
                       <td className="border px-3 py-2 text-right">
-                        {formatRupiah(dish.hpp?.hppice)}
+                        {formatRupiah(dish.hpp?.hppice || 0)}
                       </td>
                       <td className="border px-3 py-2 text-center">
                         <Button

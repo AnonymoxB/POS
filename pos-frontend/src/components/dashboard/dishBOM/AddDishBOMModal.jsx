@@ -9,7 +9,13 @@ const AddDishBOMModal = ({ dish, isOpen, onClose }) => {
 
   const [products, setProducts] = useState([]);
   const [units, setUnits] = useState([]);
-  const [form, setForm] = useState({ product: "", qty: 1, unit: "", variant: "ice" });
+  const [filteredUnits, setFilteredUnits] = useState([]);
+  const [form, setForm] = useState({
+    product: "",
+    qty: 1,
+    unit: "",
+    variant: "ice",
+  });
 
   // Load products & units saat modal terbuka
   useEffect(() => {
@@ -24,6 +30,30 @@ const AddDishBOMModal = ({ dish, isOpen, onClose }) => {
     }
   }, [isOpen]);
 
+  // Filter unit berdasarkan produk yang dipilih
+  useEffect(() => {
+    if (!form.product || !units.length) {
+      setFilteredUnits([]);
+      return;
+    }
+
+    const selectedProduct = products.find((p) => p._id === form.product);
+    if (!selectedProduct) return;
+
+    const validUnits = [];
+    const findUnits = (unitId) => {
+      const u = units.find((x) => x._id === unitId);
+      if (u) {
+        validUnits.push(u);
+        if (u.baseUnit) findUnits(u.baseUnit);
+      }
+    };
+
+    findUnits(selectedProduct.unit);
+    setFilteredUnits(validUnits);
+    setForm((f) => ({ ...f, unit: "" })); // reset unit jika produk ganti
+  }, [form.product, units, products]);
+
   // Mutation
   const { mutate, isLoading } = useMutation({
     mutationFn: async () => addDishBOM(dish._id, form),
@@ -33,7 +63,9 @@ const AddDishBOMModal = ({ dish, isOpen, onClose }) => {
       handleClose();
     },
     onError: (err) => {
-      enqueueSnackbar(err?.message || "Gagal menambah bahan", { variant: "error" });
+      enqueueSnackbar(err?.message || "Gagal menambah bahan", {
+        variant: "error",
+      });
     },
   });
 
@@ -66,7 +98,9 @@ const AddDishBOMModal = ({ dish, isOpen, onClose }) => {
             required
             disabled={isLoading}
           >
-            <option value="" disabled>-- pilih bahan --</option>
+            <option value="" disabled>
+              -- pilih bahan --
+            </option>
             {products.map((p) => (
               <option key={p._id} value={p._id}>
                 {p.name}
@@ -78,11 +112,13 @@ const AddDishBOMModal = ({ dish, isOpen, onClose }) => {
           <input
             type="number"
             value={form.qty}
-            onChange={(e) => setForm({ ...form, qty: Number(e.target.value) })}
+            onChange={(e) =>
+              setForm({ ...form, qty: Number(e.target.value) })
+            }
             className="w-full p-2 rounded bg-gray-100 dark:bg-[#333] text-gray-900 dark:text-white"
             required
             disabled={isLoading}
-            min={0.01}
+            min="0"
           />
 
           {/* Unit */}
@@ -91,12 +127,14 @@ const AddDishBOMModal = ({ dish, isOpen, onClose }) => {
             onChange={(e) => setForm({ ...form, unit: e.target.value })}
             className="w-full p-2 rounded bg-gray-100 dark:bg-[#333] text-gray-900 dark:text-white"
             required
-            disabled={isLoading}
+            disabled={isLoading || !filteredUnits.length}
           >
-            <option value="" disabled>-- pilih unit --</option>
-            {units.map((u) => (
-              <option key={u._id || u.id} value={u._id || u.id}>
-                {u.name || u.unitName} ({u.short || u.symbol})
+            <option value="" disabled>
+              -- pilih unit --
+            </option>
+            {filteredUnits.map((u) => (
+              <option key={u._id} value={u._id}>
+                {u.name} ({u.short})
               </option>
             ))}
           </select>
@@ -109,7 +147,9 @@ const AddDishBOMModal = ({ dish, isOpen, onClose }) => {
             required
             disabled={isLoading}
           >
-            <option value="" disabled>-- pilih variant --</option>
+            <option value="" disabled>
+              -- pilih variant --
+            </option>
             <option value="hot">Hot</option>
             <option value="ice">Ice</option>
           </select>
