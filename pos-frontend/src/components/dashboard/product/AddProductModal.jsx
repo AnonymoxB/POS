@@ -12,6 +12,7 @@ const AddProductModal = ({ isOpen, onClose }) => {
     category: "",
     defaultUnit: "",
     price: 0,
+    density: "", // 👉 tambahan
   });
 
   // ambil data categories
@@ -34,7 +35,7 @@ const AddProductModal = ({ isOpen, onClose }) => {
       enqueueSnackbar("Produk berhasil ditambahkan", { variant: "success" });
       queryClient.invalidateQueries(["products"]);
       onClose();
-      setForm({ name: "", category: "", defaultUnit: "", price: 0 }); // reset form
+      setForm({ name: "", category: "", defaultUnit: "", price: 0, density: "" }); // reset form
     },
     onError: (err) => {
       enqueueSnackbar(err.message || "Gagal menambahkan produk", {
@@ -58,6 +59,7 @@ const AddProductModal = ({ isOpen, onClose }) => {
       category: form.category,
       defaultUnit: form.defaultUnit,
       price: Number(form.price),
+      density: form.density ? Number(form.density) : null, // 👉 kirim ke backend
     };
 
     mutation.mutate(payload);
@@ -123,6 +125,16 @@ const AddProductModal = ({ isOpen, onClose }) => {
             value={form.price}
             onChange={(e) => setForm({ ...form, price: e.target.value })}
             required
+          />
+
+          {/* 👉 Input density */}
+          <input
+            type="number"
+            step="0.01"
+            placeholder="Density (g/ml, opsional)"
+            className="p-2 rounded bg-gray-100 dark:bg-[#333] text-gray-900 dark:text-white"
+            value={form.density}
+            onChange={(e) => setForm({ ...form, density: e.target.value })}
           />
 
           <div className="flex justify-end gap-2 mt-2">

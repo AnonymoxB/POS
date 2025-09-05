@@ -34,6 +34,10 @@ const productSchema = new mongoose.Schema(
       type: Number,
       default: 0, // harga beli terakhir
     },
+    density:{
+      type: Number,
+      default: null,
+    }
   },
   { timestamps: true }
 );

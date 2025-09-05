@@ -9,15 +9,9 @@ const EditDishBOMModal = ({ item, isOpen, onClose }) => {
 
   const [products, setProducts] = useState([]);
   const [units, setUnits] = useState([]);
-  const [filteredUnits, setFilteredUnits] = useState([]);
-  const [form, setForm] = useState({
-    product: "",
-    qty: 1,
-    unit: "",
-    variant: "ice",
-  });
+  const [form, setForm] = useState({ product: "", qty: 1, unit: "", variant: "ice" });
 
-  // Load data + isi form awal
+  // Load products & units saat modal terbuka
   useEffect(() => {
     if (isOpen && item) {
       setForm({
@@ -37,34 +31,6 @@ const EditDishBOMModal = ({ item, isOpen, onClose }) => {
     }
   }, [isOpen, item]);
 
-  // Filter unit sesuai produk yg dipilih
-  useEffect(() => {
-    if (!form.product || !units.length) {
-      setFilteredUnits([]);
-      return;
-    }
-
-    const selectedProduct = products.find((p) => p._id === form.product);
-    if (!selectedProduct) return;
-
-    const validUnits = [];
-    const findUnits = (unitId) => {
-      const u = units.find((x) => x._id === unitId);
-      if (u) {
-        validUnits.push(u);
-        if (u.baseUnit) findUnits(u.baseUnit);
-      }
-    };
-
-    findUnits(selectedProduct.unit);
-    setFilteredUnits(validUnits);
-
-    // reset unit jika unit lama tidak valid
-    if (!validUnits.some((u) => u._id === form.unit)) {
-      setForm((f) => ({ ...f, unit: "" }));
-    }
-  }, [form.product, units, products]);
-
   // Mutation untuk update BOM
   const { mutate, isLoading } = useMutation({
     mutationFn: async () => updateDishBOM(item._id, form),
@@ -74,9 +40,7 @@ const EditDishBOMModal = ({ item, isOpen, onClose }) => {
       handleClose();
     },
     onError: (err) => {
-      enqueueSnackbar(err?.message || "Gagal mengedit bahan", {
-        variant: "error",
-      });
+      enqueueSnackbar(err?.message || "Gagal mengedit bahan", { variant: "error" });
     },
   });
 
@@ -109,9 +73,7 @@ const EditDishBOMModal = ({ item, isOpen, onClose }) => {
             required
             disabled={isLoading}
           >
-            <option value="" disabled>
-              -- pilih bahan --
-            </option>
+            <option value="" disabled>-- pilih bahan --</option>
             {products.map((p) => (
               <option key={p._id} value={p._id}>
                 {p.name}
@@ -123,13 +85,11 @@ const EditDishBOMModal = ({ item, isOpen, onClose }) => {
           <input
             type="number"
             value={form.qty}
-            onChange={(e) =>
-              setForm({ ...form, qty: Number(e.target.value) })
-            }
+            onChange={(e) => setForm({ ...form, qty: Number(e.target.value) })}
             className="w-full p-2 rounded bg-gray-100 dark:bg-[#333] text-gray-900 dark:text-white"
             required
             disabled={isLoading}
-            min={0.01}
+            min="1"
           />
 
           {/* Unit */}
@@ -138,14 +98,12 @@ const EditDishBOMModal = ({ item, isOpen, onClose }) => {
             onChange={(e) => setForm({ ...form, unit: e.target.value })}
             className="w-full p-2 rounded bg-gray-100 dark:bg-[#333] text-gray-900 dark:text-white"
             required
-            disabled={isLoading || !filteredUnits.length}
+            disabled={isLoading}
           >
-            <option value="" disabled>
-              -- pilih unit --
-            </option>
-            {filteredUnits.map((u) => (
-              <option key={u._id} value={u._id}>
-                {u.name} ({u.short})
+            <option value="" disabled>-- pilih unit --</option>
+            {units.map((u) => (
+              <option key={u._id || u.id} value={u._id || u.id}>
+                {u.name || u.unitName} ({u.short || u.symbol})
               </option>
             ))}
           </select>
@@ -158,9 +116,7 @@ const EditDishBOMModal = ({ item, isOpen, onClose }) => {
             required
             disabled={isLoading}
           >
-            <option value="" disabled>
-              -- pilih variant --
-            </option>
+            <option value="" disabled>-- pilih variant --</option>
             <option value="hot">Hot</option>
             <option value="ice">Ice</option>
           </select>
