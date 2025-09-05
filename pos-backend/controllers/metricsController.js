@@ -7,10 +7,10 @@ const StockTransaction = require("../models/stockModel");
 exports.getMetrics = async (req, res) => {
   try {
     const { range = "month", category } = req.query;
-
     const now = new Date();
     let startDate;
 
+    // Tentukan awal periode berdasarkan range
     if (range === "day") {
       startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     } else if (range === "week") {
@@ -20,28 +20,28 @@ exports.getMetrics = async (req, res) => {
       startDate = new Date(now.getFullYear(), now.getMonth(), 1);
     }
 
-    // Pendapatan
+    // Hitung Pendapatan (PAID Orders)
     const totalRevenue = await Order.aggregate([
-      { $match: { status: "PAID", createdAt: { $gte: startDate } } },
-      { $group: { _id: null, total: { $sum: "$totalPrice" } } },
+      { $match: { orderStatus: "PAID", createdAt: { $gte: startDate } } },
+      { $group: { _id: null, total: { $sum: "$bills.totalWithTax" } } },
     ]);
 
-    // Pengeluaran
+    // Hitung Pengeluaran
     const totalExpense = await Expense.aggregate([
       { $match: { createdAt: { $gte: startDate } } },
       { $group: { _id: null, total: { $sum: "$amount" } } },
     ]);
 
-    // Pembelian bahan
+    // Hitung Pembelian Bahan
     const totalPurchase = await Purchase.aggregate([
       { $match: { createdAt: { $gte: startDate } } },
-      { $group: { _id: null, total: { $sum: "$total" } } },
+      { $group: { _id: null, total: { $sum: "$grandTotal" } } },
     ]);
 
-    // Total produk
+    // Hitung Total Produk
     const totalProducts = await Product.countDocuments();
 
-    // Ambil stok per produk (filter kategori kalau ada)
+    // Ambil stok per produk
     const stockQuery = [
       {
         $group: {
@@ -61,11 +61,9 @@ exports.getMetrics = async (req, res) => {
       { $unwind: "$product" },
     ];
 
-    // Kalau ada kategori, filter di sini
+    // Filter berdasarkan kategori kalau ada
     if (category && category !== "all") {
-      stockQuery.push({
-        $match: { "product.category": category },
-      });
+      stockQuery.push({ $match: { "product.category": category } });
     }
 
     stockQuery.push({
@@ -80,31 +78,29 @@ exports.getMetrics = async (req, res) => {
 
     const stockSummary = await StockTransaction.aggregate(stockQuery);
 
-    // Format tanggal
-    let groupFormat;
-    if (range === "day") groupFormat = "%Y-%m-%d";
-    else if (range === "week") groupFormat = "%Y-%m-%d";
-    else groupFormat = "%Y-%m";
+    // Format tanggal untuk chart
+    let groupFormat = "%Y-%m";
+    if (range === "day" || range === "week") groupFormat = "%Y-%m-%d";
 
-    // Chart penjualan
+    // Chart penjualan harian/bulanan
     const salesChart = await Order.aggregate([
-      { $match: { status: "PAID", createdAt: { $gte: startDate } } },
+      { $match: { orderStatus: "PAID", createdAt: { $gte: startDate } } },
       {
         $group: {
           _id: { $dateToString: { format: groupFormat, date: "$createdAt" } },
-          total: { $sum: "$totalPrice" },
+          total: { $sum: "$bills.totalWithTax" },
         },
       },
       { $sort: { _id: 1 } },
     ]);
 
-    // Chart pendapatan vs pengeluaran
+    // Chart Pendapatan vs Pengeluaran
     const incomeChart = await Order.aggregate([
-      { $match: { status: "PAID", createdAt: { $gte: startDate } } },
+      { $match: { orderStatus: "PAID", createdAt: { $gte: startDate } } },
       {
         $group: {
           _id: { $dateToString: { format: groupFormat, date: "$createdAt" } },
-          totalIncome: { $sum: "$totalPrice" },
+          totalIncome: { $sum: "$bills.totalWithTax" },
         },
       },
       { $sort: { _id: 1 } },
@@ -121,6 +117,7 @@ exports.getMetrics = async (req, res) => {
       { $sort: { _id: 1 } },
     ]);
 
+    // Gabungkan income & expense chart
     const combinedChart = [];
     const dates = new Set([
       ...incomeChart.map((d) => d._id),
@@ -137,7 +134,7 @@ exports.getMetrics = async (req, res) => {
 
     combinedChart.sort((a, b) => new Date(a.date) - new Date(b.date));
 
-    // Ambil kategori unik untuk dropdown filter
+    // Ambil kategori unik produk
     const categories = await Product.distinct("category");
 
     res.json({
