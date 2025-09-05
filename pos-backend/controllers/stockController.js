@@ -269,8 +269,6 @@ exports.getStockHistoryByProduct = async (req, res) => {
    EXPORT EXCEL
 =========================== */
 
-const ExcelJS = require("exceljs");
-
 // Export summary stok ke Excel
 exports.exportStockSummary = async (req, res) => {
   try {
