@@ -1,27 +1,9 @@
 const DishBOM = require("../models/dishBOMModel");
 const Dish = require("../models/dishesModel");
 const Unit = require("../models/unitModel");
+const Product = require("../models/productModel"); // ✅ Tambahin ini
 const { getBaseUnitAndQty, getBaseUnitAndHPP } = require("../helpers/unitConversion");
 const { validateUnitForProduct } = require("../helpers/unitValidation");
-
-// Fungsi rekursif untuk dapatkan root unit dan qty
-async function getBaseUnitAndQty(unitId, qty, session = null) {
-  const unitDoc = await Unit.findById(unitId).session(session);
-  if (!unitDoc) return { unitBase: unitId, qtyBase: qty };
-
-  if (!unitDoc.baseUnit) {
-    return {
-      unitBase: unitDoc._id,
-      qtyBase: qty * (unitDoc.conversion || 1),
-    };
-  }
-
-  return await getBaseUnitAndQty(
-    unitDoc.baseUnit,
-    qty * (unitDoc.conversion || 1),
-    session
-  );
-}
 
 // Hitung HPP dish otomatis
 const calculateDishHPP = async (dishId) => {
@@ -92,7 +74,6 @@ exports.addBOMItem = async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 };
-
 
 // Ambil semua BOM untuk dish
 exports.getBOMByDish = async (req, res) => {
