@@ -1,8 +1,8 @@
-const StockTransaction = require("../models/StockTransaction");
 const Expense = require("../models/Expense");
 const Purchase = require("../models/Purchase");
 const Order = require("../models/Order");
 const Product = require("../models/Product");
+const StockTransaction = require("../models/stockModel");
 
 exports.getMetrics = async (req, res) => {
   try {
