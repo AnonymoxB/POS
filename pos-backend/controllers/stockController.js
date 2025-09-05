@@ -112,7 +112,7 @@ exports.deleteStockTransaction = async (req, res) => {
    SUMMARY & HISTORY
 =========================== */
 
-// Summary stok per produk (semua produk)
+
 // Summary stok per produk (semua produk)
 exports.getStockSummary = async (req, res) => {
   try {
@@ -120,8 +120,12 @@ exports.getStockSummary = async (req, res) => {
       {
         $group: {
           _id: "$product",
-          totalIn: { $sum: { $cond: [{ $eq: ["$type", "IN"] }, "$qtyBase", 0] } },
-          totalOut: { $sum: { $cond: [{ $eq: ["$type", "OUT"] }, "$qtyBase", 0] } },
+          totalIn: {
+            $sum: { $cond: [{ $eq: ["$type", "IN"] }, "$qtyBase", 0] },
+          },
+          totalOut: {
+            $sum: { $cond: [{ $eq: ["$type", "OUT"] }, "$qtyBase", 0] },
+          },
         },
       },
       {
@@ -157,15 +161,16 @@ exports.getStockSummary = async (req, res) => {
           productName: "$product.name",
           totalIn: 1,
           totalOut: 1,
-          balanceBase: { $subtract: ["$totalIn", "$totalOut"] }, // saldo dalam base unit
+          balanceBase: { $subtract: ["$totalIn", "$totalOut"] },
           balance: {
             $divide: [
               { $subtract: ["$totalIn", "$totalOut"] },
               { $ifNull: ["$defaultUnit.conversion", 1] },
             ],
-          }, // saldo dalam default unit
-          unitShort: "$defaultUnit.short",
-          baseUnitShort: "$baseUnit.short",
+          },
+          unitShort: {
+            $ifNull: ["$defaultUnit.short", "$baseUnit.short"],
+          },
         },
       },
     ]);
@@ -176,6 +181,7 @@ exports.getStockSummary = async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 };
+
 
 // Summary stok per produk (by ID + filter tanggal)
 exports.getStockSummaryByProduct = async (req, res) => {
