@@ -374,9 +374,6 @@ exports.exportStockSummary = async (req, res) => {
   }
 };
 
-const ExcelJS = require("exceljs");
-const Stock = require("../models/Stock"); // pastikan path benar
-const Product = require("../models/Product"); // kalau perlu
 
 // ==================================
 // Export Summary per Produk (Excel)
