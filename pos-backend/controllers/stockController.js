@@ -368,3 +368,62 @@ exports.exportStockSummary = async (req, res) => {
   }
 };
 
+const ExcelJS = require("exceljs");
+const Stock = require("../models/Stock"); // pastikan path benar
+const Product = require("../models/Product"); // kalau perlu
+
+// ==================================
+// Export Summary per Produk (Excel)
+// ==================================
+exports.exportStockSummaryByProduct = async (req, res) => {
+  try {
+    const { productId } = req.params;
+
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.status(404).json({ success: false, message: "Produk tidak ditemukan" });
+    }
+
+    const stockData = await Stock.find({ product: productId }).populate("unit");
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Ringkasan Stok");
+
+    // Header Excel
+    worksheet.columns = [
+      { header: "Tanggal", key: "tanggal", width: 25 },
+      { header: "Tipe", key: "type", width: 10 },
+      { header: "Qty", key: "qty", width: 10 },
+      { header: "Unit", key: "unit", width: 15 },
+      { header: "Note", key: "note", width: 40 },
+    ];
+
+    // Data Excel
+    stockData.forEach((s) => {
+      worksheet.addRow({
+        tanggal: new Date(s.createdAt).toLocaleString("id-ID"),
+        type: s.type,
+        qty: s.qty,
+        unit: s.unit?.short || "-",
+        note: s.note || "-",
+      });
+    });
+
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=stock_summary_${product.name}.xlsx`
+    );
+
+    await workbook.xlsx.write(res);
+    res.end();
+  } catch (err) {
+    console.error("Export summary error:", err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+
