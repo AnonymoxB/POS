@@ -429,4 +429,61 @@ exports.exportStockSummaryByProduct = async (req, res) => {
   }
 };
 
+// ===========================
+// Export Riwayat Stok per Produk (Excel)
+// ===========================
+exports.exportStockHistory = async (req, res) => {
+  try {
+    const { productId } = req.params;
+    const product = await Product.findById(productId);
+
+    if (!product) {
+      return res.status(404).json({ success: false, message: "Produk tidak ditemukan" });
+    }
+
+    const stockData = await StockTransaction.find({ product: productId })
+      .populate("unit", "short")
+      .sort({ createdAt: 1 });
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Riwayat Stok");
+
+    // Header Excel
+    worksheet.columns = [
+      { header: "Tanggal", key: "tanggal", width: 25 },
+      { header: "Tipe", key: "type", width: 10 },
+      { header: "Qty", key: "qty", width: 10 },
+      { header: "Unit", key: "unit", width: 15 },
+      { header: "Catatan", key: "note", width: 40 },
+    ];
+
+    // Isi data Excel
+    stockData.forEach((s) => {
+      worksheet.addRow({
+        tanggal: new Date(s.createdAt).toLocaleString("id-ID"),
+        type: s.type,
+        qty: s.qty,
+        unit: s.unit?.short || "-",
+        note: s.note || "-",
+      });
+    });
+
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=stock_history_${product.name}.xlsx`
+    );
+
+    await workbook.xlsx.write(res);
+    res.end();
+  } catch (err) {
+    console.error("🔥 exportStockHistory Error:", err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+
 
