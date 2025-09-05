@@ -1,8 +1,27 @@
 const DishBOM = require("../models/dishBOMModel");
 const Dish = require("../models/dishesModel");
-const Product = require("../models/productModel");
 const Unit = require("../models/unitModel");
 
+// Fungsi rekursif untuk dapatkan root unit dan qty
+async function getBaseUnitAndQty(unitId, qty, session = null) {
+  const unitDoc = await Unit.findById(unitId).session(session);
+  if (!unitDoc) return { unitBase: unitId, qtyBase: qty };
+
+  if (!unitDoc.baseUnit) {
+    return {
+      unitBase: unitDoc._id,
+      qtyBase: qty * (unitDoc.conversion || 1),
+    };
+  }
+
+  return await getBaseUnitAndQty(
+    unitDoc.baseUnit,
+    qty * (unitDoc.conversion || 1),
+    session
+  );
+}
+
+// Hitung HPP dish otomatis
 const calculateDishHPP = async (dishId) => {
   const bomItems = await DishBOM.find({ dish: dishId })
     .populate("product")
@@ -14,51 +33,44 @@ const calculateDishHPP = async (dishId) => {
   for (const item of bomItems) {
     if (!item.product || !item.unit) continue;
 
-    // Hitung qty dalam root unit
     const { qtyBase } = await getBaseUnitAndQty(item.unit._id, Number(item.qty) || 0);
 
-    // HPP per root unit
     const productHPP = Number(item.product.hpp) || 0;
 
-    // Tambahkan ke total HPP sesuai variant
     if (item.variant === "hot") totalHot += productHPP * qtyBase;
     else if (item.variant === "ice") totalIce += productHPP * qtyBase;
   }
 
-  const updatedDish = await Dish.findByIdAndUpdate(
+  return await Dish.findByIdAndUpdate(
     dishId,
     { "hpp.hpphot": totalHot, "hpp.hppice": totalIce },
     { new: true }
   );
-
-  return updatedDish;
 };
 
-
-
-
-
-// Tambah BOM untuk dish
+// Tambah BOM item
 exports.addBOMItem = async (req, res) => {
-    try {
-      const { product, qty, unit, variant } = req.body;
-      const { dishId } = req.params;
-  
-      if (!dishId || !product || !qty || !unit || !variant) {
-        return res.status(400).json({ success: false, message: "All fields are required" });
-      }
-  
-      const newItem = await DishBOM.create({ dish: dishId, product, qty, unit, variant });
-      await calculateDishHPP(dishId);
-      res.status(201).json({ success: true, data: newItem });
-    } catch (err) {
-      console.error("🔥 addBOMItem Error:", err);
-      res.status(500).json({ success: false, message: err.message });
-    }
-  };
-  
+  try {
+    const { product, qty, unit, variant } = req.body;
+    const { dishId } = req.params;
 
-// Ambil semua BOM untuk dish tertentu
+    if (!dishId || !product || !qty || !unit || !variant) {
+      return res.status(400).json({ success: false, message: "All fields are required" });
+    }
+
+    const newItem = await DishBOM.create({ dish: dishId, product, qty, unit, variant });
+
+    // Hitung ulang HPP otomatis
+    await calculateDishHPP(dishId);
+
+    res.status(201).json({ success: true, data: newItem });
+  } catch (err) {
+    console.error("🔥 addBOMItem Error:", err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// Ambil semua BOM untuk dish
 exports.getBOMByDish = async (req, res) => {
   try {
     const { dishId } = req.params;

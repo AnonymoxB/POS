@@ -57,9 +57,7 @@ export default function DishBOM({ dish, open, onClose }) {
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
       <div className="bg-white dark:bg-[#262626] text-gray-900 dark:text-white rounded-lg p-6 w-full max-w-3xl shadow-lg">
-        <h2 className="text-lg font-bold mb-4">
-          BOM untuk {dish?.name}
-        </h2>
+        <h2 className="text-lg font-bold mb-4">BOM untuk {dish?.name}</h2>
 
         {/* Table */}
         <div className="overflow-x-auto rounded border border-gray-300 dark:border-gray-700 mb-4">
@@ -77,43 +75,29 @@ export default function DishBOM({ dish, open, onClose }) {
             <tbody>
               {loading ? (
                 <tr>
-                  <td
-                    colSpan="6"
-                    className="text-center py-4 text-gray-500 dark:text-gray-400"
-                  >
+                  <td colSpan="6" className="text-center py-4 text-gray-500 dark:text-gray-400">
                     Loading...
                   </td>
                 </tr>
               ) : bom.length > 0 ? (
                 bom.map((item, idx) => {
                   const hpp = Number(item.product?.hpp) || 0;
+                  const qty = Number(item.qty) || 0;
                   const conversion = Number(item.unit?.conversion) || 1;
-                  const totalHPP = hpp * item.qty * conversion;
+                  const totalHPP = hpp * qty * conversion;
 
                   return (
                     <tr
                       key={item._id}
                       className={`${
-                        idx % 2 === 0
-                          ? "bg-gray-50 dark:bg-[#2e2e2e]"
-                          : "bg-white dark:bg-[#262626]"
+                        idx % 2 === 0 ? "bg-gray-50 dark:bg-[#2e2e2e]" : "bg-white dark:bg-[#262626]"
                       } border-t border-gray-200 dark:border-gray-700`}
                     >
-                      <td className="px-3 py-2">
-                        {typeof item.product === "object"
-                          ? item.product?.name
-                          : item.product}
-                      </td>
-                      <td className="px-3 py-2 text-right">{item.qty}</td>
-                      <td className="px-3 py-2">
-                        {typeof item.unit === "object"
-                          ? item.unit?.short ?? item.unit?.name
-                          : item.unit}
-                      </td>
+                      <td className="px-3 py-2">{item.product?.name || "-"}</td>
+                      <td className="px-3 py-2 text-right">{qty}</td>
+                      <td className="px-3 py-2">{item.unit?.short || item.unit?.name || "-"}</td>
                       <td className="px-3 py-2">{item.variant}</td>
-                      <td className="px-3 py-2 text-right">
-                        {formatRupiah(totalHPP)}
-                      </td>
+                      <td className="px-3 py-2 text-right">{formatRupiah(totalHPP)}</td>
                       <td className="px-3 py-2 text-center space-x-2">
                         <Button
                           size="sm"
@@ -136,10 +120,7 @@ export default function DishBOM({ dish, open, onClose }) {
                 })
               ) : (
                 <tr>
-                  <td
-                    colSpan="6"
-                    className="text-center py-4 text-gray-500 dark:text-gray-400"
-                  >
+                  <td colSpan="6" className="text-center py-4 text-gray-500 dark:text-gray-400">
                     Belum ada bahan
                   </td>
                 </tr>

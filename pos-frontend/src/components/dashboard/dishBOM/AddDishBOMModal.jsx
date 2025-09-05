@@ -11,11 +11,11 @@ const AddDishBOMModal = ({ dish, isOpen, onClose }) => {
   const [units, setUnits] = useState([]);
   const [form, setForm] = useState({ product: "", qty: 1, unit: "", variant: "ice" });
 
-  // Load product & unit saat modal terbuka
+  // Load products & units saat modal terbuka
   useEffect(() => {
     if (isOpen) {
       getProducts()
-        .then((res) => setProducts(res.data || res || []))
+        .then((res) => setProducts(res.data || []))
         .catch((err) => console.error("Error load products:", err));
 
       getUnits()
@@ -30,12 +30,18 @@ const AddDishBOMModal = ({ dish, isOpen, onClose }) => {
     onSuccess: () => {
       enqueueSnackbar("Bahan berhasil ditambahkan", { variant: "success" });
       queryClient.invalidateQueries(["dish-bom", dish._id]);
-      onClose();
+      handleClose();
     },
     onError: (err) => {
       enqueueSnackbar(err?.message || "Gagal menambah bahan", { variant: "error" });
     },
   });
+
+  // Reset form + close modal
+  const handleClose = () => {
+    setForm({ product: "", qty: 1, unit: "", variant: "ice" });
+    onClose();
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -58,8 +64,9 @@ const AddDishBOMModal = ({ dish, isOpen, onClose }) => {
             onChange={(e) => setForm({ ...form, product: e.target.value })}
             className="w-full p-2 rounded bg-gray-100 dark:bg-[#333] text-gray-900 dark:text-white"
             required
+            disabled={isLoading}
           >
-            <option value="">-- pilih bahan --</option>
+            <option value="" disabled>-- pilih bahan --</option>
             {products.map((p) => (
               <option key={p._id} value={p._id}>
                 {p.name}
@@ -71,9 +78,11 @@ const AddDishBOMModal = ({ dish, isOpen, onClose }) => {
           <input
             type="number"
             value={form.qty}
-            onChange={(e) => setForm({ ...form, qty: e.target.value })}
+            onChange={(e) => setForm({ ...form, qty: Number(e.target.value) })}
             className="w-full p-2 rounded bg-gray-100 dark:bg-[#333] text-gray-900 dark:text-white"
             required
+            disabled={isLoading}
+            min={0.01}
           />
 
           {/* Unit */}
@@ -82,8 +91,9 @@ const AddDishBOMModal = ({ dish, isOpen, onClose }) => {
             onChange={(e) => setForm({ ...form, unit: e.target.value })}
             className="w-full p-2 rounded bg-gray-100 dark:bg-[#333] text-gray-900 dark:text-white"
             required
+            disabled={isLoading}
           >
-            <option value="">-- pilih unit --</option>
+            <option value="" disabled>-- pilih unit --</option>
             {units.map((u) => (
               <option key={u._id || u.id} value={u._id || u.id}>
                 {u.name || u.unitName} ({u.short || u.symbol})
@@ -93,12 +103,13 @@ const AddDishBOMModal = ({ dish, isOpen, onClose }) => {
 
           {/* Variant */}
           <select
-            value={form.variant || ""}
+            value={form.variant}
             onChange={(e) => setForm({ ...form, variant: e.target.value })}
             className="w-full p-2 rounded bg-gray-100 dark:bg-[#333] text-gray-900 dark:text-white"
             required
+            disabled={isLoading}
           >
-            <option value="">-- pilih variant --</option>
+            <option value="" disabled>-- pilih variant --</option>
             <option value="hot">Hot</option>
             <option value="ice">Ice</option>
           </select>
@@ -107,8 +118,9 @@ const AddDishBOMModal = ({ dish, isOpen, onClose }) => {
           <div className="flex justify-end gap-2">
             <button
               type="button"
-              onClick={onClose}
+              onClick={handleClose}
               className="bg-gray-400 dark:bg-gray-600 px-4 py-2 rounded text-white hover:bg-gray-500 dark:hover:bg-gray-700"
+              disabled={isLoading}
             >
               Batal
             </button>
