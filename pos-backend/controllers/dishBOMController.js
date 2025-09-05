@@ -11,18 +11,19 @@ const calculateDishHPP = async (dishId) => {
   let totalHot = 0;
   let totalIce = 0;
 
-  bomItems.forEach((item) => {
-    if (!item.product) return;
+  for (const item of bomItems) {
+    if (!item.product || !item.unit) continue;
 
-    const qty = Number(item.qty) || 0;
-    const conversion = Number(item.unit?.conversion) || 1;
-    const finalQty = qty * conversion;
+    // Hitung qty dalam root unit
+    const { qtyBase } = await getBaseUnitAndQty(item.unit._id, Number(item.qty) || 0);
 
+    // HPP per root unit
     const productHPP = Number(item.product.hpp) || 0;
 
-    if (item.variant === "hot") totalHot += productHPP * finalQty;
-    else if (item.variant === "ice") totalIce += productHPP * finalQty;
-  });
+    // Tambahkan ke total HPP sesuai variant
+    if (item.variant === "hot") totalHot += productHPP * qtyBase;
+    else if (item.variant === "ice") totalIce += productHPP * qtyBase;
+  }
 
   const updatedDish = await Dish.findByIdAndUpdate(
     dishId,
@@ -32,6 +33,8 @@ const calculateDishHPP = async (dishId) => {
 
   return updatedDish;
 };
+
+
 
 
 
