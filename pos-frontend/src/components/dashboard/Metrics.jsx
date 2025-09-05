@@ -1,113 +1,71 @@
-import React from "react";
-import { itemsData, metricsData } from "../../constants";
+import React, { useEffect, useState } from "react";
+import { getDashboardSummary } from "../../https/dashboard";
+import {
+  LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer
+} from "recharts";
 
 const Metrics = () => {
+  const [summary, setSummary] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchSummary = async () => {
+      try {
+        const data = await getDashboardSummary();
+        setSummary(data);
+      } catch (err) {
+        console.error("Gagal ambil data dashboard:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSummary();
+  }, []);
+
+  if (loading) {
+    return <p className="text-center text-gray-500">Loading dashboard...</p>;
+  }
+
   return (
-    <div className="container mx-auto py-2 px-6 md:px-4">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="font-semibold text-gray-900 dark:text-gray-100 text-xl">
-            Overall Performance
-          </h2>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            Lorem, ipsum dolor sit amet consectetur adipisicing elit.
-            Distinctio, obcaecati?
-          </p>
+    <div className="container mx-auto py-4 px-6">
+      <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+        Dashboard Metrics
+      </h2>
+
+      {/* Metrics Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="bg-blue-600 text-white p-4 rounded-lg">
+          <p className="text-sm">Total Orders</p>
+          <p className="text-2xl font-bold">{summary.totalOrders}</p>
         </div>
-        <button className="flex items-center gap-1 px-4 py-2 rounded-md text-gray-800 dark:text-gray-100 bg-gray-200 dark:bg-gray-800">
-          Last 1 Month
-          <svg
-            className="w-3 h-3"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth="4"
-          >
-            <path d="M19 9l-7 7-7-7" />
-          </svg>
-        </button>
+        <div className="bg-green-600 text-white p-4 rounded-lg">
+          <p className="text-sm">Total Purchases</p>
+          <p className="text-2xl font-bold">{summary.totalPurchases}</p>
+        </div>
+        <div className="bg-red-600 text-white p-4 rounded-lg">
+          <p className="text-sm">Total Expenses</p>
+          <p className="text-2xl font-bold">Rp {summary.totalExpenses.toLocaleString()}</p>
+        </div>
+        <div className="bg-purple-600 text-white p-4 rounded-lg">
+          <p className="text-sm">Stock Items</p>
+          <p className="text-2xl font-bold">{summary.totalStockItems}</p>
+        </div>
       </div>
 
-      {/* Metrics cards */}
-      <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {metricsData.map((metric, index) => (
-          <div
-            key={index}
-            className="shadow-sm rounded-lg p-4"
-            style={{ backgroundColor: metric.color }}
-          >
-            <div className="flex justify-between items-center">
-              <p className="font-medium text-xs text-white">{metric.title}</p>
-              <div className="flex items-center gap-1">
-                <svg
-                  className="w-3 h-3"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                  fill="none"
-                  style={{ color: metric.isIncrease ? "#fff" : "red" }}
-                >
-                  <path
-                    d={metric.isIncrease ? "M5 15l7-7 7 7" : "M19 9l-7 7-7-7"}
-                  />
-                </svg>
-                <p
-                  className="font-medium text-xs"
-                  style={{ color: metric.isIncrease ? "#fff" : "red" }}
-                >
-                  {metric.percentage}
-                </p>
-              </div>
-            </div>
-            <p className="mt-1 font-semibold text-2xl text-white">
-              {metric.value}
-            </p>
-          </div>
-        ))}
-      </div>
-
-      {/* Item details */}
-      <div className="flex flex-col justify-between mt-12">
-        <div>
-          <h2 className="font-semibold text-gray-900 dark:text-gray-100 text-xl">
-            Item Details
-          </h2>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            Lorem, ipsum dolor sit amet consectetur adipisicing elit.
-            Distinctio, obcaecati?
-          </p>
-        </div>
-
-        <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {itemsData.map((item, index) => (
-            <div
-              key={index}
-              className="shadow-sm rounded-lg p-4"
-              style={{ backgroundColor: item.color }}
-            >
-              <div className="flex justify-between items-center">
-                <p className="font-medium text-xs text-white">{item.title}</p>
-                <div className="flex items-center gap-1">
-                  <svg
-                    className="w-3 h-3 text-white"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                    fill="none"
-                  >
-                    <path d="M5 15l7-7 7 7" />
-                  </svg>
-                  <p className="font-medium text-xs text-white">
-                    {item.percentage}
-                  </p>
-                </div>
-              </div>
-              <p className="mt-1 font-semibold text-2xl text-white">
-                {item.value}
-              </p>
-            </div>
-          ))}
-        </div>
+      {/* Recharts Example */}
+      <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
+        <h3 className="text-lg font-semibold mb-4">Grafik Penjualan</h3>
+        <ResponsiveContainer width="100%" height={300}>
+          <LineChart data={summary.orders.slice(-7)}> {/* ambil 7 order terakhir */}
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="createdAt" />
+            <YAxis />
+            <Tooltip />
+            <Legend />
+            <Line type="monotone" dataKey="totalAmount" stroke="#3b82f6" name="Total Penjualan" />
+          </LineChart>
+        </ResponsiveContainer>
       </div>
     </div>
   );

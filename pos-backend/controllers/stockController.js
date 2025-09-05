@@ -168,9 +168,11 @@ exports.getStockSummary = async (req, res) => {
               { $ifNull: ["$defaultUnit.conversion", 1] },
             ],
           },
+          conversion: { $ifNull: ["$defaultUnit.conversion", 1] }, // ✅ Tambah conversion
           unitShort: {
             $ifNull: ["$defaultUnit.short", "$baseUnit.short"],
           },
+          baseUnitShort: "$baseUnit.short", // ✅ Tambah base unit
         },
       },
     ]);
@@ -181,6 +183,7 @@ exports.getStockSummary = async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 };
+
 
 
 // Summary stok per produk (by ID + filter tanggal)

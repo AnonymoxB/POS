@@ -33,7 +33,7 @@ const Payment = () => {
     fetchPayments();
   }, []);
 
-  if (loading) return <p className="text-[#ababab]">Loading...</p>;
+  if (loading) return <p className="text-gray-500 dark:text-gray-400">Loading...</p>;
   if (error) return <p className="text-red-500">{error}</p>;
 
   // Filter by search
@@ -137,7 +137,7 @@ const Payment = () => {
   };
 
   return (
-    <Card className="bg-[#262626] text-white">
+    <Card className="bg-white dark:bg-[#1e1e1e] text-gray-900 dark:text-gray-200 shadow-md rounded-xl">
       <CardContent className="p-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
           <h2 className="text-xl font-bold">Daftar Payment</h2>
@@ -153,17 +153,14 @@ const Payment = () => {
 
         {/* Summary jumlah per tipe */}
         <div className="flex gap-4 mb-4">
-          <div className="bg-red-600/20 text-red-400 px-3 py-2 rounded font-semibold">
-            Expense: {summary.expense.count} | Rp{" "}
-            {summary.expense.total.toLocaleString("id-ID")}
+          <div className="bg-red-600/20 text-red-600 dark:text-red-400 px-3 py-2 rounded font-semibold">
+            Expense: {summary.expense.count} | Rp {summary.expense.total.toLocaleString("id-ID")}
           </div>
-          <div className="bg-blue-600/20 text-blue-400 px-3 py-2 rounded font-semibold">
-            Purchase: {summary.purchase.count} | Rp{" "}
-            {summary.purchase.total.toLocaleString("id-ID")}
+          <div className="bg-blue-600/20 text-blue-600 dark:text-blue-400 px-3 py-2 rounded font-semibold">
+            Purchase: {summary.purchase.count} | Rp {summary.purchase.total.toLocaleString("id-ID")}
           </div>
-          <div className="bg-green-600/20 text-green-400 px-3 py-2 rounded font-semibold">
-            Order: {summary.order.count} | Rp{" "}
-            {summary.order.total.toLocaleString("id-ID")}
+          <div className="bg-green-600/20 text-green-600 dark:text-green-400 px-3 py-2 rounded font-semibold">
+            Order: {summary.order.count} | Rp {summary.order.total.toLocaleString("id-ID")}
           </div>
         </div>
 
@@ -176,34 +173,32 @@ const Payment = () => {
               setSearchTerm(e.target.value);
               setCurrentPage(1);
             }}
-            className="bg-[#333] text-white border-gray-600"
+            className="bg-gray-100 dark:bg-[#2a2a2a] text-gray-900 dark:text-gray-200 border-gray-300 dark:border-gray-600"
           />
         </div>
 
         {currentPayments.length === 0 ? (
-          <p className="text-gray-400">Tidak ada data pembayaran.</p>
+          <p className="text-gray-400 dark:text-gray-500">Tidak ada data pembayaran.</p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full border-collapse border border-gray-600 text-sm">
+            <table className="w-full border-collapse border border-gray-300 dark:border-gray-700 text-sm">
               <thead>
-                <tr className="bg-[#333] text-gray-300">
-                  <th className="border border-gray-600 px-3 py-2">
+                <tr className="bg-gray-200 dark:bg-[#2a2a2a] text-gray-700 dark:text-gray-300">
+                  <th className="border border-gray-300 dark:border-gray-700 px-3 py-2">
                     <input
                       type="checkbox"
                       onChange={handleSelectAll}
-                      checked={currentPayments.every((p) =>
-                        selectedPayments.has(p._id)
-                      )}
+                      checked={currentPayments.every((p) => selectedPayments.has(p._id))}
                     />
                   </th>
-                  <th className="border border-gray-600 px-3 py-2">#</th>
-                  <th className="border border-gray-600 px-3 py-2">Payment ID</th>
-                  <th className="border border-gray-600 px-3 py-2">Tanggal</th>
-                  <th className="border border-gray-600 px-3 py-2">Source</th>
-                  <th className="border border-gray-600 px-3 py-2">Arah</th>
-                  <th className="border border-gray-600 px-3 py-2">Metode</th>
-                  <th className="border border-gray-600 px-3 py-2">Status</th>
-                  <th className="border border-gray-600 px-3 py-2 text-right">
+                  <th className="border border-gray-300 dark:border-gray-700 px-3 py-2">#</th>
+                  <th className="border border-gray-300 dark:border-gray-700 px-3 py-2">Payment ID</th>
+                  <th className="border border-gray-300 dark:border-gray-700 px-3 py-2">Tanggal</th>
+                  <th className="border border-gray-300 dark:border-gray-700 px-3 py-2">Source</th>
+                  <th className="border border-gray-300 dark:border-gray-700 px-3 py-2">Arah</th>
+                  <th className="border border-gray-300 dark:border-gray-700 px-3 py-2">Metode</th>
+                  <th className="border border-gray-300 dark:border-gray-700 px-3 py-2">Status</th>
+                  <th className="border border-gray-300 dark:border-gray-700 px-3 py-2 text-right">
                     Jumlah
                   </th>
                 </tr>
@@ -212,76 +207,76 @@ const Payment = () => {
                 {currentPayments.map((pay, index) => (
                   <tr
                     key={pay?._id || index}
-                    className="border-t border-gray-700 hover:bg-[#333]/50"
+                    className="border-t border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-[#333]/50"
                   >
-                    <td className="border border-gray-600 px-3 py-2 text-center">
+                    <td className="border border-gray-300 dark:border-gray-700 px-3 py-2 text-center">
                       <input
                         type="checkbox"
                         checked={selectedPayments.has(pay._id)}
                         onChange={() => handleSelect(pay._id)}
                       />
                     </td>
-                    <td className="border border-gray-600 px-3 py-2 text-center">
+                    <td className="border border-gray-300 dark:border-gray-700 px-3 py-2 text-center">
                       {indexOfFirstItem + index + 1}
                     </td>
-                    <td className="border border-gray-600 px-3 py-2 font-mono">
+                    <td className="border border-gray-300 dark:border-gray-700 px-3 py-2 font-mono">
                       {pay?.paymentId || "-"}
                     </td>
-                    <td className="border border-gray-600 px-3 py-2 text-center">
+                    <td className="border border-gray-300 dark:border-gray-700 px-3 py-2 text-center">
                       {pay?.createdAt
                         ? new Date(pay.createdAt).toLocaleString("id-ID")
                         : "-"}
                     </td>
-                    <td className="border border-gray-600 px-3 py-2 text-center">
+                    <td className="border border-gray-300 dark:border-gray-700 px-3 py-2 text-center">
                       <span
                         className={`px-2 py-1 rounded text-xs font-semibold mr-2
                           ${
                             pay?.sourceType?.toLowerCase() === "purchase"
-                              ? "bg-blue-600/30 text-blue-400"
+                              ? "bg-blue-600/30 text-blue-500 dark:text-blue-400"
                               : pay?.sourceType?.toLowerCase() === "order"
-                              ? "bg-green-600/30 text-green-400"
+                              ? "bg-green-600/30 text-green-500 dark:text-green-400"
                               : pay?.sourceType?.toLowerCase() === "expense"
-                              ? "bg-red-600/30 text-red-400"
-                              : "bg-gray-600/30 text-gray-300"
+                              ? "bg-red-600/30 text-red-500 dark:text-red-400"
+                              : "bg-gray-600/30 text-gray-400"
                           }`}
                       >
                         {pay?.sourceType || "-"}
                       </span>
                     </td>
-                    <td className="border border-gray-600 px-3 py-2 text-center">
+                    <td className="border border-gray-300 dark:border-gray-700 px-3 py-2 text-center">
                       {pay?.direction?.toLowerCase() === "in" ? (
-                        <span className="text-green-400 font-semibold">Masuk</span>
+                        <span className="text-green-600 dark:text-green-400 font-semibold">Masuk</span>
                       ) : (
-                        <span className="text-red-400 font-semibold">Keluar</span>
+                        <span className="text-red-600 dark:text-red-400 font-semibold">Keluar</span>
                       )}
                     </td>
-                    <td className="border border-gray-600 px-3 py-2 capitalize text-center">
+                    <td className="border border-gray-300 dark:border-gray-700 px-3 py-2 capitalize text-center">
                       {pay?.method || "-"}
                     </td>
-                    <td className="border border-gray-600 px-3 py-2 text-center">
+                    <td className="border border-gray-300 dark:border-gray-700 px-3 py-2 text-center">
                       {pay?.status?.toLowerCase() === "success" && (
-                        <span className="px-2 py-1 rounded bg-green-600/30 text-green-400 text-xs">
+                        <span className="px-2 py-1 rounded bg-green-600/30 text-green-500 dark:text-green-400 text-xs">
                           Sukses
                         </span>
                       )}
                       {pay?.status?.toLowerCase() === "pending" && (
-                        <span className="px-2 py-1 rounded bg-yellow-600/30 text-yellow-400 text-xs">
+                        <span className="px-2 py-1 rounded bg-yellow-600/30 text-yellow-500 dark:text-yellow-400 text-xs">
                           Pending
                         </span>
                       )}
                       {pay?.status?.toLowerCase() === "failed" && (
-                        <span className="px-2 py-1 rounded bg-red-600/30 text-red-400 text-xs">
+                        <span className="px-2 py-1 rounded bg-red-600/30 text-red-500 dark:text-red-400 text-xs">
                           Gagal
                         </span>
                       )}
                     </td>
-                    <td className="border border-gray-600 px-3 py-2 font-semibold text-right">
+                    <td className="border border-gray-300 dark:border-gray-700 px-3 py-2 font-semibold text-right">
                       {pay?.direction?.toLowerCase() === "in" ? (
-                        <span className="text-green-400">
+                        <span className="text-green-600 dark:text-green-400">
                           + Rp {pay?.amount?.toLocaleString("id-ID")}
                         </span>
                       ) : (
-                        <span className="text-red-400">
+                        <span className="text-red-600 dark:text-red-400">
                           - Rp {pay?.amount?.toLocaleString("id-ID")}
                         </span>
                       )}
@@ -293,7 +288,7 @@ const Payment = () => {
 
             {/* Pagination */}
             <div className="flex flex-col sm:flex-row justify-between items-center gap-3 mt-4">
-              <div className="text-gray-400 text-sm">
+              <div className="text-gray-600 dark:text-gray-400 text-sm">
                 {filteredPayments.length > 0 && (
                   <span>
                     Menampilkan <b>{indexOfFirstItem + 1}</b>–
@@ -307,7 +302,7 @@ const Payment = () => {
                 )}
               </div>
 
-              <div className="flex items-center gap-2 text-gray-300">
+              <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
                 <label htmlFor="itemsPerPage">Tampilkan</label>
                 <select
                   id="itemsPerPage"
@@ -316,7 +311,7 @@ const Payment = () => {
                     setItemsPerPage(Number(e.target.value));
                     setCurrentPage(1);
                   }}
-                  className="bg-[#333] text-white border border-gray-600 rounded px-2 py-1"
+                  className="bg-gray-100 dark:bg-[#2a2a2a] text-gray-900 dark:text-gray-200 border border-gray-300 dark:border-gray-600 rounded px-2 py-1"
                 >
                   <option value={5}>5</option>
                   <option value={10}>10</option>
@@ -349,7 +344,7 @@ const Payment = () => {
                       className={`${
                         currentPage === page
                           ? "bg-green-600 text-white"
-                          : "bg-[#333] text-gray-300 hover:bg-gray-700"
+                          : "bg-gray-100 dark:bg-[#2a2a2a] text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-[#333]"
                       }`}
                       onClick={() => setCurrentPage(page)}
                     >

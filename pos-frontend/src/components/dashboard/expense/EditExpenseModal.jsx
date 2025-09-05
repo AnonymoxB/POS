@@ -5,6 +5,12 @@ import { useSnackbar } from "notistack";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
+// Fungsi format Rupiah
+const formatRupiah = (value) => {
+  if (!value) return "";
+  return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+};
+
 const EditExpenseModal = ({ isOpen, onClose, expense, onUpdated }) => {
   const { enqueueSnackbar } = useSnackbar();
   const queryClient = useQueryClient();
@@ -16,54 +22,76 @@ const EditExpenseModal = ({ isOpen, onClose, expense, onUpdated }) => {
     date: "",
   });
 
-  // ketika modal dibuka isi form dengan data lama
   useEffect(() => {
-    if (expense) {
+    if (expense && isOpen) {
       setForm({
-        name: expense.note || "",
+        note: expense.note || "",
         category: expense.category || "",
-        amount: expense.amount || "",
+        amount: expense.amount?.toString() || "",
         date: expense.date ? expense.date.split("T")[0] : "",
       });
     }
-  }, [expense]);
+  }, [expense, isOpen]);
 
   const { mutate, isLoading } = useMutation({
     mutationFn: ({ id, data }) => updateExpense(id, data),
     onSuccess: () => {
-      enqueueSnackbar("Expense berhasil diperbarui", { variant: "success" });
+      enqueueSnackbar("✅ Expense berhasil diperbarui", { variant: "success" });
       queryClient.invalidateQueries(["expenses"]);
       onUpdated?.();
       onClose();
     },
     onError: () => {
-      enqueueSnackbar("Gagal memperbarui expense", { variant: "error" });
+      enqueueSnackbar("❌ Gagal memperbarui expense", { variant: "error" });
     },
   });
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+
+    if (name === "amount") {
+      const cleanValue = value.replace(/\D/g, ""); // Hapus karakter non-angka
+      setForm({ ...form, [name]: cleanValue });
+    } else {
+      setForm({ ...form, [name]: value });
+    }
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!expense?._id) return;
-    mutate({ id: expense._id, data: form });
+    mutate({
+      id: expense._id,
+      data: { ...form, amount: Number(form.amount) },
+    });
   };
 
   if (!isOpen) return null;
 
+  const handleOutsideClick = (e) => {
+    if (e.target.id === "modal-overlay") {
+      onClose();
+    }
+  };
+
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-      <div className="bg-[#262626] p-6 rounded-xl shadow-lg w-full max-w-md">
-        <h2 className="text-lg font-bold mb-4 text-white">Edit Expense</h2>
-        <form onSubmit={handleSubmit} className="space-y-3">
+    <div
+      id="modal-overlay"
+      onClick={handleOutsideClick}
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50"
+    >
+      <div className="bg-white dark:bg-[#262626] p-6 rounded-xl shadow-xl w-full max-w-md">
+        <h2 className="text-lg font-bold mb-4 text-gray-900 dark:text-gray-100">
+          Edit Expense
+        </h2>
+        <form onSubmit={handleSubmit} className="space-y-4">
           <Input
             placeholder="Nama expense"
             name="note"
             value={form.note}
             onChange={handleChange}
             required
+            className="bg-gray-100 dark:bg-[#2a2a2a] border border-gray-300 dark:border-gray-600"
           />
           <Input
             placeholder="Kategori"
@@ -71,14 +99,16 @@ const EditExpenseModal = ({ isOpen, onClose, expense, onUpdated }) => {
             value={form.category}
             onChange={handleChange}
             required
+            className="bg-gray-100 dark:bg-[#2a2a2a] border border-gray-300 dark:border-gray-600"
           />
           <Input
-            type="number"
-            placeholder="Jumlah"
+            type="text"
+            placeholder="Jumlah (Rp)"
             name="amount"
-            value={form.amount}
+            value={formatRupiah(form.amount)}
             onChange={handleChange}
             required
+            className="bg-gray-100 dark:bg-[#2a2a2a] border border-gray-300 dark:border-gray-600"
           />
           <Input
             type="date"
@@ -86,6 +116,7 @@ const EditExpenseModal = ({ isOpen, onClose, expense, onUpdated }) => {
             value={form.date}
             onChange={handleChange}
             required
+            className="bg-gray-100 dark:bg-[#2a2a2a] border border-gray-300 dark:border-gray-600"
           />
           <div className="flex justify-end gap-2 mt-4">
             <Button
