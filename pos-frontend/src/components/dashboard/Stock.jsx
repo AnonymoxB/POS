@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -215,10 +217,10 @@ const Stock = () => {
                       {summaryByProductData?.data?.product?.name}
                     </td>
                     <td className="px-3 py-2 text-right">
-                      {summaryByProductData?.data?.totalQty}
+                      {summaryByProductData?.data?.balance}
                     </td>
                     <td className="px-3 py-2">
-                      {summaryByProductData?.data?.unit?.short}
+                      {summaryByProductData?.data?.unitShort}
                     </td>
                   </tr>
                 </tbody>

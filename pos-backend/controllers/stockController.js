@@ -113,6 +113,7 @@ exports.deleteStockTransaction = async (req, res) => {
 =========================== */
 
 // Summary stok per produk (semua produk)
+// Summary stok per produk (semua produk)
 exports.getStockSummary = async (req, res) => {
   try {
     const summary = await StockTransaction.aggregate([
@@ -120,16 +121,16 @@ exports.getStockSummary = async (req, res) => {
         $group: {
           _id: "$product",
           totalIn: { $sum: { $cond: [{ $eq: ["$type", "IN"] }, "$qtyBase", 0] } },
-          totalOut:{ $sum: { $cond: [{ $eq: ["$type", "OUT"] }, "$qtyBase", 0] } }
-        }
+          totalOut: { $sum: { $cond: [{ $eq: ["$type", "OUT"] }, "$qtyBase", 0] } },
+        },
       },
       {
         $lookup: {
           from: "products",
           localField: "_id",
           foreignField: "_id",
-          as: "product"
-        }
+          as: "product",
+        },
       },
       { $unwind: "$product" },
       {
@@ -137,34 +138,37 @@ exports.getStockSummary = async (req, res) => {
           from: "units",
           localField: "product.defaultUnit",
           foreignField: "_id",
-          as: "defaultUnit"
-        }
+          as: "defaultUnit",
+        },
       },
       { $unwind: { path: "$defaultUnit", preserveNullAndEmptyArrays: true } },
-
       {
         $lookup: {
           from: "units",
           localField: "product.baseUnit",
           foreignField: "_id",
-          as: "baseUnit"
-        }
+          as: "baseUnit",
+        },
       },
       { $unwind: { path: "$baseUnit", preserveNullAndEmptyArrays: true } },
-      
       {
         $project: {
           productId: "$_id",
           productName: "$product.name",
           totalIn: 1,
           totalOut: 1,
-          balance: { $subtract: ["$totalIn", "$totalOut"] },
-          unit: "$defaultUnit.short",
-          baseUnit: "$baseUnit.short"
-        }
-      }
+          balanceBase: { $subtract: ["$totalIn", "$totalOut"] }, // saldo dalam base unit
+          balance: {
+            $divide: [
+              { $subtract: ["$totalIn", "$totalOut"] },
+              { $ifNull: ["$defaultUnit.conversion", 1] },
+            ],
+          }, // saldo dalam default unit
+          unitShort: "$defaultUnit.short",
+          baseUnitShort: "$baseUnit.short",
+        },
+      },
     ]);
-    
 
     res.json({ success: true, data: summary });
   } catch (err) {
@@ -195,15 +199,33 @@ exports.getStockSummaryByProduct = async (req, res) => {
     ]);
 
     const result = { IN: 0, OUT: 0 };
-    summary.forEach((s) => { result[s._id] = s.totalQty; });
+    summary.forEach((s) => {
+      result[s._id] = s.totalQty;
+    });
+
+    // ambil info produk & unit
+    const product = await Product.findById(productId)
+      .populate("defaultUnit", "short conversion")
+      .populate("baseUnit", "short");
+
+    if (!product) {
+      return res.status(404).json({ success: false, message: "Product not found" });
+    }
+
+    const balanceBase = result.IN - result.OUT;
+    const balance =
+      balanceBase / (product.defaultUnit?.conversion || 1);
 
     res.json({
       success: true,
       data: {
-        product: productId,
+        product: { _id: product._id, name: product.name },
         totalIn: result.IN,
         totalOut: result.OUT,
-        balance: result.IN - result.OUT,
+        balance,
+        balanceBase,
+        unitShort: product.defaultUnit?.short,
+        baseUnitShort: product.baseUnit?.short,
       },
     });
   } catch (err) {
@@ -211,6 +233,7 @@ exports.getStockSummaryByProduct = async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 };
+
 
 // Riwayat transaksi stok per produk
 exports.getStockHistoryByProduct = async (req, res) => {
@@ -246,167 +269,104 @@ exports.getStockHistoryByProduct = async (req, res) => {
    EXPORT EXCEL
 =========================== */
 
-exports.exportStock = async (req, res) => {
+const ExcelJS = require("exceljs");
+
+// Export summary stok ke Excel
+exports.exportStockSummary = async (req, res) => {
   try {
-    const { type, productId, start, end } = req.query;
+    const summary = await StockTransaction.aggregate([
+      {
+        $group: {
+          _id: "$product",
+          totalIn: { $sum: { $cond: [{ $eq: ["$type", "IN"] }, "$qtyBase", 0] } },
+          totalOut: { $sum: { $cond: [{ $eq: ["$type", "OUT"] }, "$qtyBase", 0] } },
+        },
+      },
+      {
+        $lookup: {
+          from: "products",
+          localField: "_id",
+          foreignField: "_id",
+          as: "product",
+        },
+      },
+      { $unwind: "$product" },
+      {
+        $lookup: {
+          from: "units",
+          localField: "product.defaultUnit",
+          foreignField: "_id",
+          as: "defaultUnit",
+        },
+      },
+      { $unwind: { path: "$defaultUnit", preserveNullAndEmptyArrays: true } },
+      {
+        $lookup: {
+          from: "units",
+          localField: "product.baseUnit",
+          foreignField: "_id",
+          as: "baseUnit",
+        },
+      },
+      { $unwind: { path: "$baseUnit", preserveNullAndEmptyArrays: true } },
+      {
+        $project: {
+          productName: "$product.name",
+          totalIn: 1,
+          totalOut: 1,
+          balanceBase: { $subtract: ["$totalIn", "$totalOut"] },
+          balance: {
+            $divide: [
+              { $subtract: ["$totalIn", "$totalOut"] },
+              { $ifNull: ["$defaultUnit.conversion", 1] },
+            ],
+          },
+          unitShort: "$defaultUnit.short",
+          baseUnitShort: "$baseUnit.short",
+        },
+      },
+    ]);
 
+    // Buat workbook
     const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet("Stock Report");
+    const worksheet = workbook.addWorksheet("Stock Summary");
 
-    // Build filter
-    const filter = {};
-    if (productId) filter.product = productId;
-    if (start && end) {
-      filter.createdAt = { $gte: new Date(start), $lte: new Date(end) };
-    }
+    // Header
+    worksheet.columns = [
+      { header: "Product", key: "productName", width: 30 },
+      { header: "Total In (Base)", key: "totalIn", width: 20 },
+      { header: "Total Out (Base)", key: "totalOut", width: 20 },
+      { header: "Balance", key: "balance", width: 20 },
+      { header: "Unit", key: "unitShort", width: 10 },
+      { header: "Balance Base", key: "balanceBase", width: 20 },
+      { header: "Base Unit", key: "baseUnitShort", width: 12 },
+    ];
 
-    if (type === "summary") {
-      const tx = await StockTransaction.find(filter)
-        .populate("product")
-        .populate("unit")
-        .lean();
-
-      const summaryMap = {};
-      tx.forEach((t) => {
-        const pid = t.product?._id?.toString();
-        if (!pid) return;
-
-        if (!summaryMap[pid]) {
-          summaryMap[pid] = {
-            product: t.product?.name || "-",
-            unit: t.unit?.short || "-",
-            in: 0,
-            out: 0,
-          };
-        }
-        if (t.type === "IN") summaryMap[pid].in += Number(t.qty) || 0;
-        if (t.type === "OUT") summaryMap[pid].out += Number(t.qty) || 0;
-      });
-
-      worksheet.columns = [
-        { header: "Produk", key: "product", width: 30 },
-        { header: "Total In", key: "in", width: 15 },
-        { header: "Total Out", key: "out", width: 15 },
-        { header: "Saldo", key: "balance", width: 15 },
-        { header: "Unit", key: "unit", width: 10 },
-      ];
-
-      Object.values(summaryMap).forEach((s) => {
-        worksheet.addRow({
-          product: s.product,
-          in: s.in,
-          out: s.out,
-          balance: s.in - s.out,
-          unit: s.unit,
-        });
-      });
-
-    } else if (type === "history") {
-      if (!productId) {
-        return res.status(400).json({
-          success: false,
-          message: "productId wajib untuk export history",
-        });
-      }
-
-      const history = await StockTransaction.find(filter)
-        .sort({ createdAt: 1 })
-        .populate("product")
-        .populate("unit")
-        .lean();
-
-      worksheet.columns = [
-        { header: "Tanggal", key: "date", width: 20 },
-        { header: "Produk", key: "product", width: 30 },
-        { header: "Tipe", key: "type", width: 10 },
-        { header: "Qty", key: "qty", width: 10 },
-        { header: "Unit", key: "unit", width: 10 },
-        { header: "Note", key: "note", width: 30 },
-      ];
-
-      history.forEach((h) => {
-        worksheet.addRow({
-          date: h.createdAt
-            ? new Date(h.createdAt).toLocaleString("id-ID")
-            : "-",
-          product: h.product?.name || "-",
-          type: h.type || "-",
-          qty: Number(h.qty) || 0,
-          unit: h.unit?.short || "-",
-          note: h.note || "-",
-        });
-      });
-    } else {
-      return res
-        .status(400)
-        .json({ success: false, message: "type tidak valid" });
-    }
-
-    // --- Styling ---
-    worksheet.getRow(1).eachCell((cell) => {
-      cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
-      cell.fill = {
-        type: "pattern",
-        pattern: "solid",
-        fgColor: { argb: "FF4B5563" }, // abu-abu gelap
-      };
-      cell.alignment = { vertical: "middle", horizontal: "center" };
-    });
-
-    worksheet.eachRow((row) => {
-      row.eachCell((cell) => {
-        cell.border = {
-          top: { style: "thin", color: { argb: "FFAAAAAA" } },
-          left: { style: "thin", color: { argb: "FFAAAAAA" } },
-          bottom: { style: "thin", color: { argb: "FFAAAAAA" } },
-          right: { style: "thin", color: { argb: "FFAAAAAA" } },
-        };
-        if (typeof cell.value === "number") {
-          cell.alignment = { horizontal: "center" };
-        }
+    // Isi data
+    summary.forEach((item) => {
+      worksheet.addRow({
+        productName: item.productName,
+        totalIn: item.totalIn,
+        totalOut: item.totalOut,
+        balance: item.balance,
+        unitShort: item.unitShort,
+        balanceBase: item.balanceBase,
+        baseUnitShort: item.baseUnitShort,
       });
     });
 
-    // --- Auto Naming ---
-    let filename = `stock_${type}`;
-    if (productId) filename += `_${productId}`;
-    if (start && end) {
-      filename += `_${start}_${end}`;
-    } else {
-      filename += `_all`;
-    }
-    filename += `.xlsx`;
-
-    const buffer = await workbook.xlsx.writeBuffer();
-
-    res.setHeader(
-      "Content-Type",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    );
+    // Export file
     res.setHeader(
       "Content-Disposition",
-      `attachment; filename="${filename}"`
+      "attachment; filename=stock_summary.xlsx"
     );
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
 
-    return res.send(buffer);
+    await workbook.xlsx.write(res);
+    res.end();
   } catch (err) {
-    console.error("🔥 Export error:", err.message);
-    console.error(err.stack);
-    res
-      .status(500)
-      .json({ success: false, message: "Gagal export", error: err.message });
+    console.error("🔥 exportStockSummary Error:", err);
+    res.status(500).json({ success: false, message: err.message });
   }
 };
 
-// Shortcuts
-exports.exportStockSummaryByProduct = (req, res) => {
-  req.query.type = "summary";
-  req.query.productId = req.params.productId;
-  return exports.exportStock(req, res);
-};
-
-exports.exportStockHistory = (req, res) => {
-  req.query.type = "history";
-  req.query.productId = req.params.productId;
-  return exports.exportStock(req, res);
-};
