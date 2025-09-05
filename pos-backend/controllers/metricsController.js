@@ -7,10 +7,10 @@ const StockTransaction = require("../models/stockModel");
 exports.getMetrics = async (req, res) => {
   try {
     const { range = "month", category } = req.query;
+
+    // Hitung tanggal awal berdasarkan range
     const now = new Date();
     let startDate;
-
-    // Tentukan awal periode berdasarkan range
     if (range === "day") {
       startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     } else if (range === "week") {
@@ -20,34 +20,41 @@ exports.getMetrics = async (req, res) => {
       startDate = new Date(now.getFullYear(), now.getMonth(), 1);
     }
 
-    // Hitung Pendapatan (PAID Orders)
+    // ==================== METRICS ====================
+
+    // Total Pendapatan (SEMUA order dihitung)
     const totalRevenue = await Order.aggregate([
-      { $match: { orderStatus: "PAID", createdAt: { $gte: startDate } } },
+      { $match: { createdAt: { $gte: startDate } } },
       { $group: { _id: null, total: { $sum: "$bills.totalWithTax" } } },
     ]);
 
-    // Hitung Pengeluaran
+    // Total Pengeluaran
     const totalExpense = await Expense.aggregate([
       { $match: { createdAt: { $gte: startDate } } },
       { $group: { _id: null, total: { $sum: "$amount" } } },
     ]);
 
-    // Hitung Pembelian Bahan
+    // Total Pembelian bahan
     const totalPurchase = await Purchase.aggregate([
       { $match: { createdAt: { $gte: startDate } } },
       { $group: { _id: null, total: { $sum: "$grandTotal" } } },
     ]);
 
-    // Hitung Total Produk
+    // Total Produk
     const totalProducts = await Product.countDocuments();
 
-    // Ambil stok per produk
+    // ==================== STOK PRODUK ====================
+
     const stockQuery = [
       {
         $group: {
           _id: "$product",
-          totalIn: { $sum: { $cond: [{ $eq: ["$type", "IN"] }, "$qtyBase", 0] } },
-          totalOut: { $sum: { $cond: [{ $eq: ["$type", "OUT"] }, "$qtyBase", 0] } },
+          totalIn: {
+            $sum: { $cond: [{ $eq: ["$type", "IN"] }, "$qtyBase", 0] },
+          },
+          totalOut: {
+            $sum: { $cond: [{ $eq: ["$type", "OUT"] }, "$qtyBase", 0] },
+          },
         },
       },
       {
@@ -61,7 +68,7 @@ exports.getMetrics = async (req, res) => {
       { $unwind: "$product" },
     ];
 
-    // Filter berdasarkan kategori kalau ada
+    // Kalau ada filter kategori
     if (category && category !== "all") {
       stockQuery.push({ $match: { "product.category": category } });
     }
@@ -78,13 +85,15 @@ exports.getMetrics = async (req, res) => {
 
     const stockSummary = await StockTransaction.aggregate(stockQuery);
 
-    // Format tanggal untuk chart
-    let groupFormat = "%Y-%m";
-    if (range === "day" || range === "week") groupFormat = "%Y-%m-%d";
+    // ==================== CHART ====================
 
-    // Chart penjualan harian/bulanan
+    // Format tanggal sesuai range
+    const groupFormat =
+      range === "day" || range === "week" ? "%Y-%m-%d" : "%Y-%m";
+
+    // Chart penjualan
     const salesChart = await Order.aggregate([
-      { $match: { orderStatus: "PAID", createdAt: { $gte: startDate } } },
+      { $match: { createdAt: { $gte: startDate } } },
       {
         $group: {
           _id: { $dateToString: { format: groupFormat, date: "$createdAt" } },
@@ -94,9 +103,9 @@ exports.getMetrics = async (req, res) => {
       { $sort: { _id: 1 } },
     ]);
 
-    // Chart Pendapatan vs Pengeluaran
+    // Chart pendapatan
     const incomeChart = await Order.aggregate([
-      { $match: { orderStatus: "PAID", createdAt: { $gte: startDate } } },
+      { $match: { createdAt: { $gte: startDate } } },
       {
         $group: {
           _id: { $dateToString: { format: groupFormat, date: "$createdAt" } },
@@ -106,6 +115,7 @@ exports.getMetrics = async (req, res) => {
       { $sort: { _id: 1 } },
     ]);
 
+    // Chart pengeluaran
     const expenseChart = await Expense.aggregate([
       { $match: { createdAt: { $gte: startDate } } },
       {
@@ -117,7 +127,7 @@ exports.getMetrics = async (req, res) => {
       { $sort: { _id: 1 } },
     ]);
 
-    // Gabungkan income & expense chart
+    // Gabung income & expense jadi 1 chart
     const combinedChart = [];
     const dates = new Set([
       ...incomeChart.map((d) => d._id),
@@ -134,9 +144,10 @@ exports.getMetrics = async (req, res) => {
 
     combinedChart.sort((a, b) => new Date(a.date) - new Date(b.date));
 
-    // Ambil kategori unik produk
+    // Ambil semua kategori produk
     const categories = await Product.distinct("category");
 
+    // ==================== RESPONSE ====================
     res.json({
       success: true,
       data: {
