@@ -55,25 +55,13 @@ export const deleteDishBOM = (id) => api.delete(`/api/dish-bom/${id}`);
 
 
 // Ambil ringkasan data dashboard
-export const getDashboardSummary = async () => {
-  const [orders, purchases, expenses, stock] = await Promise.all([
-    api.get("/api/order"),
-    api.get("/api/purchase"),
-    api.get("/api/expenses"),
-    api.get("/api/stock/summary"),
-  ]);
-
-  return {
-    totalOrders: orders.data?.data?.length || 0,
-    totalPurchases: purchases.data?.data?.length || 0,
-    totalExpenses: expenses.data?.data?.length || 0,
-    totalStockItems: stock.data?.data?.length || 0,
-    orders: orders.data?.data || [],
-    purchases: purchases.data?.data || [],
-    expenses: expenses.data?.data || [],
-    stock: stock.data?.data || [],
-  };
+// Dashboard Metrics API
+export const getDashboardMetrics = async (range = "month") => {
+  const res = await api.get(`/api/metrics?range=${range}`);
+  return res.data.data;
 };
+
+
 
 
 

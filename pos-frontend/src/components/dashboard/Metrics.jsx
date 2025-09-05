@@ -1,77 +1,105 @@
 import React, { useEffect, useState } from "react";
 import api from "../../https/axiosWrapper";
 import {
-  LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer
+  LineChart,
+  Line,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Legend,
+  BarChart,
+  Bar,
+  ResponsiveContainer,
 } from "recharts";
 
 const Metrics = () => {
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [range, setRange] = useState("month");
+  const [category, setCategory] = useState("all");
+
+  const fetchSummary = async (selectedRange = range, selectedCategory = category) => {
+    try {
+      setLoading(true);
+      const res = await api.get(`/api/metrics?range=${selectedRange}&category=${selectedCategory}`);
+      setSummary(res.data.data);
+    } catch (err) {
+      console.error("Gagal ambil data dashboard:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchSummary = async () => {
-      try {
-        const res = await api.get("/api/dashboard");
-        setSummary(res.data.data);
-      } catch (err) {
-        console.error("Gagal ambil data dashboard:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchSummary();
-  }, []);
+  }, [range, category]);
 
-  if (loading) {
+  if (loading || !summary) {
     return <p className="text-center text-gray-500">Loading dashboard...</p>;
   }
 
   return (
     <div className="container mx-auto py-4 px-6">
-      <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-        Dashboard Metrics
-      </h2>
-
-      {/* Metrics Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <div className="bg-blue-600 text-white p-4 rounded-lg">
-          <p className="text-sm">Total Orders</p>
-          <p className="text-2xl font-bold">{summary.totalOrders}</p>
-        </div>
-        <div className="bg-green-600 text-white p-4 rounded-lg">
-          <p className="text-sm">Total Purchases</p>
-          <p className="text-2xl font-bold">{summary.totalPurchases}</p>
-        </div>
-        <div className="bg-red-600 text-white p-4 rounded-lg">
-          <p className="text-sm">Total Expenses</p>
-          <p className="text-2xl font-bold">
-            Rp {summary.totalExpenses.toLocaleString()}
-          </p>
-        </div>
-        <div className="bg-purple-600 text-white p-4 rounded-lg">
-          <p className="text-sm">Stock Items</p>
-          <p className="text-2xl font-bold">{summary.totalStockItems}</p>
+      {/* Filter range */}
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+          Dashboard Metrics
+        </h2>
+        <div className="flex gap-3">
+          <select
+            value={range}
+            onChange={(e) => setRange(e.target.value)}
+            className="border px-3 py-2 rounded-md bg-white dark:bg-gray-800 dark:text-white"
+          >
+            <option value="day">Harian</option>
+            <option value="week">Mingguan</option>
+            <option value="month">Bulanan</option>
+          </select>
+          <select
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            className="border px-3 py-2 rounded-md bg-white dark:bg-gray-800 dark:text-white"
+          >
+            {summary.categories.map((cat) => (
+              <option key={cat} value={cat}>
+                {cat === "all" ? "Semua Kategori" : cat}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 
-      {/* Recharts Example */}
+      {/* Metrics Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        {summary.metricsData.map((item, idx) => (
+          <div
+            key={idx}
+            className="p-4 rounded-lg shadow-lg"
+            style={{ backgroundColor: item.color, color: "white" }}
+          >
+            <p className="text-sm">{item.title}</p>
+            <p className="text-2xl font-bold">
+              {item.unit === "Rp"
+                ? `Rp ${item.value.toLocaleString()}`
+                : `${item.value} ${item.unit}`}
+            </p>
+          </div>
+        ))}
+      </div>
+
+      {/* Grafik Stok Produk */}
       <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
-        <h3 className="text-lg font-semibold mb-4">Grafik Penjualan</h3>
-        <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={summary.salesChart}>
+        <h3 className="text-lg font-semibold mb-4">Stok Produk</h3>
+        <ResponsiveContainer width="100%" height={400}>
+          <BarChart data={summary.stockChart}>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="date" />
+            <XAxis dataKey="product" />
             <YAxis />
             <Tooltip />
             <Legend />
-            <Line
-              type="monotone"
-              dataKey="totalAmount"
-              stroke="#3b82f6"
-              name="Total Penjualan"
-            />
-          </LineChart>
+            <Bar dataKey="stock" fill="#6366f1" name="Jumlah Stok" />
+          </BarChart>
         </ResponsiveContainer>
       </div>
     </div>

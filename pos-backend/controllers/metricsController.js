@@ -6,27 +6,43 @@ const StockTransaction = require("../models/stockModel");
 
 exports.getMetrics = async (req, res) => {
   try {
-    // Hitung total pendapatan (dari orders)
+    const { range = "month", category } = req.query;
+
+    const now = new Date();
+    let startDate;
+
+    if (range === "day") {
+      startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    } else if (range === "week") {
+      const firstDayOfWeek = now.getDate() - now.getDay();
+      startDate = new Date(now.getFullYear(), now.getMonth(), firstDayOfWeek);
+    } else {
+      startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+    }
+
+    // Pendapatan
     const totalRevenue = await Order.aggregate([
-      { $match: { status: "PAID" } },
+      { $match: { status: "PAID", createdAt: { $gte: startDate } } },
       { $group: { _id: null, total: { $sum: "$totalPrice" } } },
     ]);
 
-    // Hitung total pengeluaran
+    // Pengeluaran
     const totalExpense = await Expense.aggregate([
+      { $match: { createdAt: { $gte: startDate } } },
       { $group: { _id: null, total: { $sum: "$amount" } } },
     ]);
 
-    // Hitung total pembelian bahan
+    // Pembelian bahan
     const totalPurchase = await Purchase.aggregate([
+      { $match: { createdAt: { $gte: startDate } } },
       { $group: { _id: null, total: { $sum: "$total" } } },
     ]);
 
-    // Hitung total produk
+    // Total produk
     const totalProducts = await Product.countDocuments();
 
-    // Ambil stok per produk
-    const stockSummary = await StockTransaction.aggregate([
+    // Ambil stok per produk (filter kategori kalau ada)
+    const stockQuery = [
       {
         $group: {
           _id: "$product",
@@ -43,74 +59,141 @@ exports.getMetrics = async (req, res) => {
         },
       },
       { $unwind: "$product" },
-      {
-        $project: {
-          productId: "$_id",
-          productName: "$product.name",
-          balance: { $subtract: ["$totalIn", "$totalOut"] },
-          unit: "$product.baseUnit",
-        },
-      },
-    ]);
+    ];
 
-    // Ambil data chart: total penjualan per bulan
-    const chartData = await Order.aggregate([
+    // Kalau ada kategori, filter di sini
+    if (category && category !== "all") {
+      stockQuery.push({
+        $match: { "product.category": category },
+      });
+    }
+
+    stockQuery.push({
+      $project: {
+        productId: "$_id",
+        productName: "$product.name",
+        balance: { $subtract: ["$totalIn", "$totalOut"] },
+        unit: "$product.baseUnit",
+        category: "$product.category",
+      },
+    });
+
+    const stockSummary = await StockTransaction.aggregate(stockQuery);
+
+    // Format tanggal
+    let groupFormat;
+    if (range === "day") groupFormat = "%Y-%m-%d";
+    else if (range === "week") groupFormat = "%Y-%m-%d";
+    else groupFormat = "%Y-%m";
+
+    // Chart penjualan
+    const salesChart = await Order.aggregate([
+      { $match: { status: "PAID", createdAt: { $gte: startDate } } },
       {
         $group: {
-          _id: { $substr: ["$createdAt", 0, 7] }, // contoh: 2025-09
-          value: { $sum: "$totalPrice" },
+          _id: { $dateToString: { format: groupFormat, date: "$createdAt" } },
+          total: { $sum: "$totalPrice" },
         },
       },
       { $sort: { _id: 1 } },
     ]);
 
+    // Chart pendapatan vs pengeluaran
+    const incomeChart = await Order.aggregate([
+      { $match: { status: "PAID", createdAt: { $gte: startDate } } },
+      {
+        $group: {
+          _id: { $dateToString: { format: groupFormat, date: "$createdAt" } },
+          totalIncome: { $sum: "$totalPrice" },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]);
+
+    const expenseChart = await Expense.aggregate([
+      { $match: { createdAt: { $gte: startDate } } },
+      {
+        $group: {
+          _id: { $dateToString: { format: groupFormat, date: "$createdAt" } },
+          totalExpense: { $sum: "$amount" },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]);
+
+    const combinedChart = [];
+    const dates = new Set([
+      ...incomeChart.map((d) => d._id),
+      ...expenseChart.map((d) => d._id),
+    ]);
+
+    dates.forEach((date) => {
+      combinedChart.push({
+        date,
+        income: incomeChart.find((i) => i._id === date)?.totalIncome || 0,
+        expense: expenseChart.find((e) => e._id === date)?.totalExpense || 0,
+      });
+    });
+
+    combinedChart.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    // Ambil kategori unik untuk dropdown filter
+    const categories = await Product.distinct("category");
+
     res.json({
       success: true,
-      metricsData: [
-        {
-          title: "Pendapatan",
-          value: totalRevenue[0]?.total || 0,
-          percentage: "+12%",
-          isIncrease: true,
-          color: "#4f46e5",
-          unit: "Rp",
-        },
-        {
-          title: "Pengeluaran",
-          value: totalExpense[0]?.total || 0,
-          percentage: "-4%",
-          isIncrease: false,
-          color: "#dc2626",
-          unit: "Rp",
-        },
-        {
-          title: "Pembelian Bahan",
-          value: totalPurchase[0]?.total || 0,
-          percentage: "+8%",
-          isIncrease: true,
-          color: "#059669",
-          unit: "Rp",
-        },
-        {
-          title: "Total Produk",
-          value: totalProducts,
-          percentage: "+5%",
-          isIncrease: true,
-          color: "#f59e0b",
-          unit: "Item",
-        },
-      ],
-      itemsData: stockSummary.map((item) => ({
-        title: item.productName,
-        value: item.balance,
-        percentage: "+0%",
-        color: "#4f46e5",
-        unit: "pcs",
-      })),
-      chartData: chartData.map((c) => ({
-        month: c._id,
-        value: c.value,
-      })),
+      data: {
+        metricsData: [
+          {
+            title: "Pendapatan",
+            value: totalRevenue[0]?.total || 0,
+            percentage: "+12%",
+            isIncrease: true,
+            color: "#4f46e5",
+            unit: "Rp",
+          },
+          {
+            title: "Pengeluaran",
+            value: totalExpense[0]?.total || 0,
+            percentage: "-4%",
+            isIncrease: false,
+            color: "#dc2626",
+            unit: "Rp",
+          },
+          {
+            title: "Pembelian Bahan",
+            value: totalPurchase[0]?.total || 0,
+            percentage: "+8%",
+            isIncrease: true,
+            color: "#059669",
+            unit: "Rp",
+          },
+          {
+            title: "Total Produk",
+            value: totalProducts,
+            percentage: "+5%",
+            isIncrease: true,
+            color: "#f59e0b",
+            unit: "Item",
+          },
+        ],
+        itemsData: stockSummary.map((item) => ({
+          title: item.productName,
+          value: item.balance,
+          unit: item.unit,
+        })),
+        salesChart: salesChart.map((c) => ({
+          date: c._id,
+          totalAmount: c.total,
+        })),
+        incomeExpenseChart: combinedChart,
+        stockChart: stockSummary.map((item) => ({
+          product: item.productName,
+          stock: item.balance,
+          category: item.category,
+        })),
+        categories: ["all", ...categories],
+      },
     });
   } catch (error) {
     console.error("🔥 getMetrics Error:", error);
