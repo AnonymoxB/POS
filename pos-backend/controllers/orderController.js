@@ -69,16 +69,23 @@ const addOrder = async (req, res, next) => {
 
         if (!product) throw createHttpError(404, `Product tidak ditemukan untuk BOM ${bom._id}`);
         if (!product.defaultUnit) throw createHttpError(400, `Produk ${product.name} belum punya default unit`);
+        
 
+        console.log("DEBUG:", {
+          totalBomQty,
+          bomUnit: bom.unit?.short,
+          defaultUnit: product.defaultUnit?.short,
+          density: product.density
+        });
         // 🔹 Konversi qty BOM → unit default product (support density)
         let qtyBase;
-        try {
-          qtyBase = await convertQty(totalBomQty, bom.unit._id, product.defaultUnit._id, product);
-          console.log(`[CONVERT OK] ${totalBomQty} ${bom.unit?.short} -> ${qtyBase} ${product.defaultUnit?.short}`);
-        } catch (err) {
-          console.error(`[CONVERT FAIL] Product: ${product.name}, BOM Unit: ${bom.unit?.short}, Default: ${product.defaultUnit?.short}`);
-          throw err;
-        }
+          try {
+            qtyBase = await convertQty(totalBomQty, bom.unit._id, product.defaultUnit._id, product);
+            console.log(`[CONVERT OK] ${totalBomQty} ${bom.unit?.short} -> ${qtyBase} ${product.defaultUnit?.short}`);
+          } catch (err) {
+            console.error(`[CONVERT FAIL] Product: ${product.name}, BOM Unit: ${bom.unit?.short}, Default: ${product.defaultUnit?.short}`);
+            throw err;
+          }
 
         if (qtyBase <= 0) {
           throw createHttpError(400, `Konversi unit invalid untuk produk ${product.name}`);

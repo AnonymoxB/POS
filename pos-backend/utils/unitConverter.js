@@ -8,7 +8,7 @@ async function convertQty(qty, fromUnitId, toUnitId, product = null) {
 
   if (!fromUnit || !toUnit) throw new Error("Unit tidak ditemukan");
 
-  // Ubah ke base unit teratas
+  // 1️⃣ Naik ke base root dari unit asal
   let baseQty = qty;
   let current = fromUnit;
   while (current.baseUnit) {
@@ -17,8 +17,7 @@ async function convertQty(qty, fromUnitId, toUnitId, product = null) {
   }
   const fromRoot = current;
 
-  // Ubah dari base root ke unit tujuan
-  let resultQty = baseQty;
+  // 2️⃣ Naik ke base root unit tujuan
   current = toUnit;
   const stack = [];
   while (current.baseUnit) {
@@ -27,21 +26,30 @@ async function convertQty(qty, fromUnitId, toUnitId, product = null) {
   }
   const toRoot = current;
 
+  // 3️⃣ Unit compatible → konversi normal
   if (fromRoot._id.toString() === toRoot._id.toString()) {
-    // Unit compatible → konversi normal (tanpa density)
+    while (stack.length) {
+      const u = stack.pop();
+      baseQty = baseQty / u.conversion;
+    }
+    return baseQty;
+  }
+
+  // 4️⃣ Unit beda root → pakai density kalau ada
+  if (product?.density) {
+    // contoh ML → Gram: qty * density
+    let resultQty = baseQty * product.density;
+
+    // Kalau unit tujuan ada konversi, lakukan konversi ke unit tujuan
     while (stack.length) {
       const u = stack.pop();
       resultQty = resultQty / u.conversion;
     }
+
     return resultQty;
   }
 
-  // Unit beda root → gunakan density jika tersedia
-  if (product?.density) {
-    return qty * product.density;
-  }
-
-  throw new Error("Unit tidak kompatibel (beda root)");
+  throw new Error("Unit tidak kompatibel (beda root dan density tidak tersedia)");
 }
 
 module.exports = { convertQty };
