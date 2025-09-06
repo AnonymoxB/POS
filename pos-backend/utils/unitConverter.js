@@ -8,7 +8,7 @@ async function convertQty(qty, fromUnitId, toUnitId, product = null) {
 
   if (!fromUnit || !toUnit) throw new Error("Unit tidak ditemukan");
 
-  // Konversi ke base unit teratas
+  // Ubah ke base unit teratas
   let baseQty = qty;
   let current = fromUnit;
   while (current.baseUnit) {
@@ -17,7 +17,8 @@ async function convertQty(qty, fromUnitId, toUnitId, product = null) {
   }
   const fromRoot = current;
 
-  // Base root tujuan
+  // Ubah dari base root ke unit tujuan
+  let resultQty = baseQty;
   current = toUnit;
   const stack = [];
   while (current.baseUnit) {
@@ -26,9 +27,8 @@ async function convertQty(qty, fromUnitId, toUnitId, product = null) {
   }
   const toRoot = current;
 
-  // Jika root sama, konversi normal
   if (fromRoot._id.toString() === toRoot._id.toString()) {
-    let resultQty = baseQty;
+    // Unit compatible → konversi normal (tanpa density)
     while (stack.length) {
       const u = stack.pop();
       resultQty = resultQty / u.conversion;
@@ -36,9 +36,8 @@ async function convertQty(qty, fromUnitId, toUnitId, product = null) {
     return resultQty;
   }
 
-  // Jika beda root, pakai density jika tersedia
+  // Unit beda root → gunakan density jika tersedia
   if (product?.density) {
-    // qty dalam BOM unit → gram (atau base product unit)
     return qty * product.density;
   }
 
