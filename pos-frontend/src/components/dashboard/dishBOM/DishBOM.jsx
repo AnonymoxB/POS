@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import AddDishBOMModal from "./AddDishBOMModal";
 import EditDishBOMModal from "./EditDishBOMModal";
-import { getDishBOMs, deleteDishBOM, getDishById } from "../../../https";
+import { getDishBOMs, deleteDishBOM } from "../../../https";
 import { useSnackbar } from "notistack";
 
 export default function DishBOM({ dish, open, onClose }) {
@@ -11,7 +11,6 @@ export default function DishBOM({ dish, open, onClose }) {
   const [addOpen, setAddOpen] = useState(false);
   const [editItem, setEditItem] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
-  const [currentDish, setCurrentDish] = useState(dish);
   const { enqueueSnackbar } = useSnackbar();
 
   const formatRupiah = (num) =>
@@ -21,28 +20,23 @@ export default function DishBOM({ dish, open, onClose }) {
       minimumFractionDigits: 0,
     }).format(num || 0);
 
-  // Load BOM + update HPP Hot/Ice
   const loadBOM = useCallback(async () => {
-    if (!currentDish?._id) return;
+    if (!dish?._id) return;
     setLoading(true);
     try {
-      const res = await getDishBOMs(currentDish._id);
-      setBOM(res.data || []);
-
-      // Fetch dish terbaru untuk HPP Hot/Ice
-      const dishRes = await getDishById(currentDish._id);
-      setCurrentDish(dishRes.data || currentDish);
+      const res = await getDishBOMs(dish._id);
+      setBOM(res.data?.data || []);
     } catch (err) {
       console.error("Gagal load BOM:", err);
       setBOM([]);
     } finally {
       setLoading(false);
     }
-  }, [currentDish?._id]);
+  }, [dish?._id]);
 
   useEffect(() => {
-    if (open && currentDish?._id) loadBOM();
-  }, [open, currentDish, loadBOM]);
+    if (open && dish?._id) loadBOM();
+  }, [open, dish, loadBOM]);
 
   const handleDelete = async (id) => {
     setDeletingId(id);
@@ -63,7 +57,7 @@ export default function DishBOM({ dish, open, onClose }) {
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
       <div className="bg-white dark:bg-[#262626] text-gray-900 dark:text-white rounded-lg p-6 w-full max-w-3xl shadow-lg">
-        <h2 className="text-lg font-bold mb-4">BOM untuk {currentDish?.name}</h2>
+        <h2 className="text-lg font-bold mb-4">BOM untuk {dish?.name}</h2>
 
         {/* Table */}
         <div className="overflow-x-auto rounded border border-gray-300 dark:border-gray-700 mb-4">
@@ -90,16 +84,12 @@ export default function DishBOM({ dish, open, onClose }) {
                   <tr
                     key={item._id}
                     className={`${
-                      idx % 2 === 0
-                        ? "bg-gray-50 dark:bg-[#2e2e2e]"
-                        : "bg-white dark:bg-[#262626]"
+                      idx % 2 === 0 ? "bg-gray-50 dark:bg-[#2e2e2e]" : "bg-white dark:bg-[#262626]"
                     } border-t border-gray-200 dark:border-gray-700`}
                   >
                     <td className="px-3 py-2">{item.product?.name || "-"}</td>
                     <td className="px-3 py-2 text-right">{item.qty}</td>
-                    <td className="px-3 py-2">
-                      {item.unit?.short || item.unit?.name || "-"}
-                    </td>
+                    <td className="px-3 py-2">{item.unit?.short || item.unit?.name || "-"}</td>
                     <td className="px-3 py-2 capitalize">{item.variant || "-"}</td>
                     <td className="px-3 py-2 text-right text-green-600 dark:text-green-400">
                       {formatRupiah(item.hpp || 0)}
@@ -134,58 +124,34 @@ export default function DishBOM({ dish, open, onClose }) {
           </table>
         </div>
 
-        {/* Footer HPP */}
+        {/* Footer HPP dari backend */}
         <div className="bg-gray-100 dark:bg-[#333] rounded p-3 mb-4">
           <p className="font-semibold">
             HPP Hot:{" "}
-            <span className="text-green-600 dark:text-green-400">
-              {formatRupiah(currentDish.hpp?.hpphot || 0)}
-            </span>
+            <span className="text-green-600 dark:text-green-400">{formatRupiah(dish.hpp?.hpphot || 0)}</span>
           </p>
           <p className="font-semibold">
             HPP Ice:{" "}
-            <span className="text-green-600 dark:text-green-400">
-              {formatRupiah(currentDish.hpp?.hppice || 0)}
-            </span>
+            <span className="text-green-600 dark:text-green-400">{formatRupiah(dish.hpp?.hppice || 0)}</span>
           </p>
         </div>
 
         {/* Buttons */}
         <div className="flex justify-between">
-          <Button
-            className="bg-green-600 hover:bg-green-700 text-white"
-            onClick={() => setAddOpen(true)}
-          >
+          <Button className="bg-green-600 hover:bg-green-700 text-white" onClick={() => setAddOpen(true)}>
             Tambah Bahan
           </Button>
-          <Button
-            className="bg-gray-600 hover:bg-gray-700 text-white"
-            onClick={() => onClose(false)}
-          >
+          <Button className="bg-gray-600 hover:bg-gray-700 text-white" onClick={() => onClose(false)}>
             Tutup
           </Button>
         </div>
       </div>
 
       {/* Modal Tambah */}
-      <AddDishBOMModal
-        dish={currentDish}
-        isOpen={addOpen}
-        onClose={() => {
-          setAddOpen(false);
-          loadBOM();
-        }}
-      />
+      <AddDishBOMModal dish={dish} isOpen={addOpen} onClose={() => { setAddOpen(false); loadBOM(); }} />
 
       {/* Modal Edit */}
-      <EditDishBOMModal
-        item={editItem}
-        isOpen={!!editItem}
-        onClose={() => {
-          setEditItem(null);
-          loadBOM();
-        }}
-      />
+      <EditDishBOMModal item={editItem} isOpen={!!editItem} onClose={() => { setEditItem(null); loadBOM(); }} />
     </div>
   );
 }

@@ -44,6 +44,8 @@ export const getDishes = async () => {
   console.log("Respon dari /api/dish:", res.data);
   return res.data?.data || [];
 };
+
+
 export const updateDish = (id, dishData) => api.put(`/api/dish/${id}`, dishData);
 export const deleteDish = (id) => api.delete(`/api/dish/${id}`);
 

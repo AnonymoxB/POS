@@ -65,7 +65,7 @@ exports.getBOMByDish = async (req, res) => {
       return {
         ...item.toObject(),
         hpp: productHPP * qtyBase,
-        qty: item.qtyBase, 
+        // qty: item.qtyBase, 
       };
     });
 
