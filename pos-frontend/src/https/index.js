@@ -48,10 +48,10 @@ export const updateDish = (id, dishData) => api.put(`/api/dish/${id}`, dishData)
 export const deleteDish = (id) => api.delete(`/api/dish/${id}`);
 
 // Dish BOM Endpoints
-export const getDishBOMs = (dishId) => api.get(`/api/dish-bom/${dishId}`);
-export const addDishBOM = (dishId, data) => api.post(`/api/dish-bom/${dishId}`, data);
-export const updateDishBOM = (id, data) => api.put(`/api/dish-bom/${id}`, data);
-export const deleteDishBOM = (id) => api.delete(`/api/dish-bom/${id}`);
+export const getDishBOMs = (dishId) => api.get(`/api/bom/${dishId}`);
+export const addDishBOM = (dishId, data) => api.post(`/api/bom/${dishId}`, data);
+export const updateDishBOM = (id, data) => api.put(`/api/bom/${id}`, data);
+export const deleteDishBOM = (id) => api.delete(`/api/bom/${id}`);
 
 
 // Ambil ringkasan data dashboard
