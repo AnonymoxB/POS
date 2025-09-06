@@ -19,6 +19,7 @@ async function getBaseUnitAndQty(unitId, qty) {
   );
 }
 
+
 const dishBOMSchema = new mongoose.Schema(
   {
     dish: { type: mongoose.Schema.Types.ObjectId, ref: "Dish", required: true },
@@ -52,12 +53,22 @@ dishBOMSchema.pre("save", async function (next) {
 dishBOMSchema.pre("findOneAndUpdate", async function (next) {
   try {
     const update = this.getUpdate();
-    if (update.qty && update.unit) {
-      const { qtyBase, unitBase } = await getBaseUnitAndQty(update.unit, update.qty);
+    if (!update) return next();
+
+    // ambil dokumen lama
+    const docToUpdate = await this.model.findOne(this.getQuery());
+
+    // pakai nilai baru kalau ada, kalau tidak pakai nilai lama
+    const qty = update.qty ?? docToUpdate.qty;
+    const unit = update.unit ?? docToUpdate.unit;
+
+    if (qty && unit) {
+      const { qtyBase, unitBase } = await getBaseUnitAndQty(unit, qty);
       update.qtyBase = qtyBase;
       update.unitBase = unitBase;
       this.setUpdate(update);
     }
+
     next();
   } catch (err) {
     next(err);

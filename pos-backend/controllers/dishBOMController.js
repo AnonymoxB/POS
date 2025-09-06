@@ -58,12 +58,24 @@ exports.getBOMByDish = async (req, res) => {
       .populate("unit", "name short")
       .populate("unitBase", "name short");
 
-    res.json({ success: true, data: items });
+    // 🔹 hitung HPP per item = product.hpp * qtyBase
+    const itemsWithHPP = items.map((item) => {
+      const productHPP = Number(item.product?.hpp) || 0;
+      const qtyBase = Number(item.qtyBase) || 0;
+      return {
+        ...item.toObject(),
+        hpp: productHPP * qtyBase,
+        qty: item.qtyBase, // biar FE bisa pakai "qty"
+      };
+    });
+
+    res.json({ success: true, data: itemsWithHPP });
   } catch (err) {
     console.error("🔥 getBOMByDish Error:", err);
     res.status(500).json({ success: false, message: err.message });
   }
 };
+
 
 // Update item BOM
 exports.updateBOMItem = async (req, res) => {
