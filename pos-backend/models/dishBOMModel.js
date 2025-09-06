@@ -1,8 +1,10 @@
 const mongoose = require("mongoose");
 const Unit = require("./unitModel");
 
-// 🔁 fungsi rekursif untuk dapatkan base unit dan qty
+// 🔁 Fungsi rekursif untuk dapatkan base unit & qty
 async function getBaseUnitAndQty(unitId, qty) {
+  if (!unitId) return { unitBase: null, qtyBase: qty };
+
   const unitDoc = await Unit.findById(unitId);
   if (!unitDoc) return { unitBase: unitId, qtyBase: qty };
 
@@ -19,7 +21,6 @@ async function getBaseUnitAndQty(unitId, qty) {
   );
 }
 
-
 const dishBOMSchema = new mongoose.Schema(
   {
     dish: { type: mongoose.Schema.Types.ObjectId, ref: "Dish", required: true },
@@ -35,13 +36,13 @@ const dishBOMSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// 🪝 Middleware: sebelum save → hitung qtyBase & unitBase
+// 🪝 Pre Save → Hitung qtyBase & unitBase
 dishBOMSchema.pre("save", async function (next) {
   try {
     if (this.qty && this.unit) {
       const { qtyBase, unitBase } = await getBaseUnitAndQty(this.unit, this.qty);
-      this.qtyBase = qtyBase;
-      this.unitBase = unitBase;
+      this.qtyBase = qtyBase ?? 0;
+      this.unitBase = unitBase ?? null;
     }
     next();
   } catch (err) {
@@ -49,24 +50,32 @@ dishBOMSchema.pre("save", async function (next) {
   }
 });
 
-// 🪝 Middleware: sebelum update → hitung qtyBase & unitBase
+// 🪝 Pre Update → Hitung qtyBase & unitBase
 dishBOMSchema.pre("findOneAndUpdate", async function (next) {
   try {
-    const update = this.getUpdate();
-    if (!update) return next();
+    const rawUpdate = this.getUpdate();
+    if (!rawUpdate) return next();
 
-    // ambil dokumen lama
+    const update = rawUpdate.$set || rawUpdate;
+
+    // Ambil data lama untuk fallback
     const docToUpdate = await this.model.findOne(this.getQuery());
+    if (!docToUpdate) return next();
 
-    // pakai nilai baru kalau ada, kalau tidak pakai nilai lama
     const qty = update.qty ?? docToUpdate.qty;
     const unit = update.unit ?? docToUpdate.unit;
 
     if (qty && unit) {
       const { qtyBase, unitBase } = await getBaseUnitAndQty(unit, qty);
-      update.qtyBase = qtyBase;
-      update.unitBase = unitBase;
-      this.setUpdate(update);
+      update.qtyBase = qtyBase ?? 0;
+      update.unitBase = unitBase ?? null;
+
+      if (rawUpdate.$set) {
+        rawUpdate.$set = update;
+        this.setUpdate(rawUpdate);
+      } else {
+        this.setUpdate(update);
+      }
     }
 
     next();
@@ -76,3 +85,4 @@ dishBOMSchema.pre("findOneAndUpdate", async function (next) {
 });
 
 module.exports = mongoose.model("DishBOM", dishBOMSchema);
+  

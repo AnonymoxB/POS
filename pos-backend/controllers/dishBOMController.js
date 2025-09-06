@@ -1,8 +1,7 @@
-// controllers/dishBOMController.js
 const DishBOM = require("../models/dishBOMModel");
 const Dish = require("../models/dishesModel");
 
-// Hitung HPP dish dari qtyBase (sudah dihitung otomatis oleh schema)
+// Hitung ulang HPP
 const calculateDishHPP = async (dishId) => {
   const bomItems = await DishBOM.find({ dish: dishId }).populate("product");
 
@@ -25,7 +24,7 @@ const calculateDishHPP = async (dishId) => {
   );
 };
 
-// Tambah BOM item
+// ➕ Tambah BOM
 exports.addBOMItem = async (req, res) => {
   try {
     const { product, qty, unit, variant } = req.body;
@@ -37,9 +36,14 @@ exports.addBOMItem = async (req, res) => {
         .json({ success: false, message: "All fields are required" });
     }
 
-    const newItem = await DishBOM.create({ dish: dishId, product, qty, unit, variant });
+    const newItem = await DishBOM.create({
+      dish: dishId,
+      product,
+      qty,
+      unit,
+      variant,
+    });
 
-    // Recalc HPP setelah create
     await calculateDishHPP(dishId);
 
     res.status(201).json({ success: true, data: newItem });
@@ -49,7 +53,7 @@ exports.addBOMItem = async (req, res) => {
   }
 };
 
-// Ambil semua BOM untuk dish
+// 📦 Ambil semua BOM per dish
 exports.getBOMByDish = async (req, res) => {
   try {
     const { dishId } = req.params;
@@ -58,14 +62,13 @@ exports.getBOMByDish = async (req, res) => {
       .populate("unit", "name short")
       .populate("unitBase", "name short");
 
-    // 🔹 hitung HPP per item = product.hpp * qtyBase
     const itemsWithHPP = items.map((item) => {
       const productHPP = Number(item.product?.hpp) || 0;
       const qtyBase = Number(item.qtyBase) || 0;
       return {
         ...item.toObject(),
         hpp: productHPP * qtyBase,
-        qty: item.qtyBase, // biar FE bisa pakai "qty"
+        qty: item.qtyBase,
       };
     });
 
@@ -76,8 +79,7 @@ exports.getBOMByDish = async (req, res) => {
   }
 };
 
-
-// Update item BOM
+// ✏️ Update BOM
 exports.updateBOMItem = async (req, res) => {
   try {
     const { id } = req.params;
@@ -87,10 +89,11 @@ exports.updateBOMItem = async (req, res) => {
       runValidators: true,
     });
     if (!updated) {
-      return res.status(404).json({ success: false, message: "BOM item not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "BOM item not found" });
     }
 
-    // Recalc HPP setelah update
     await calculateDishHPP(updated.dish);
 
     res.json({ success: true, data: updated });
@@ -100,16 +103,17 @@ exports.updateBOMItem = async (req, res) => {
   }
 };
 
-// Hapus item BOM
+// 🗑️ Hapus BOM
 exports.deleteBOMItem = async (req, res) => {
   try {
     const { id } = req.params;
     const deleted = await DishBOM.findByIdAndDelete(id);
     if (!deleted) {
-      return res.status(404).json({ success: false, message: "BOM item not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "BOM item not found" });
     }
 
-    // Recalc HPP setelah delete
     await calculateDishHPP(deleted.dish);
 
     res.json({ success: true, message: "BOM item deleted" });
