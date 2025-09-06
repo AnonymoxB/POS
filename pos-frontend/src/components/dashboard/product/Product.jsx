@@ -139,6 +139,8 @@ const Product = () => {
                   <th className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-center">Unit</th>
                   <th className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-right">HPP</th>
                   <th className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-right">Harga</th>
+                  <th className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-right">Harga B Terakhir</th>
+                  <th className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-right">Density</th>
                   <th className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-center">Aksi</th>
                 </tr>
               </thead>
@@ -165,6 +167,12 @@ const Product = () => {
                     </td>
                     <td className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-right">
                       Rp {p.price?.toLocaleString("id-ID")}
+                    </td>
+                    <td className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-right">
+                      Rp {p.lastPurchasePrice?.toLocaleString("id-ID")}
+                    </td>
+                    <td className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-right">
+                      {p.density ?? "-"}
                     </td>
                     <td className="p-3 flex gap-2 justify-center">
                       <button

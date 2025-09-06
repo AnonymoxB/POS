@@ -11,6 +11,7 @@ const EditProductModal = ({ isOpen, onClose, product }) => {
     category: "",
     defaultUnit: "",
     price: 0,
+    density:"",
   });
 
   useEffect(() => {
@@ -20,6 +21,7 @@ const EditProductModal = ({ isOpen, onClose, product }) => {
         category: product?.category?._id || product?.category || "",
         defaultUnit: product?.defaultUnit?._id || product?.defaultUnit || "",
         price: product?.price || 0,
+        density: product?.density ?? "",
       });
     }
   }, [product]);
@@ -118,6 +120,14 @@ const EditProductModal = ({ isOpen, onClose, product }) => {
             value={form.price}
             onChange={(e) => setForm({ ...form, price: e.target.value })}
             required
+          />
+          <input
+            type="number"
+            step="0.01"
+            placeholder="Density (g/ml, opsional)"
+            className="p-2 rounded bg-gray-100 dark:bg-[#333] text-gray-900 dark:text-white"
+            value={form.density}
+            onChange={(e) => setForm({ ...form, density: e.target.value })}
           />
 
           <div className="flex justify-end gap-2 mt-2">
