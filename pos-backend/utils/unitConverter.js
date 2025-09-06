@@ -1,6 +1,6 @@
 const Unit = require("../models/unitModel");
 
-async function convertQty(qty, fromUnitId, toUnitId) {
+async function convertQty(qty, fromUnitId, toUnitId, product = null) {
   if (fromUnitId.toString() === toUnitId.toString()) return qty;
 
   const fromUnit = await Unit.findById(fromUnitId);
@@ -8,7 +8,7 @@ async function convertQty(qty, fromUnitId, toUnitId) {
 
   if (!fromUnit || !toUnit) throw new Error("Unit tidak ditemukan");
 
-  // Ubah ke base unit teratas (misalnya Liter)
+  // Ubah ke base unit teratas (misal Liter atau Gram)
   let baseQty = qty;
   let current = fromUnit;
   while (current.baseUnit) {
@@ -27,18 +27,21 @@ async function convertQty(qty, fromUnitId, toUnitId) {
   }
   const toRoot = current;
 
-  // Pastikan base root sama (misal L dan ML masih satu hirarki)
-  if (fromRoot._id.toString() !== toRoot._id.toString()) {
-    throw new Error("Unit tidak kompatibel (beda root)");
+  // Base root sama → konversi normal
+  if (fromRoot._id.toString() === toRoot._id.toString()) {
+    while (stack.length) {
+      const u = stack.pop();
+      resultQty = resultQty / u.conversion;
+    }
+    return resultQty;
   }
 
-  // Konversi ke tujuan
-  while (stack.length) {
-    const u = stack.pop();
-    resultQty = resultQty / u.conversion;
+  // Base root berbeda → pakai density jika tersedia
+  if (product?.density) {
+    return qty * product.density;
   }
 
-  return resultQty;
+  throw new Error("Unit tidak kompatibel (beda root)");
 }
 
 module.exports = { convertQty };

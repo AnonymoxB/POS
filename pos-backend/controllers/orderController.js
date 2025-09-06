@@ -20,9 +20,7 @@ const addOrder = async (req, res, next) => {
       throw createHttpError(400, "Items tidak boleh kosong.");
     }
 
-    /**
-     * 🔹 Detailkan item order
-     */
+    // 🔹 Detailkan item order
     const detailedItems = await Promise.all(
       items.map(async (item) => {
         if (!item.dishId || !mongoose.Types.ObjectId.isValid(item.dishId)) {
@@ -48,9 +46,7 @@ const addOrder = async (req, res, next) => {
       })
     );
 
-    /**
-     * 🔹 Simpan order utama
-     */
+    // 🔹 Simpan order utama
     const order = new Order({
       ...rest,
       orderId,
@@ -58,13 +54,12 @@ const addOrder = async (req, res, next) => {
     });
     await order.save({ session });
 
-    /**
-     * 🔹 Update stok berdasarkan BOM
-     */
+    // 🔹 Update stok berdasarkan BOM
     for (const item of detailedItems) {
       const bomList = await DishBOM.find({ 
         dish: item.dishId,
-        variant: item.variant, })
+        variant: item.variant,
+      })
         .populate({ path: "product", populate: "defaultUnit" })
         .populate("unit");
 
@@ -72,24 +67,16 @@ const addOrder = async (req, res, next) => {
         const totalBomQty = bom.qty * item.qty;
         const product = bom.product;
 
-        if (!product) {
-          throw createHttpError(404, `Product tidak ditemukan untuk BOM ${bom._id}`);
-        }
-        if (!product.defaultUnit) {
-          throw createHttpError(400, `Produk ${product.name} belum punya default unit`);
-        }
+        if (!product) throw createHttpError(404, `Product tidak ditemukan untuk BOM ${bom._id}`);
+        if (!product.defaultUnit) throw createHttpError(400, `Produk ${product.name} belum punya default unit`);
 
-        // konversi qty BOM → unit default product
+        // 🔹 Konversi qty BOM → unit default product (support density)
         let qtyBase;
         try {
-          qtyBase = await convertQty(totalBomQty, bom.unit._id, product.defaultUnit._id);
-          console.log(
-            `[CONVERT OK] ${totalBomQty} ${bom.unit?.short} -> ${qtyBase} ${product.defaultUnit?.short}`
-          );
+          qtyBase = await convertQty(totalBomQty, bom.unit._id, product.defaultUnit._id, product);
+          console.log(`[CONVERT OK] ${totalBomQty} ${bom.unit?.short} -> ${qtyBase} ${product.defaultUnit?.short}`);
         } catch (err) {
-          console.error(
-            `[CONVERT FAIL] Product: ${product.name}, BOM Unit: ${bom.unit?.short}, Default: ${product.defaultUnit?.short}`
-          );
+          console.error(`[CONVERT FAIL] Product: ${product.name}, BOM Unit: ${bom.unit?.short}, Default: ${product.defaultUnit?.short}`);
           throw err;
         }
 
@@ -97,15 +84,11 @@ const addOrder = async (req, res, next) => {
           throw createHttpError(400, `Konversi unit invalid untuk produk ${product.name}`);
         }
 
-        console.log(
-          `[STOCK] ${product.name}: ${totalBomQty} ${bom.unit.short} → ${qtyBase} ${product.defaultUnit.short}`
-        );
+        console.log(`[STOCK] ${product.name}: ${totalBomQty} ${bom.unit.short} → ${qtyBase} ${product.defaultUnit.short}`);
 
         // 🔒 Ambil ulang product dengan session (biar tidak race condition)
         const productDoc = await Product.findById(product._id).session(session);
-        if (!productDoc) {
-          throw createHttpError(404, `Produk ${product.name} tidak ditemukan`);
-        }
+        if (!productDoc) throw createHttpError(404, `Produk ${product.name} tidak ditemukan`);
 
         // cek stok cukup dulu
         if (productDoc.stockBase < qtyBase) {
@@ -125,9 +108,9 @@ const addOrder = async (req, res, next) => {
             {
               product: product._id,
               type: "OUT",
-              qty: totalBomQty, // jumlah sesuai BOM
-              unit: bom.unit._id, // unit dari BOM
-              qtyBase, // konversi ke unit dasar
+              qty: totalBomQty,
+              unit: bom.unit._id,
+              qtyBase,
               unitBase: product.defaultUnit._id,
               note: `Dipakai untuk order ${order.orderId}`,
               relatedOrder: order._id,
@@ -139,12 +122,8 @@ const addOrder = async (req, res, next) => {
       }
     }
 
-
-    /**
-     * 🔹 Simpan payment
-     */
-    await savePaymentFromOrder(order, req.user && req.user._id ? req.user._id.toString() : null);
-
+    // 🔹 Simpan payment
+    await savePaymentFromOrder(order, req.user?._id?.toString() || null);
 
     await session.commitTransaction();
     session.endSession();
@@ -161,6 +140,7 @@ const addOrder = async (req, res, next) => {
     return next(error);
   }
 };
+
 
 
 
