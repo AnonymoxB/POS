@@ -82,6 +82,36 @@ const getDishHPP = async (req, res) => {
   }
 };
 
+// GET dish by id (termasuk BOM + product + unit)
+const getDishById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    
+    const dish = await Dish.findById(id).populate("category", "name");
+    if (!dish) {
+      return res.status(404).json({ success: false, message: "Dish tidak ditemukan" });
+    }
+
+    
+    const bom = await DishBOM.find({ dish: id })
+      .populate({
+        path: "product",
+        select: "name price defaultUnit",
+        populate: { path: "defaultUnit", select: "name short" },
+      })
+      .populate("unit", "name short");
+
+    return res.json({
+      success: true,
+      data: { ...dish.toObject(), bom },
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+
 
 
 
@@ -91,4 +121,5 @@ module.exports = {
   updateDish,
   deleteDish,
   getDishHPP,
+  getDishById,
 };

@@ -1,6 +1,6 @@
 // src/hooks/useDish.js
 import { useState, useEffect, useCallback } from "react";
-import { getDishById } from "../https";
+import { getDishById } from "../https/index";
 
 export function useDish(dishId) {
   const [dish, setDish] = useState(null);
