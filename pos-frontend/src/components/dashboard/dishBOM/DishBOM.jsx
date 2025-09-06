@@ -5,6 +5,7 @@ import EditDishBOMModal from "./EditDishBOMModal";
 import { getDishBOMs, deleteDishBOM } from "../../../https";
 import { useSnackbar } from "notistack";
 import { useDish } from "../../../hooks/useDish";
+// import { data } from "react-router-dom";
 
 export default function DishBOM({ dishId, open, onClose }) {
   const { dish, reloadDish } = useDish(dishId);
@@ -22,19 +23,21 @@ export default function DishBOM({ dishId, open, onClose }) {
       minimumFractionDigits: 0,
     }).format(num || 0);
 
-  const loadBOM = useCallback(async () => {
-    if (!dishId) return;
-    setLoading(true);
-    try {
-      const res = await getDishBOMs(dishId);
-      setBOM(res.data?.data || []);
-    } catch (err) {
-      console.error("Gagal load BOM:", err);
-      setBOM([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [dishId]);
+    const loadBOM = useCallback(async () => {
+      if (!dishId) return;
+      setLoading(true);
+      try {
+        const items = await getDishBOMs(dishId);
+        console.log("BOM dari backend:", items);
+        setBOM(items);
+      } catch (err) {
+        console.error("Gagal load BOM:", err);
+        setBOM([]);
+      } finally {
+        setLoading(false);
+      }
+    }, [dishId]);
+    
 
   useEffect(() => {
     if (open && dishId) {

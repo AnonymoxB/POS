@@ -54,7 +54,10 @@ export const updateDish = (id, dishData) => api.put(`/api/dish/${id}`, dishData)
 export const deleteDish = (id) => api.delete(`/api/dish/${id}`);
 
 // Dish BOM Endpoints
-export const getDishBOMs = (dishId) => api.get(`/api/dish-bom/${dishId}`);
+export const getDishBOMs = async (dishId) => {
+  const res = await api.get(`/api/dish-bom/${dishId}`);
+  return res.data?.data || [];
+};
 export const addDishBOM = (dishId, data) => api.post(`/api/dish-bom/${dishId}`, data);
 export const updateDishBOM = (id, data) => api.put(`/api/dish-bom/${id}`, data);
 export const deleteDishBOM = (id) => api.delete(`/api/dish-bom/${id}`);
