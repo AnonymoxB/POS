@@ -4,11 +4,8 @@ import AddDishBOMModal from "./AddDishBOMModal";
 import EditDishBOMModal from "./EditDishBOMModal";
 import { getDishBOMs, deleteDishBOM } from "../../../https";
 import { useSnackbar } from "notistack";
-import { useDish } from "../../../hooks/useDish";
-// import { data } from "react-router-dom";
 
-export default function DishBOM({ dishId, open, onClose }) {
-  const { dish, reloadDish } = useDish(dishId);
+export default function DishBOM({ dish, open, onClose }) {
   const [bom, setBOM] = useState([]);
   const [loading, setLoading] = useState(true);
   const [addOpen, setAddOpen] = useState(false);
@@ -23,28 +20,23 @@ export default function DishBOM({ dishId, open, onClose }) {
       minimumFractionDigits: 0,
     }).format(num || 0);
 
-    const loadBOM = useCallback(async () => {
-      if (!dishId) return;
-      setLoading(true);
-      try {
-        const items = await getDishBOMs(dishId);
-        console.log("BOM dari backend:", items);
-        setBOM(items);
-      } catch (err) {
-        console.error("Gagal load BOM:", err);
-        setBOM([]);
-      } finally {
-        setLoading(false);
-      }
-    }, [dishId]);
-    
+  const loadBOM = useCallback(async () => {
+    if (!dish?._id) return;
+    setLoading(true);
+    try {
+      const res = await getDishBOMs(dish._id);
+      setBOM(res.data?.data || []);
+    } catch (err) {
+      console.error("Gagal load BOM:", err);
+      setBOM([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [dish?._id]);
 
   useEffect(() => {
-    if (open && dishId) {
-      loadBOM();
-      reloadDish();
-    }
-  }, [open, dishId, loadBOM, reloadDish]);
+    if (open && dish?._id) loadBOM();
+  }, [open, dish, loadBOM]);
 
   const handleDelete = async (id) => {
     setDeletingId(id);
@@ -52,7 +44,6 @@ export default function DishBOM({ dishId, open, onClose }) {
       await deleteDishBOM(id);
       enqueueSnackbar("Bahan berhasil dihapus", { variant: "success" });
       await loadBOM();
-      await reloadDish(); // refresh HPP juga
     } catch (err) {
       console.error("Gagal hapus BOM:", err);
       enqueueSnackbar("Gagal menghapus bahan", { variant: "error" });
@@ -77,7 +68,6 @@ export default function DishBOM({ dishId, open, onClose }) {
                 <th className="px-3 py-2 text-right">Qty</th>
                 <th className="px-3 py-2 text-left">Unit</th>
                 <th className="px-3 py-2 text-left">Variant</th>
-                <th className="px-3 py-2 text-right">HPP</th>
                 <th className="px-3 py-2 text-center">Aksi</th>
               </tr>
             </thead>
@@ -108,9 +98,6 @@ export default function DishBOM({ dishId, open, onClose }) {
                     </td>
                     <td className="px-3 py-2 capitalize">
                       {item.variant || "-"}
-                    </td>
-                    <td className="px-3 py-2 text-right">
-                      {formatRupiah(item.hpp || 0)}
                     </td>
                     <td className="px-3 py-2 text-center space-x-2">
                       <Button
@@ -150,13 +137,13 @@ export default function DishBOM({ dishId, open, onClose }) {
           <p className="font-semibold">
             HPP Hot:{" "}
             <span className="text-green-600 dark:text-green-400">
-              {formatRupiah(dish?.hpp?.hpphot || 0)}
+              {formatRupiah(dish.hpp?.hpphot || 0)}
             </span>
           </p>
           <p className="font-semibold">
             HPP Ice:{" "}
             <span className="text-green-600 dark:text-green-400">
-              {formatRupiah(dish?.hpp?.hppice || 0)}
+              {formatRupiah(dish.hpp?.hppice || 0)}
             </span>
           </p>
         </div>
@@ -182,10 +169,9 @@ export default function DishBOM({ dishId, open, onClose }) {
       <AddDishBOMModal
         dish={dish}
         isOpen={addOpen}
-        onClose={async () => {
+        onClose={() => {
           setAddOpen(false);
-          await loadBOM();
-          await reloadDish();
+          loadBOM();
         }}
       />
 
@@ -193,10 +179,9 @@ export default function DishBOM({ dishId, open, onClose }) {
       <EditDishBOMModal
         item={editItem}
         isOpen={!!editItem}
-        onClose={async () => {
+        onClose={() => {
           setEditItem(null);
-          await loadBOM();
-          await reloadDish();
+          loadBOM();
         }}
       />
     </div>

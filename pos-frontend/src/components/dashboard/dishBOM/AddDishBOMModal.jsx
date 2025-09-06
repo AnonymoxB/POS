@@ -9,45 +9,35 @@ const AddDishBOMModal = ({ dish, isOpen, onClose }) => {
 
   const [products, setProducts] = useState([]);
   const [units, setUnits] = useState([]);
-  const [form, setForm] = useState({
-    product: "",
-    qty: 1,
-    unit: "",
-    variant: "ice",
-  });
+  const [form, setForm] = useState({ product: "", qty: 1, unit: "", variant: "ice" });
 
-  // 🔹 Reset form setiap kali modal dibuka
+  // Load products & units saat modal terbuka
   useEffect(() => {
     if (isOpen) {
-      setForm({ product: "", qty: 1, unit: "", variant: "ice" });
-
       getProducts()
         .then((res) => setProducts(res.data || []))
-        .catch((err) => console.error("❌ Gagal load products:", err));
+        .catch((err) => console.error("Error load products:", err));
 
       getUnits()
         .then((res) => setUnits(res.data?.data || res.data || []))
-        .catch((err) => console.error("❌ Gagal load units:", err));
+        .catch((err) => console.error("Error load units:", err));
     }
   }, [isOpen]);
 
-  // 🔹 Mutation untuk tambah BOM
+  // Mutation
   const { mutate, isLoading } = useMutation({
-    mutationFn: (data) => addDishBOM(dish._id, data),
+    mutationFn: async () => addDishBOM(dish._id, form),
     onSuccess: () => {
-      enqueueSnackbar("Bahan berhasil ditambahkan ✅", { variant: "success" });
+      enqueueSnackbar("Bahan berhasil ditambahkan", { variant: "success" });
       queryClient.invalidateQueries(["dish-bom", dish._id]);
       handleClose();
     },
     onError: (err) => {
-      console.error("❌ Add BOM Error:", err);
-      enqueueSnackbar(err?.response?.data?.message || "Gagal menambah bahan", {
-        variant: "error",
-      });
+      enqueueSnackbar(err?.message || "Gagal menambah bahan", { variant: "error" });
     },
   });
 
-  // 🔹 Reset form + close modal
+  // Reset form + close modal
   const handleClose = () => {
     setForm({ product: "", qty: 1, unit: "", variant: "ice" });
     onClose();
@@ -55,11 +45,7 @@ const AddDishBOMModal = ({ dish, isOpen, onClose }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!dish?._id) {
-      enqueueSnackbar("Dish tidak valid", { variant: "error" });
-      return;
-    }
-    mutate(form);
+    mutate();
   };
 
   if (!isOpen) return null;
@@ -80,9 +66,7 @@ const AddDishBOMModal = ({ dish, isOpen, onClose }) => {
             required
             disabled={isLoading}
           >
-            <option value="" disabled>
-              -- pilih bahan --
-            </option>
+            <option value="" disabled>-- pilih bahan --</option>
             {products.map((p) => (
               <option key={p._id} value={p._id}>
                 {p.name}
@@ -94,13 +78,11 @@ const AddDishBOMModal = ({ dish, isOpen, onClose }) => {
           <input
             type="number"
             value={form.qty}
-            onChange={(e) =>
-              setForm({ ...form, qty: Number(e.target.value) })
-            }
+            onChange={(e) => setForm({ ...form, qty: Number(e.target.value) })}
             className="w-full p-2 rounded bg-gray-100 dark:bg-[#333] text-gray-900 dark:text-white"
             required
             disabled={isLoading}
-            min="1"
+            min="0"
           />
 
           {/* Unit */}
@@ -111,9 +93,7 @@ const AddDishBOMModal = ({ dish, isOpen, onClose }) => {
             required
             disabled={isLoading}
           >
-            <option value="" disabled>
-              -- pilih unit --
-            </option>
+            <option value="" disabled>-- pilih unit --</option>
             {units.map((u) => (
               <option key={u._id || u.id} value={u._id || u.id}>
                 {u.name || u.unitName} ({u.short || u.symbol})
@@ -129,6 +109,7 @@ const AddDishBOMModal = ({ dish, isOpen, onClose }) => {
             required
             disabled={isLoading}
           >
+            <option value="" disabled>-- pilih variant --</option>
             <option value="hot">Hot</option>
             <option value="ice">Ice</option>
           </select>

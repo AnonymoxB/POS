@@ -9,14 +9,9 @@ const EditDishBOMModal = ({ item, isOpen, onClose }) => {
 
   const [products, setProducts] = useState([]);
   const [units, setUnits] = useState([]);
-  const [form, setForm] = useState({
-    product: "",
-    qty: 1,
-    unit: "",
-    variant: "ice",
-  });
+  const [form, setForm] = useState({ product: "", qty: 1, unit: "", variant: "ice" });
 
-  // 🔄 Load data ketika modal terbuka
+  // Load products & units saat modal terbuka
   useEffect(() => {
     if (isOpen && item) {
       setForm({
@@ -28,35 +23,33 @@ const EditDishBOMModal = ({ item, isOpen, onClose }) => {
 
       getProducts()
         .then((res) => setProducts(res.data || []))
-        .catch((err) => console.error("❌ Gagal load products:", err));
+        .catch((err) => console.error("Error load products:", err));
 
       getUnits()
         .then((res) => setUnits(res.data?.data || res.data || []))
-        .catch((err) => console.error("❌ Gagal load units:", err));
+        .catch((err) => console.error("Error load units:", err));
     }
   }, [isOpen, item]);
 
-  // 🔑 Mutation Update Dish BOM
+  // Mutation untuk update BOM
   const { mutate, isLoading } = useMutation({
-    mutationFn: (data) => updateDishBOM(item._id, data),
+    mutationFn: async () => updateDishBOM(item._id, form),
     onSuccess: () => {
-      enqueueSnackbar("Bahan berhasil diperbarui ✅", { variant: "success" });
+      enqueueSnackbar("Bahan berhasil diperbarui", { variant: "success" });
       queryClient.invalidateQueries(["dish-bom", item.dish]);
       handleClose();
     },
     onError: (err) => {
-      console.error("❌ Update BOM Error:", err);
-      enqueueSnackbar(err?.response?.data?.message || "Gagal mengedit bahan", {
-        variant: "error",
-      });
+      enqueueSnackbar(err?.message || "Gagal mengedit bahan", { variant: "error" });
     },
   });
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    mutate(form);
+    mutate();
   };
 
+  // Reset form + close modal
   const handleClose = () => {
     setForm({ product: "", qty: 1, unit: "", variant: "ice" });
     onClose();
@@ -80,9 +73,7 @@ const EditDishBOMModal = ({ item, isOpen, onClose }) => {
             required
             disabled={isLoading}
           >
-            <option value="" disabled>
-              -- pilih bahan --
-            </option>
+            <option value="" disabled>-- pilih bahan --</option>
             {products.map((p) => (
               <option key={p._id} value={p._id}>
                 {p.name}
@@ -109,9 +100,7 @@ const EditDishBOMModal = ({ item, isOpen, onClose }) => {
             required
             disabled={isLoading}
           >
-            <option value="" disabled>
-              -- pilih unit --
-            </option>
+            <option value="" disabled>-- pilih unit --</option>
             {units.map((u) => (
               <option key={u._id || u.id} value={u._id || u.id}>
                 {u.name || u.unitName} ({u.short || u.symbol})
@@ -127,6 +116,7 @@ const EditDishBOMModal = ({ item, isOpen, onClose }) => {
             required
             disabled={isLoading}
           >
+            <option value="" disabled>-- pilih variant --</option>
             <option value="hot">Hot</option>
             <option value="ice">Ice</option>
           </select>

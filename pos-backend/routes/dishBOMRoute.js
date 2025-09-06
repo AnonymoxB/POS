@@ -7,12 +7,10 @@ const {
   deleteBOMItem,
 } = require("../controllers/dishBOMController");
 
-// BOM untuk 1 dish
-router.get("/dish/:dishId", getBOMByDish);     // GET semua BOM item by dish
-router.post("/dish/:dishId", addBOMItem);      // POST tambah BOM item ke dish
 
-// Operasi langsung ke BOM item
-router.put("/:id", updateBOMItem);             // PUT update 1 BOM item
-router.delete("/:id", deleteBOMItem);          // DELETE hapus 1 BOM item
+router.post("/:dishId", addBOMItem);
+router.get("/:dishId", getBOMByDish);
+router.put("/:id", updateBOMItem);    
+router.delete("/:id", deleteBOMItem);  
 
 module.exports = router;
