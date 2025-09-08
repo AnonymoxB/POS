@@ -25,17 +25,17 @@ exports.getMetrics = async (req, res) => {
     const totalRevenue = await Order.aggregate([
       { $match: { createdAt: { $gte: startDate } } },
       { $group: { _id: null, total: { $sum: "$bills.totalWithTax" } } },
-    ]);
+    ]).catch(() => []);
 
     const totalExpense = await Expense.aggregate([
       { $match: { createdAt: { $gte: startDate } } },
       { $group: { _id: null, total: { $sum: "$amount" } } },
-    ]);
+    ]).catch(() => []);
 
     const totalPurchase = await Purchase.aggregate([
       { $match: { createdAt: { $gte: startDate } } },
       { $group: { _id: null, total: { $sum: "$grandTotal" } } },
-    ]);
+    ]).catch(() => []);
 
     const totalProducts = await Product.countDocuments();
 
@@ -77,7 +77,9 @@ exports.getMetrics = async (req, res) => {
       },
     });
 
-    const stockSummary = await StockTransaction.aggregate(stockQuery);
+    const stockSummary = await StockTransaction.aggregate(stockQuery).catch(
+      () => []
+    );
 
     // ==================== CHART ====================
     const groupFormat =
@@ -92,7 +94,7 @@ exports.getMetrics = async (req, res) => {
         },
       },
       { $sort: { _id: 1 } },
-    ]);
+    ]).catch(() => []);
 
     const expenseChart = await Expense.aggregate([
       { $match: { createdAt: { $gte: startDate } } },
@@ -103,7 +105,7 @@ exports.getMetrics = async (req, res) => {
         },
       },
       { $sort: { _id: 1 } },
-    ]);
+    ]).catch(() => []);
 
     const purchaseChart = await Purchase.aggregate([
       { $match: { createdAt: { $gte: startDate } } },
@@ -114,7 +116,7 @@ exports.getMetrics = async (req, res) => {
         },
       },
       { $sort: { _id: 1 } },
-    ]);
+    ]).catch(() => []);
 
     // Gabungan income & expense
     const combinedChart = [];
@@ -161,26 +163,31 @@ exports.getMetrics = async (req, res) => {
     profitChart.sort((a, b) => new Date(a.date) - new Date(b.date));
 
     // ==================== PROFIT PER DISH ====================
-    const orders = await Order.find({ createdAt: { $gte: startDate } }).populate(
-      "items.dish"
-    );
+    const orders = await Order.find({ createdAt: { $gte: startDate } })
+      .populate("items.dish")
+      .catch(() => []);
 
-    const dishes = await Dish.find().populate("bom.product");
+    const dishes = await Dish.find()
+      .populate("bom.product")
+      .catch(() => []);
 
-    const profitPerDish = dishes.map((dish) => {
+    const profitPerDish = (dishes || []).map((dish) => {
       const hpp = (dish.bom || []).reduce((sum, bom) => {
         const productPrice = bom.product?.purchasePrice || 0;
-        return sum + bom.qty * productPrice;
+        const qty = bom.qty || 0;
+        return sum + qty * productPrice;
       }, 0);
-    
-      const totalSold = orders.reduce((sum, order) => {
-        const item = order.items.find((i) => i.dish?._id?.equals(dish._id));
+
+      const totalSold = (orders || []).reduce((sum, order) => {
+        const item = order.items.find(
+          (i) => i.dish && i.dish._id && i.dish._id.equals(dish._id)
+        );
         return sum + (item ? item.qty : 0);
       }, 0);
-    
+
       const revenue = (dish.price || 0) * totalSold;
       const profitDish = ((dish.price || 0) - hpp) * totalSold;
-    
+
       return {
         dish: dish.name,
         price: dish.price || 0,
@@ -190,10 +197,9 @@ exports.getMetrics = async (req, res) => {
         profit: profitDish,
       };
     });
-    
 
     // ==================== RESPONSE ====================
-    const categories = await Product.distinct("category");
+    const categories = await Product.distinct("category").catch(() => []);
 
     res.json({
       success: true,
@@ -225,7 +231,7 @@ exports.getMetrics = async (req, res) => {
           },
           {
             title: "Total Produk",
-            value: totalProducts,
+            value: totalProducts || 0,
             percentage: "+5%",
             isIncrease: true,
             color: "#f59e0b",
@@ -234,19 +240,19 @@ exports.getMetrics = async (req, res) => {
         ],
         profit, // profit global
         profitChart,
-        profitPerDish, // ✅ konsisten dipakai di FE
-        itemsData: stockSummary.map((item) => ({
+        profitPerDish,
+        itemsData: (stockSummary || []).map((item) => ({
           title: item.productName,
           value: item.balance,
           unit: item.unit,
         })),
         incomeExpenseChart: combinedChart,
-        stockChart: stockSummary.map((item) => ({
+        stockChart: (stockSummary || []).map((item) => ({
           product: item.productName,
           stock: item.balance,
           category: item.category,
         })),
-        categories: ["all", ...categories],
+        categories: ["all", ...(categories || [])],
       },
     });
   } catch (error) {
