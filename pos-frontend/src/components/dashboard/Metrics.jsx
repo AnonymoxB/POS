@@ -41,7 +41,7 @@ const Metrics = () => {
 
   return (
     <div className="container mx-auto py-4 px-6">
-      {/* Filter range */}
+      {/* Filter */}
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
           Dashboard Metrics
@@ -87,10 +87,9 @@ const Metrics = () => {
           </div>
         ))}
 
-        {/* Card Profit */}
         {summary.profit && (
           <div className="p-4 rounded-lg shadow-lg bg-green-600 text-white">
-            <p className="text-sm">Profit</p>
+            <p className="text-sm">Profit Global</p>
             <p className="text-2xl font-bold">
               Rp {summary.profit.toLocaleString()}
             </p>
@@ -98,8 +97,8 @@ const Metrics = () => {
         )}
       </div>
 
-      {/* Grafik Stok Produk */}
-      <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
+      {/* Stok Produk */}
+      <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow mb-8">
         <h3 className="text-lg font-semibold mb-4">Stok Produk</h3>
         <ResponsiveContainer width="100%" height={400}>
           <BarChart data={summary.stockChart}>
@@ -115,7 +114,7 @@ const Metrics = () => {
 
       {/* Grafik Profit */}
       {summary.profitChart && (
-        <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow mt-8">
+        <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow mb-8">
           <h3 className="text-lg font-semibold mb-4">Grafik Profit</h3>
           <ResponsiveContainer width="100%" height={400}>
             <LineChart data={summary.profitChart}>
@@ -124,14 +123,62 @@ const Metrics = () => {
               <YAxis />
               <Tooltip />
               <Legend />
-              <Line
-                type="monotone"
-                dataKey="profit"
-                stroke="#16a34a"
-                name="Profit"
-              />
+              <Line type="monotone" dataKey="profit" stroke="#16a34a" name="Profit" />
             </LineChart>
           </ResponsiveContainer>
+        </div>
+      )}
+
+      {/* Profit Per Dish */}
+      {summary.profitPerDish && (
+        <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow mt-8">
+          <h3 className="text-lg font-semibold mb-4">Profit Per Dish</h3>
+
+          <ResponsiveContainer width="100%" height={400}>
+            <BarChart data={summary.profitPerDish}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="dish" />
+              <YAxis />
+              <Tooltip formatter={(val) => `Rp ${val.toLocaleString()}`} />
+              <Legend />
+              <Bar dataKey="profit" fill="#f59e0b" name="Profit" />
+            </BarChart>
+          </ResponsiveContainer>
+
+          {/* Tabel */}
+          <div className="mt-6 overflow-x-auto">
+            <table className="w-full text-sm border-collapse">
+              <thead>
+                <tr className="border-b text-left">
+                  <th className="p-2">Dish</th>
+                  <th className="p-2">Harga</th>
+                  <th className="p-2">HPP</th>
+                  <th className="p-2">Terjual</th>
+                  <th className="p-2">Revenue</th>
+                  <th className="p-2">Profit</th>
+                </tr>
+              </thead>
+              <tbody>
+                {summary.profitPerDish
+                  .sort((a, b) => b.profit - a.profit)
+                  .map((d, idx) => (
+                    <tr
+                      key={idx}
+                      className="border-b hover:bg-gray-50 dark:hover:bg-gray-700"
+                    >
+                      <td className="p-2">{d.dish}</td>
+                      <td className="p-2">Rp {d.price.toLocaleString()}</td>
+                      <td className="p-2">Rp {d.hpp.toLocaleString()}</td>
+                      <td className="p-2">{d.totalSold}</td>
+                      <td className="p-2">Rp {d.revenue.toLocaleString()}</td>
+                      <td className="p-2 font-semibold text-green-600">
+                        Rp {d.profit.toLocaleString()}
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </div>
