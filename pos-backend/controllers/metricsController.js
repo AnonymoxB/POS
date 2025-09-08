@@ -168,27 +168,29 @@ exports.getMetrics = async (req, res) => {
     const dishes = await Dish.find().populate("bom.product");
 
     const profitPerDish = dishes.map((dish) => {
-      const hpp = dish.bom.reduce((sum, bom) => {
-        return sum + bom.qty * (bom.product.purchasePrice || 0);
+      const hpp = (dish.bom || []).reduce((sum, bom) => {
+        const productPrice = bom.product?.purchasePrice || 0;
+        return sum + bom.qty * productPrice;
       }, 0);
-
+    
       const totalSold = orders.reduce((sum, order) => {
-        const item = order.items.find((i) => i.dish?._id.equals(dish._id));
+        const item = order.items.find((i) => i.dish?._id?.equals(dish._id));
         return sum + (item ? item.qty : 0);
       }, 0);
-
-      const revenue = dish.price * totalSold;
-      const profitDish = (dish.price - hpp) * totalSold;
-
+    
+      const revenue = (dish.price || 0) * totalSold;
+      const profitDish = ((dish.price || 0) - hpp) * totalSold;
+    
       return {
         dish: dish.name,
-        price: dish.price,
+        price: dish.price || 0,
         hpp,
         totalSold,
         revenue,
         profit: profitDish,
       };
     });
+    
 
     // ==================== RESPONSE ====================
     const categories = await Product.distinct("category");
