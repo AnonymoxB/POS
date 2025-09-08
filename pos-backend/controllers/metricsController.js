@@ -3,7 +3,7 @@ const Purchase = require("../models/purchaseModel");
 const Order = require("../models/orderModel");
 const Product = require("../models/productModel");
 const StockTransaction = require("../models/stockModel");
-const Dish = require("../models/dishModel");
+const Dish = require("../models/dishesModel");
 
 exports.getMetrics = async (req, res) => {
   try {
