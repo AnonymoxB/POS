@@ -13,6 +13,8 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
+const formatRupiah = (num) => `Rp ${num.toLocaleString("id-ID")}`;
+
 const Metrics = () => {
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -22,8 +24,10 @@ const Metrics = () => {
   const fetchSummary = async (selectedRange = range, selectedCategory = category) => {
     try {
       setLoading(true);
-      const res = await api.get(`/api/metrics?range=${selectedRange}&category=${selectedCategory}`);
-      setSummary(res.data.data);
+      const res = await api.get(
+        `/api/metrics?range=${selectedRange}&category=${selectedCategory}`
+      );
+      setSummary(res.data?.data || null);
     } catch (err) {
       console.error("Gagal ambil data dashboard:", err);
     } finally {
@@ -35,8 +39,12 @@ const Metrics = () => {
     fetchSummary();
   }, [range, category]);
 
-  if (loading || !summary) {
-    return <p className="text-center text-gray-500">Loading dashboard...</p>;
+  if (loading) {
+    return <p className="text-center text-gray-500">Memuat dashboard...</p>;
+  }
+
+  if (!summary) {
+    return <p className="text-center text-red-500">Tidak ada data tersedia.</p>;
   }
 
   return (
@@ -61,7 +69,7 @@ const Metrics = () => {
             onChange={(e) => setCategory(e.target.value)}
             className="border px-3 py-2 rounded-md bg-white dark:bg-gray-800 dark:text-white"
           >
-            {summary.categories.map((cat) => (
+            {summary?.categories?.map((cat) => (
               <option key={cat} value={cat}>
                 {cat === "all" ? "Semua Kategori" : cat}
               </option>
@@ -72,7 +80,7 @@ const Metrics = () => {
 
       {/* Metrics Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        {summary.metricsData.map((item, idx) => (
+        {summary?.metricsData?.map((item, idx) => (
           <div
             key={idx}
             className="p-4 rounded-lg shadow-lg"
@@ -81,39 +89,39 @@ const Metrics = () => {
             <p className="text-sm">{item.title}</p>
             <p className="text-2xl font-bold">
               {item.unit === "Rp"
-                ? `Rp ${item.value.toLocaleString()}`
+                ? formatRupiah(item.value)
                 : `${item.value} ${item.unit}`}
             </p>
           </div>
         ))}
 
-        {summary.profit && (
+        {summary?.profit && (
           <div className="p-4 rounded-lg shadow-lg bg-green-600 text-white">
             <p className="text-sm">Profit Global</p>
-            <p className="text-2xl font-bold">
-              Rp {summary.profit.toLocaleString()}
-            </p>
+            <p className="text-2xl font-bold">{formatRupiah(summary.profit)}</p>
           </div>
         )}
       </div>
 
       {/* Stok Produk */}
-      <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow mb-8">
-        <h3 className="text-lg font-semibold mb-4">Stok Produk</h3>
-        <ResponsiveContainer width="100%" height={400}>
-          <BarChart data={summary.stockChart}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="product" />
-            <YAxis />
-            <Tooltip />
-            <Legend />
-            <Bar dataKey="stock" fill="#6366f1" name="Jumlah Stok" />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
+      {summary?.stockChart?.length > 0 && (
+        <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow mb-8">
+          <h3 className="text-lg font-semibold mb-4">Stok Produk</h3>
+          <ResponsiveContainer width="100%" height={400}>
+            <BarChart data={summary.stockChart}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="product" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="stock" fill="#6366f1" name="Jumlah Stok" />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      )}
 
       {/* Grafik Profit */}
-      {summary.profitChart && (
+      {summary?.profitChart?.length > 0 && (
         <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow mb-8">
           <h3 className="text-lg font-semibold mb-4">Grafik Profit</h3>
           <ResponsiveContainer width="100%" height={400}>
@@ -121,7 +129,7 @@ const Metrics = () => {
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="date" />
               <YAxis />
-              <Tooltip />
+              <Tooltip formatter={(val) => formatRupiah(val)} />
               <Legend />
               <Line type="monotone" dataKey="profit" stroke="#16a34a" name="Profit" />
             </LineChart>
@@ -130,7 +138,7 @@ const Metrics = () => {
       )}
 
       {/* Profit Per Dish */}
-      {summary.profitPerDish && (
+      {summary?.profitPerDish?.length > 0 && (
         <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow mt-8">
           <h3 className="text-lg font-semibold mb-4">Profit Per Dish</h3>
 
@@ -139,7 +147,7 @@ const Metrics = () => {
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="dish" />
               <YAxis />
-              <Tooltip formatter={(val) => `Rp ${val.toLocaleString()}`} />
+              <Tooltip formatter={(val) => formatRupiah(val)} />
               <Legend />
               <Bar dataKey="profit" fill="#f59e0b" name="Profit" />
             </BarChart>
@@ -167,12 +175,12 @@ const Metrics = () => {
                       className="border-b hover:bg-gray-50 dark:hover:bg-gray-700"
                     >
                       <td className="p-2">{d.dish}</td>
-                      <td className="p-2">Rp {d.price.toLocaleString()}</td>
-                      <td className="p-2">Rp {d.hpp.toLocaleString()}</td>
+                      <td className="p-2">{formatRupiah(d.price)}</td>
+                      <td className="p-2">{formatRupiah(d.hpp)}</td>
                       <td className="p-2">{d.totalSold}</td>
-                      <td className="p-2">Rp {d.revenue.toLocaleString()}</td>
+                      <td className="p-2">{formatRupiah(d.revenue)}</td>
                       <td className="p-2 font-semibold text-green-600">
-                        Rp {d.profit.toLocaleString()}
+                        {formatRupiah(d.profit)}
                       </td>
                     </tr>
                   ))}

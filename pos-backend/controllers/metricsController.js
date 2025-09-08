@@ -163,54 +163,52 @@ exports.getMetrics = async (req, res) => {
     profitChart.sort((a, b) => new Date(a.date) - new Date(b.date));
 
     // ==================== PROFIT PER DISH ====================
-const orders = await Order.find({ createdAt: { $gte: startDate } })
-.populate("items.dishId") // ✅ populate dishId, bukan dish
-.catch(() => []);
+    const orders = await Order.find({ createdAt: { $gte: startDate } })
+      .populate("items.dishId")
+      .catch(() => []);
 
-const dishes = await Dish.find()
-.populate("bom.product")
-.catch(() => []);
+    const dishes = await Dish.find()
+      .populate("bom.product")
+      .catch(() => []);
 
-const profitPerDish = (dishes || []).map((dish) => {
-// 🔹 Hitung HPP (biaya produksi per porsi)
-const hpp = (dish.bom || []).reduce((sum, bom) => {
-  const productPrice = bom.product?.purchasePrice || 0;
-  const qty = bom.qtyBase ?? bom.qty ?? 0;
-  return sum + qty * productPrice;
-}, 0);
+    const profitPerDish = (dishes || []).map((dish) => {
+      // HPP (biaya produksi per porsi)
+      const hpp = (dish.bom || []).reduce((sum, bom) => {
+        const productPrice = bom.product?.purchasePrice || 0;
+        const qty = bom.qtyBase ?? bom.qty ?? 0;
+        return sum + qty * productPrice;
+      }, 0);
 
-// 🔹 Hitung total sold hot & ice
-let totalHot = 0;
-let totalIce = 0;
+      let totalHot = 0;
+      let totalIce = 0;
 
-(orders || []).forEach((order) => {
-  order.items.forEach((i) => {
-    if (i.dishId && i.dishId._id && i.dishId._id.equals(dish._id)) {
-      if (i.variant === "hot") totalHot += i.qty;
-      if (i.variant === "ice") totalIce += i.qty;
-    }
-  });
-});
+      (orders || []).forEach((order) => {
+        order.items.forEach((i) => {
+          if (i.dishId && i.dishId._id && i.dishId._id.equals(dish._id)) {
+            if (i.variant === "hot") totalHot += i.qty;
+            if (i.variant === "ice") totalIce += i.qty;
+          }
+        });
+      });
 
-// 🔹 Revenue & Profit per variant
-const revenueHot = (dish.price?.hot || 0) * totalHot;
-const revenueIce = (dish.price?.ice || 0) * totalIce;
-const profitHot = ((dish.price?.hot || 0) - hpp) * totalHot;
-const profitIce = ((dish.price?.ice || 0) - hpp) * totalIce;
+      const revenueHot = (dish.price?.hot || 0) * totalHot;
+      const revenueIce = (dish.price?.ice || 0) * totalIce;
+      const profitHot = ((dish.price?.hot || 0) - hpp) * totalHot;
+      const profitIce = ((dish.price?.ice || 0) - hpp) * totalIce;
 
-return {
-  dish: dish.name,
-  hpp,
-  totalHot,
-  totalIce,
-  revenueHot,
-  revenueIce,
-  profitHot,
-  profitIce,
-};
-});
-
-res.json({ profitPerDish });
+      return {
+        dish: dish.name,
+        hpp,
+        totalHot,
+        totalIce,
+        revenueHot,
+        revenueIce,
+        profitHot,
+        profitIce,
+        revenue: revenueHot + revenueIce,
+        profit: profitHot + profitIce,
+      };
+    });
 
     // ==================== RESPONSE ====================
     const categories = await Product.distinct("category").catch(() => []);
@@ -252,7 +250,7 @@ res.json({ profitPerDish });
             unit: "Item",
           },
         ],
-        profit, // profit global
+        profit,
         profitChart,
         profitPerDish,
         itemsData: (stockSummary || []).map((item) => ({
