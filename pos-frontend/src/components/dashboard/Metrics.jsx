@@ -86,6 +86,16 @@ const Metrics = () => {
             </p>
           </div>
         ))}
+
+        {/* Card Profit */}
+        {summary.profit && (
+          <div className="p-4 rounded-lg shadow-lg bg-green-600 text-white">
+            <p className="text-sm">Profit</p>
+            <p className="text-2xl font-bold">
+              Rp {summary.profit.toLocaleString()}
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Grafik Stok Produk */}
@@ -102,6 +112,28 @@ const Metrics = () => {
           </BarChart>
         </ResponsiveContainer>
       </div>
+
+      {/* Grafik Profit */}
+      {summary.profitChart && (
+        <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow mt-8">
+          <h3 className="text-lg font-semibold mb-4">Grafik Profit</h3>
+          <ResponsiveContainer width="100%" height={400}>
+            <LineChart data={summary.profitChart}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="date" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Line
+                type="monotone"
+                dataKey="profit"
+                stroke="#16a34a"
+                name="Profit"
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      )}
     </div>
   );
 };
