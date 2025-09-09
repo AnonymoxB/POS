@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
-import { getMetrics } from "../../https";
+import { getDashboardMetrics } from "../../https/index";
+
 
 const formatRupiah = (num) => {
   if (typeof num !== "number") return "-";
@@ -14,8 +15,17 @@ export default function ProfitPerDish() {
   useEffect(() => {
     const fetchMetrics = async () => {
       try {
-        const res = await getMetrics();
-        setData(res.data?.profitPerDish || []);
+        const res = await getDashboardMetrics();
+        console.log("📦 API Response:", res.data);
+
+        // fleksibel ambil data dari berbagai kemungkinan struktur
+        const profitData =
+          res.data?.profitPerDish ||
+          res.data?.data?.profitPerDish ||
+          res.data?.metrics?.profitPerDish ||
+          [];
+
+        setData(profitData);
       } catch (err) {
         console.error("❌ Error fetch profit per dish:", err);
       }
@@ -24,6 +34,17 @@ export default function ProfitPerDish() {
   }, []);
 
   const sortedData = [...data].sort((a, b) => b.profit - a.profit);
+
+  if (!sortedData.length) {
+    return (
+      <Card className="p-4 shadow-md rounded-2xl">
+        <h2 className="text-lg font-semibold mb-4">Profit per Dish</h2>
+        <CardContent>
+          <p className="text-center text-gray-500">Tidak ada data tersedia.</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <div className="grid md:grid-cols-2 gap-6 mt-6">

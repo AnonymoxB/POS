@@ -30,7 +30,10 @@ const Metrics = () => {
       const res = await api.get(
         `/api/metrics?range=${selectedRange}&category=${selectedCategory}`
       );
-      setSummary(res.data?.data || null);
+
+      console.log("📦 API Response:", res.data); // DEBUG
+      // cek apakah res.data langsung berisi metrics atau ada di dalam data
+      setSummary(res.data?.data || res.data || null);
     } catch (err) {
       console.error("❌ Gagal ambil data dashboard:", err);
     } finally {
@@ -141,12 +144,13 @@ const Metrics = () => {
       )}
 
       {/* Profit Per Dish */}
-      {summary?.profitPerDish?.length > 0 && (
+      {summary?.profitPerDish && summary.profitPerDish.length > 0 ? (
         <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow mt-8">
           <h3 className="text-lg font-semibold mb-4">Profit Per Dish</h3>
 
+          {/* Chart */}
           <ResponsiveContainer width="100%" height={400}>
-            <BarChart data={summary.profitPerDish.sort((a, b) => b.profit - a.profit)}>
+            <BarChart data={[...summary.profitPerDish].sort((a, b) => b.profit - a.profit)}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="dish" />
               <YAxis />
@@ -197,6 +201,10 @@ const Metrics = () => {
             </table>
           </div>
         </div>
+      ) : (
+        <p className="text-center text-gray-500 mt-8">
+          📭 Tidak ada data profit per dish.
+        </p>
       )}
     </div>
   );

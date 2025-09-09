@@ -53,11 +53,6 @@ app.use("/api/metrics", require("./routes/metricsRoute"));
 
 
 
-
-
-
-
-
 // Global error handler - MUST be last middleware
 app.use(globalErrorHandler);
 

@@ -179,34 +179,26 @@ exports.getMetrics = async (req, res) => {
         return sum + qty * productPrice;
       }, 0);
 
-      let totalHot = 0;
-      let totalIce = 0;
-
+      let totalSold = 0;
       (orders || []).forEach((order) => {
         order.items.forEach((i) => {
           if (i.dishId && i.dishId._id && i.dishId._id.equals(dish._id)) {
-            if (i.variant === "hot") totalHot += i.qty;
-            if (i.variant === "ice") totalIce += i.qty;
+            totalSold += i.qty;
           }
         });
       });
 
-      const revenueHot = (dish.price?.hot || 0) * totalHot;
-      const revenueIce = (dish.price?.ice || 0) * totalIce;
-      const profitHot = ((dish.price?.hot || 0) - hpp) * totalHot;
-      const profitIce = ((dish.price?.ice || 0) - hpp) * totalIce;
+      const price = dish.price?.hot || dish.price?.ice || 0;
+      const revenue = price * totalSold;
+      const profit = (price - hpp) * totalSold;
 
       return {
         dish: dish.name,
+        price,
         hpp,
-        totalHot,
-        totalIce,
-        revenueHot,
-        revenueIce,
-        profitHot,
-        profitIce,
-        revenue: revenueHot + revenueIce,
-        profit: profitHot + profitIce,
+        totalSold,
+        revenue,
+        profit,
       };
     });
 

@@ -56,8 +56,8 @@ export const updateDishBOM = (id, data) => api.put(`/api/bom/${id}`, data);
 export const deleteDishBOM = (id) => api.delete(`/api/bom/${id}`);
 
 
-// Ambil ringkasan data dashboard
-// Dashboard Metrics API
+
+
 export const getDashboardMetrics = async (range = "month") => {
   const res = await api.get(`/api/metrics?range=${range}`);
   return res.data.data;

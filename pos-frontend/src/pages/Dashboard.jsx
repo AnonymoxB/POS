@@ -35,13 +35,18 @@ import {
   LayoutList,
   ContactRound,
   Wheat,
+  ChartNoAxesCombinedIcon,
 } from "lucide-react";
+import ProfitPerDish from "../components/dashboard/ProfitPerDish";
 
 // Grup tab
 const tabGroups = [
   {
     group: "Dashboard",
-    items: [{ name: "Metrics", icon: LayoutDashboard }],
+    items: [
+      { name: "Metrics", icon: LayoutDashboard },
+      { name: "Profit per Dish", icon: ChartNoAxesCombinedIcon },
+    ],
   },
   {
     group: "Master Data",
@@ -191,6 +196,7 @@ const Dashboard = () => {
         {activeTab === "Stock" && <Stock />}
         {activeTab === "Dish BOM" && <DishBOMPage />}
         {activeTab === "Expenses" && <Expense />}
+        {activeTab === "Profit per Dish" && <ProfitPerDish/>}
       </div>
 
       {/* Modals */}
