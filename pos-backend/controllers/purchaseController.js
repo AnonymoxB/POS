@@ -74,8 +74,11 @@ exports.createPurchase = async (req, res) => {
       const newStock = oldStock + qtyBase;
 
       product.stockBase = newStock;
-      product.hpp = newStock > 0 ? (oldValue + newValue) / newStock : item.price;
-      product.lastPurchasePrice = item.price; // ✅ update harga beli terakhir
+      product.hpp = newStock > 0 
+      ? Math.round((oldValue + newValue) / newStock) 
+      : Math.round(item.price);
+
+      product.lastPurchasePrice = item.price;
 
       await product.save({ session });
 
@@ -204,7 +207,10 @@ exports.updatePurchase = async (req, res) => {
       const newStock = oldStock + qtyBase;
 
       product.stockBase = newStock;
-      product.hpp = newStock > 0 ? (oldValue + newValue) / newStock : item.price;
+      product.hpp = newStock > 0 
+      ? Math.round((oldValue + newValue) / newStock) 
+      : Math.round(item.price);
+
       product.lastPurchasePrice = item.price; // ✅ update harga beli terakhir
 
       await product.save({ session });
