@@ -122,6 +122,7 @@ exports.createPurchase = async (req, res) => {
   }
 };
 
+
 // ================= UPDATE PURCHASE =================
 exports.updatePurchase = async (req, res) => {
   const session = await mongoose.startSession();
@@ -131,15 +132,31 @@ exports.updatePurchase = async (req, res) => {
     const { id } = req.params;
     const { supplier, items } = req.body;
 
-    const oldPurchase = await Purchase.findById(id).session(session);
-    if (!oldPurchase) return res.status(404).json({ success: false, message: "Purchase not found" });
+    // ✅ Validasi awal
+    if (!items || items.length === 0) {
+      throw new Error("Items tidak boleh kosong");
+    }
+    for (const item of items) {
+      if (!item.product || !item.unit || item.quantity == null || item.price == null) {
+        throw new Error("Item harus punya product, unit, quantity, dan price");
+      }
+    }
 
-    // Rollback stock lama
+    const oldPurchase = await Purchase.findById(id).session(session);
+    if (!oldPurchase)
+      return res.status(404).json({ success: false, message: "Purchase not found" });
+
+    // ✅ Rollback stock lama
     for (const oldItem of oldPurchase.items) {
       const product = await Product.findById(oldItem.product).session(session);
       if (!product) continue;
 
-      const { qtyBase } = await getBaseUnitAndQty(oldItem.unit, oldItem.quantity, session);
+      const { unitBase, qtyBase } = await getBaseUnitAndQty(
+        oldItem.unit,
+        oldItem.quantity,
+        session
+      );
+
       product.stockBase -= qtyBase;
       await product.save({ session });
 
@@ -169,12 +186,16 @@ exports.updatePurchase = async (req, res) => {
       { new: true, session }
     );
 
-    // Update stock & HPP baru
+    // ✅ Update stock & HPP baru
     for (const item of items) {
       const product = await Product.findById(item.product).session(session);
       if (!product) continue;
 
-      const { unitBase, qtyBase } = await getBaseUnitAndQty(item.unit, item.quantity, session);
+      const { unitBase, qtyBase } = await getBaseUnitAndQty(
+        item.unit,
+        item.quantity,
+        session
+      );
 
       const oldStock = product.stockBase || 0;
       const oldValue = oldStock * (product.hpp || 0);
@@ -203,7 +224,7 @@ exports.updatePurchase = async (req, res) => {
       );
     }
 
-    // Update payment
+    // ✅ Update payment
     await Payment.updateMany(
       { source: id, sourceType: "Purchase" },
       { $set: { amount: grandTotal } },
@@ -220,7 +241,8 @@ exports.updatePurchase = async (req, res) => {
   }
 };
 
-// ================= DELETE PURCHASE =================
+
+
 // ================= DELETE PURCHASE =================
 exports.deletePurchase = async (req, res) => {
   const session = await mongoose.startSession();
