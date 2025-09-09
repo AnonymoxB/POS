@@ -22,7 +22,7 @@ router.get("/summary", controller.getStockSummary);
 router.get("/summary/:productId", controller.getStockSummaryByProduct);
 
 //Adjustment
-router.post("/adjustment", createStockAdjustment);
+router.post("/adjustment", controller.createStockAdjustment);
 
 
 // =====================
