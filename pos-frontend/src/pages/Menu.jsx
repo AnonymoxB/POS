@@ -43,13 +43,22 @@ const Menu = () => {
       </div>
 
       {/* Right Div */}
-      <div className="flex-[1] w-full lg:w-auto bg-white dark:bg-[#1a1a1a] rounded-lg pt-2 lg:mt-4 lg:mr-3 flex flex-col max-h-[calc(100vh-6rem)] overflow-y-auto shadow-md dark:shadow-none border border-gray-200 dark:border-[#2a2a2a] transition-colors">
-        <CustomerInfo />
-        <hr className="border-gray-200 dark:border-[#2a2a2a]" />
-        <CartInfo />
-        <hr className="border-gray-200 dark:border-[#2a2a2a]" />
-        <Bill />
+      <div className="flex-[1] w-full lg:w-auto bg-white dark:bg-[#1a1a1a] rounded-lg pt-2 lg:mt-4 lg:mr-3 flex flex-col max-h-[calc(100vh-6rem)] shadow-md dark:shadow-none border border-gray-200 dark:border-[#2a2a2a] transition-colors">
+        
+        {/* Sticky Header: Customer + Cart */}
+        <div className="sticky top-0 bg-white dark:bg-[#1a1a1a] z-10 px-4 py-2">
+          <CustomerInfo />
+          <hr className="border-gray-200 dark:border-[#2a2a2a] my-2" />
+          <CartInfo />
+          <hr className="border-gray-200 dark:border-[#2a2a2a] mt-2" />
+        </div>
+
+        {/* Scrollable Bill */}
+        <div className="flex-1 overflow-y-auto px-4 py-2">
+          <Bill />
+        </div>
       </div>
+
 
       <BottomNav />
     </section>

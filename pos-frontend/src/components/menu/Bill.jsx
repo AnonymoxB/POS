@@ -20,13 +20,30 @@ const Bill = () => {
 
   const change = cashGiven - totalPriceWithTax;
 
+  const orderMutation = useMutation({
+    mutationFn: (reqData) => addOrder(reqData),
+    onSuccess: (resData) => {
+      const { data } = resData.data;
+      setOrderInfo(data);
+      enqueueSnackbar("✅ Order berhasil dibuat!", { variant: "success" });
+      setShowInvoice(true);
+      dispatch(removeAllItems());
+      setCashGiven(0);
+    },
+    onError: (error) => {
+      enqueueSnackbar(
+        `Gagal membuat order: ${error.response?.data?.message || error.message}`,
+        { variant: "error" }
+      );
+    },
+  });
+
   const handlePlaceOrder = () => {
     if (!paymentMethod) {
       enqueueSnackbar("Please select a payment method!", { variant: "warning" });
       return;
     }
 
-    // Validasi khusus Cash saja
     if (paymentMethod === "Cash" && cashGiven < totalPriceWithTax) {
       enqueueSnackbar("Jumlah cash kurang!", { variant: "error" });
       return;
@@ -53,62 +70,32 @@ const Bill = () => {
       bills: {
         total,
         totalWithTax: totalPriceWithTax,
-        ...(paymentMethod === "Cash" ? { cashGiven, change } : {}), 
+        ...(paymentMethod === "Cash" ? { cashGiven, change } : {}),
       },
       items: cleanedCart,
       paymentMethod,
     };
 
-    orderMutation.mutate(orderData, {
-      onSuccess: () => {
-        if (paymentMethod === "Qris") {
-          enqueueSnackbar("✅ Pembayaran QRIS berhasil!", { variant: "success" });
-        } else if (paymentMethod === "Cash") {
-          enqueueSnackbar("✅ Pembayaran Cash berhasil!", { variant: "success" });
-        }
-      },
-      onError: () => {
-        enqueueSnackbar("❌ Gagal membuat order, coba lagi.", { variant: "error" });
-      },
-    });
+    orderMutation.mutate(orderData);
   };
-
-
-  const orderMutation = useMutation({
-  mutationFn: (reqData) => {
-    console.log("📦 Payload dikirim ke API:", reqData); // Debug request
-    return addOrder(reqData);
-  },
-  onSuccess: (resData) => {
-    console.log("✅ Response sukses:", resData);
-    const { data } = resData.data;
-    setOrderInfo(data);
-    enqueueSnackbar("✅ Order berhasil dibuat!", { variant: "success" });
-    setShowInvoice(true);
-    dispatch(removeAllItems());
-    setCashGiven(0);
-  },
-  onError: (error) => {
-    console.error("❌ Error detail:", error.response?.data || error.message);
-    enqueueSnackbar(
-      `Gagal membuat order: ${error.response?.data?.message || error.message}`,
-      { variant: "error" }
-    );
-  },
-});
-
 
   return (
     <>
       {/* Summary */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-5 mt-2 gap-2 sm:gap-0">
-        <p className="text-xs text-[#ababab] font-medium">Items({cartData.length})</p>
-        <h1 className="text-[#f5f5f5] text-md font-bold">Rp {total.toFixed(0)}</h1>
+        <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+          Items({cartData.length})
+        </p>
+        <h1 className="text-gray-900 dark:text-gray-100 text-md font-bold">
+          Rp {total.toFixed(0)}
+        </h1>
       </div>
 
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-5 mt-2 gap-2 sm:gap-0 font-bold text-lg">
-        <p className="text-xs sm:text-md text-[#ababab]">Total</p>
-        <h1 className="text-[#f5f5f5] text-md sm:text-lg">Rp {totalPriceWithTax.toFixed(0)}</h1>
+        <p className="text-xs sm:text-md text-gray-500 dark:text-gray-400">Total</p>
+        <h1 className="text-gray-900 dark:text-gray-100 text-md sm:text-lg">
+          Rp {totalPriceWithTax.toFixed(0)}
+        </h1>
       </div>
 
       {/* Payment Method */}
@@ -118,7 +105,13 @@ const Bill = () => {
             key={method}
             onClick={() => setPaymentMethod(method)}
             className={`flex-1 px-4 py-3 rounded-lg font-semibold transition-colors duration-200
-              ${paymentMethod === method ? "bg-[#383737] text-white" : "bg-[#1f1f1f] text-[#ababab] hover:bg-[#2a2a2a]"}`}
+              ${
+                paymentMethod === method
+                  ? method === "Cash"
+                    ? "bg-green-600 dark:bg-green-500 text-white"
+                    : "bg-blue-600 dark:bg-blue-500 text-white"
+                  : "bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-700"
+              }`}
           >
             {method}
           </button>
@@ -128,28 +121,32 @@ const Bill = () => {
       {/* Cash Input & Kembalian */}
       {paymentMethod === "Cash" && (
         <div className="flex flex-col px-5 mt-4 gap-2">
-          <label className="text-[#ababab] text-sm font-medium">Cash Given</label>
+          <label className="text-gray-500 dark:text-gray-400 text-sm font-medium">
+            Cash Given
+          </label>
           <input
             type="number"
             value={cashGiven}
             onChange={(e) => setCashGiven(Number(e.target.value))}
-            className="bg-[#1f1f1f] text-white px-3 py-2 rounded-lg focus:outline-none"
+            className="bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 rounded-lg focus:outline-none"
             placeholder="Masukkan jumlah cash"
           />
           {cashGiven >= totalPriceWithTax && (
-            <p className="text-green-400 font-semibold">Kembalian: Rp {change.toFixed(0)}</p>
+            <p className="text-green-400 font-semibold">
+              Kembalian: Rp {change.toFixed(0)}
+            </p>
           )}
         </div>
       )}
 
       {/* Action Buttons */}
       <div className="flex flex-col sm:flex-row items-stretch gap-3 px-5 mt-4">
-        <button className="flex-1 bg-[#025cca] px-4 py-3 rounded-lg text-[#f5f5f5] font-semibold text-lg">
+        <button className="flex-1 bg-blue-700 dark:bg-blue-600 px-4 py-3 rounded-lg text-white font-semibold text-lg">
           Print Receipt
         </button>
         <button
           onClick={handlePlaceOrder}
-          className="flex-1 bg-[#f6b100] px-4 py-3 rounded-lg text-[#1f1f1f] font-semibold text-lg"
+          className="flex-1 bg-yellow-500 dark:bg-yellow-600 px-4 py-3 rounded-lg text-gray-900 dark:text-gray-100 font-semibold text-lg"
         >
           Place Order
         </button>
