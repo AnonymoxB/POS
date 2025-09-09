@@ -32,7 +32,7 @@ const productSchema = new mongoose.Schema(
     },
     lastPurchasePrice: {
       type: Number,
-      default: 0, // harga beli terakhir
+      default: 0, 
     },
     density:{
       type: Number,

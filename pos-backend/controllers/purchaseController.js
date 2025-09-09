@@ -75,6 +75,7 @@ exports.createPurchase = async (req, res) => {
 
       product.stockBase = newStock;
       product.hpp = newStock > 0 ? (oldValue + newValue) / newStock : item.price;
+      product.lastPurchasePrice = item.price; // ✅ update harga beli terakhir
 
       await product.save({ session });
 
@@ -204,6 +205,7 @@ exports.updatePurchase = async (req, res) => {
 
       product.stockBase = newStock;
       product.hpp = newStock > 0 ? (oldValue + newValue) / newStock : item.price;
+      product.lastPurchasePrice = item.price; // ✅ update harga beli terakhir
 
       await product.save({ session });
       await updateDishHPP(product._id, session);
@@ -240,6 +242,7 @@ exports.updatePurchase = async (req, res) => {
     session.endSession();
   }
 };
+
 
 
 
