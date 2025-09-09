@@ -72,7 +72,7 @@ const MenuContainer = () => {
   };
 
   return (
-    <>
+    <div className="flex flex-col h-screen">
       {/* Categories */}
       <div className="grid grid-cols-4 gap-4 px-6 py-4">
         {categories.map((cat, index) => {
@@ -127,10 +127,10 @@ const MenuContainer = () => {
         })}
       </div>
 
-      <hr className="border-gray-300 dark:border-gray-700 border-t-2 mt-4" />
+      <hr className="border-gray-300 dark:border-gray-700 border-t-2" />
 
       {/* Dishes */}
-      <div className="px-2 sm:px-4 py-4 overflow-y-auto"  style={{ maxHeight: 'calc(100vh - 200px)' }}>
+      <div className="flex-1 overflow-y-auto px-2 sm:px-4 py-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
           {filteredDishes.map((dish) => (
             <div
@@ -181,7 +181,7 @@ const MenuContainer = () => {
           ))}
         </div>
       </div>
-    </>
+    </div>
   );
 };
 

@@ -59,7 +59,7 @@ const Menu = () => {
         </div>
 
         {/* Scrollable Bill */}
-        <div className="flex-1 overflow-y-auto px-4 py-2">
+        <div className="sticky bottom-0 bg-white dark:bg-[#1a1a1a] border-t px-4 py-3 z-10">
           <Bill />
         </div>
       </div>
