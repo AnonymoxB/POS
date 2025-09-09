@@ -1,3 +1,4 @@
+// Menu.jsx
 import React, { useEffect } from "react";
 import BottomNav from "../components/shared/BottomNav";
 import BckButton from "../components/shared/BckButton";
@@ -17,8 +18,9 @@ const Menu = () => {
 
   return (
     <section className="bg-gray-50 dark:bg-[#1f1f1f] min-h-[calc(100vh-5rem)] flex flex-col lg:flex-row gap-3 overflow-hidden px-2 lg:px-0 transition-colors">
+
       {/* Left Div */}
-      <div className="flex-[3] w-full lg:w-auto">
+      <div className="flex-[3] w-full lg:w-auto flex flex-col">
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between px-4 lg:px-10 py-4 gap-4">
           <div className="flex items-center gap-4">
             <BckButton />
@@ -39,13 +41,16 @@ const Menu = () => {
           </div>
         </div>
 
-        <MenuContainer />
+        {/* Scrollable Menu Container */}
+        <div className="flex-1 overflow-y-auto">
+          <MenuContainer />
+        </div>
       </div>
 
       {/* Right Div */}
       <div className="flex-[1] w-full lg:w-auto bg-white dark:bg-[#1a1a1a] rounded-lg pt-2 lg:mt-4 lg:mr-3 flex flex-col max-h-[calc(100vh-6rem)] shadow-md dark:shadow-none border border-gray-200 dark:border-[#2a2a2a] transition-colors">
-        
-        {/* Sticky Header: Customer + Cart */}
+
+        {/* Sticky Header */}
         <div className="sticky top-0 bg-white dark:bg-[#1a1a1a] z-10 px-4 py-2">
           <CustomerInfo />
           <hr className="border-gray-200 dark:border-[#2a2a2a] my-2" />
@@ -58,7 +63,6 @@ const Menu = () => {
           <Bill />
         </div>
       </div>
-
 
       <BottomNav />
     </section>

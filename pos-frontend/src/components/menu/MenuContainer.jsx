@@ -130,7 +130,7 @@ const MenuContainer = () => {
       <hr className="border-gray-300 dark:border-gray-700 border-t-2 mt-4" />
 
       {/* Dishes */}
-      <div className="max-h-[calc(100vh-300px)] overflow-y-auto px-2 sm:px-4 py-4">
+      <div className="px-2 sm:px-4 py-4 overflow-y-auto"  style={{ maxHeight: 'calc(100vh - 200px)' }}>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
           {filteredDishes.map((dish) => (
             <div

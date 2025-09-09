@@ -142,13 +142,13 @@ const Bill = () => {
       {/* Action Buttons */}
       <div className="flex flex-col sm:flex-row items-stretch gap-3 px-5 mt-4">
         <button className="flex-1 bg-blue-700 dark:bg-blue-600 px-4 py-3 rounded-lg text-white font-semibold text-lg">
-          Print Receipt
+          Print
         </button>
         <button
           onClick={handlePlaceOrder}
           className="flex-1 bg-yellow-500 dark:bg-yellow-600 px-4 py-3 rounded-lg text-gray-900 dark:text-gray-100 font-semibold text-lg"
         >
-          Place Order
+          Order
         </button>
       </div>
 
