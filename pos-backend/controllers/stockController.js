@@ -122,8 +122,9 @@ exports.getStockSummary = async (req, res) => {
       match.createdAt = { $gte: new Date(startDate), $lte: new Date(endDate) };
     }
 
-    // Ambil semua produk
-    const products = await Product.find().populate("defaultUnit", "short conversion").populate("baseUnit", "short");
+    // Ambil semua produk + default unit
+    const products = await Product.find()
+      .populate("defaultUnit", "short conversion");
 
     const result = [];
 
@@ -172,8 +173,7 @@ exports.getStockSummary = async (req, res) => {
         totalIn,
         totalOut,
         closingBalance,
-        unitShort: product.defaultUnit?.short || product.baseUnit?.short,
-        baseUnitShort: product.baseUnit?.short,
+        unitShort: product.defaultUnit?.short || "-",
       });
     }
 
@@ -183,6 +183,7 @@ exports.getStockSummary = async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 };
+
 
 
 
