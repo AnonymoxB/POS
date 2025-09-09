@@ -167,12 +167,12 @@ const Expense = () => {
                     <td className="px-3 py-2">
                       {new Date(exp.date).toLocaleDateString("id-ID")}
                     </td>
-                    <td className="px-3 py-2">{exp.note}</td>
-                    <td className="px-3 py-2">{exp.category}</td>
-                    <td className="px-3 py-2 text-right">
+                    <td className=" border border-gray-300 dark:border-gray-600 px-3 py-2">{exp.note}</td>
+                    <td className=" border border-gray-300 dark:border-gray-600 px-3 py-2">{exp.category}</td>
+                    <td className=" border border-gray-300 dark:border-gray-600 px-3 py-2 text-right">
                       Rp {exp.amount?.toLocaleString("id-ID")}
                     </td>
-                    <td className="px-3 py-2 text-center flex gap-2 justify-center">
+                    <td className=" border border-gray-300 dark:border-gray-600 px-3 py-2 text-center flex gap-2 justify-center">
                       <Button
                         size="sm"
                         className="bg-blue-600 hover:bg-blue-700"

@@ -364,20 +364,20 @@ export default function Stock() {
                         key={s._id}
                         className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-[#2a2a2a]"
                       >
-                        <td className="px-3 py-2">
+                        <td className="border border-gray-300 dark:border-gray-600 px-3 py-2">
                           {new Date(s.createdAt).toLocaleString("id-ID")}
                         </td>
-                        <td className="px-3 py-2">{s.product?.name}</td>
+                        <td className="border border-gray-300 dark:border-gray-600 px-3 py-2">{s.product?.name}</td>
                         <td
-                          className={`px-3 py-2 font-semibold ${
+                          className={`border border-gray-300 dark:border-gray-600 px-3 py-2 font-semibold ${
                             s.type === "IN" ? "text-green-600" : "text-red-500"
                           }`}
                         >
                           {s.type}
                         </td>
-                        <td className="px-3 py-2 text-right">{s.qty}</td>
-                        <td className="px-3 py-2">{s.unit?.short}</td>
-                        <td className="px-3 py-2">{s.note || "-"}</td>
+                        <td className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-right">{s.qty}</td>
+                        <td className="border border-gray-300 dark:border-gray-600 px-3 py-2">{s.unit?.short}</td>
+                        <td className="border border-gray-300 dark:border-gray-600 px-3 py-2">{s.note || "-"}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -437,12 +437,12 @@ export default function Stock() {
                         key={item.productId}
                         className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-[#2a2a2a]"
                       >
-                        <td className="px-3 py-2">{sumFirst + idx + 1}</td>
-                        <td className="px-3 py-2">{item.productName}</td>
-                        <td className="px-3 py-2 text-right">{item.totalIn}</td>
-                        <td className="px-3 py-2 text-right">{item.totalOut}</td>
-                        <td className="px-3 py-2 text-right">{item.balance}</td>
-                        <td className="px-3 py-2">{item.unitShort}</td>
+                        <td className="border border-gray-300 dark:border-gray-600 px-3 py-2">{sumFirst + idx + 1}</td>
+                        <td className="border border-gray-300 dark:border-gray-600 px-3 py-2">{item.productName}</td>
+                        <td className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-right">{item.totalIn}</td>
+                        <td className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-right">{item.totalOut}</td>
+                        <td className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-right">{item.balance}</td>
+                        <td className="border border-gray-300 dark:border-gray-600 px-3 py-2">{item.unitShort}</td>
                       </tr>
                     ))}
                   </tbody>

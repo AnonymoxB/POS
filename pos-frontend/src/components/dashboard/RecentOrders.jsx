@@ -20,12 +20,6 @@ const RecentOrders = () => {
 
   const orders = resData?.data?.data || [];
 
-  const handleStatusChange = ({ orderId, orderStatus }) => {
-    orderStatusUpdateMutation.mutate({ orderId, orderStatus });
-  };
-
-  
-
   const orderStatusUpdateMutation = useMutation({
     mutationFn: ({ orderId, orderStatus }) =>
       updateOrderStatus({ orderId, orderStatus }),
@@ -38,13 +32,17 @@ const RecentOrders = () => {
     },
   });
 
+  const handleStatusChange = ({ orderId, orderStatus }) => {
+    orderStatusUpdateMutation.mutate({ orderId, orderStatus });
+  };
+
   useEffect(() => {
     if (isError) {
       enqueueSnackbar("Something went wrong!", { variant: "error" });
     }
   }, [isError]);
 
-  // Filter by search
+  // Filter
   const filteredOrders = orders.filter(
     (order) =>
       order.customerDetails?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -73,7 +71,7 @@ const RecentOrders = () => {
     return pages;
   };
 
-  // Hitung total nominal page
+  // Hitung total nominal halaman
   const totalAmount = currentOrders.reduce(
     (sum, order) => sum + (order.bills?.totalWithTax || 0),
     0
@@ -90,7 +88,7 @@ const RecentOrders = () => {
   };
 
   return (
-    <Card className="bg-[#262626] text-white">
+    <Card className="bg-white dark:bg-[#262626] text-gray-900 dark:text-white">
       <CardContent className="p-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
           <h2 className="text-xl font-bold">Recent Orders</h2>
@@ -105,38 +103,43 @@ const RecentOrders = () => {
               setSearchTerm(e.target.value);
               setCurrentPage(1);
             }}
-            className="bg-[#333] text-white border-gray-600"
+            className="bg-gray-100 dark:bg-[#333] text-gray-900 dark:text-white border-gray-300 dark:border-gray-600"
           />
         </div>
 
         {currentOrders.length === 0 ? (
-          <p className="text-gray-400">Tidak ada pesanan terbaru.</p>
+          <p className="text-gray-500 dark:text-gray-400">Tidak ada pesanan terbaru.</p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full border-collapse border border-gray-600 text-sm">
+            <table className="w-full border-collapse border border-gray-300 dark:border-gray-600 text-sm">
               <thead>
-                <tr className="bg-[#333] text-gray-300">
-                  <th className="border border-gray-600 px-3 py-2">Order ID</th>
-                  <th className="border border-gray-600 px-3 py-2">Customer</th>
-                  <th className="border border-gray-600 px-3 py-2">Status</th>
-                  <th className="border border-gray-600 px-3 py-2">Date & Time</th>
-                  <th className="border border-gray-600 px-3 py-2">Items</th>
-                  <th className="border border-gray-600 px-3 py-2">Table No</th>
-                  <th className="border border-gray-600 px-3 py-2 text-right">Total</th>
-                  <th className="border border-gray-600 px-3 py-2 text-center">Payment Method</th>
+                <tr className="bg-gray-200 dark:bg-[#333] text-gray-700 dark:text-gray-300">
+                  <th className="border border-gray-300 dark:border-gray-600 px-3 py-2">Order ID</th>
+                  <th className="border border-gray-300 dark:border-gray-600 px-3 py-2">Customer</th>
+                  <th className="border border-gray-300 dark:border-gray-600 px-3 py-2">Status</th>
+                  <th className="border border-gray-300 dark:border-gray-600 px-3 py-2">Date & Time</th>
+                  <th className="border border-gray-300 dark:border-gray-600 px-3 py-2">Items</th>
+                  <th className="border border-gray-300 dark:border-gray-600 px-3 py-2">Table No</th>
+                  <th className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-right">Total</th>
+                  <th className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-center">Payment Method</th>
                 </tr>
               </thead>
               <tbody>
                 {currentOrders.map((order) => (
-                  <tr key={order._id} className="border-t border-gray-700 hover:bg-[#333]/50">
-                    <td className="border border-gray-600 px-3 py-2">#{Math.floor(new Date(order.orderDate).getTime())}</td>
-                    <td className="border border-gray-600 px-3 py-2">
-                      {order.customerDetails?.name || "-"}
+                  <tr
+                    key={order._id}
+                    className="border-t border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-[#333]"
+                  >
+                    <td className="px-3 py-2">
+                      #{Math.floor(new Date(order.orderDate).getTime())}
                     </td>
-                    <td className="border border-gray-600 px-3 py-2">
+                    <td className="border border-gray-300 dark:border-gray-600 px-3 py-2">{order.customerDetails?.name || "-"}</td>
+                    <td className="border border-gray-300 dark:border-gray-600 px-3 py-2">
                       <select
-                        className={`bg-[#1a1a1a] text-[#f5f5f5] border border-gray-500 p-2 rounded-lg focus:outline-none ${
-                          order.orderStatus === "Ready" ? "text-green-500" : "text-yellow-500"
+                        className={`rounded-md border border-gray-300 dark:border-gray-600 px-2 py-1 text-sm bg-gray-100 dark:bg-[#1a1a1a] text-gray-900 dark:text-white ${
+                          order.orderStatus === "Ready"
+                            ? "text-green-600 dark:text-green-400"
+                            : "text-yellow-600 dark:text-yellow-400"
                         }`}
                         value={order.orderStatus}
                         onChange={(e) =>
@@ -147,46 +150,49 @@ const RecentOrders = () => {
                         <option value="Ready">Ready</option>
                       </select>
                     </td>
-                    <td className="border border-gray-600 px-3 py-2">{formatDateAndTime(order.orderDate)}</td>
-                    <td className="border border-gray-600 px-3 py-2">
+                    <td className="border border-gray-300 dark:border-gray-600 px-3 py-2">{formatDateAndTime(order.orderDate)}</td>
+                    <td className="border border-gray-300 dark:border-gray-600 px-3 py-2">
                       <ul className="list-disc pl-5">
                         {groupItems(order.items || []).map((item) => (
-                          <li key={`${item.dishId}-${item.name}`}>{item.name} x {item.qty}</li>
+                          <li key={`${item.dishId}-${item.name}`}>
+                            {item.name} x {item.qty}
+                          </li>
                         ))}
                       </ul>
                     </td>
-                    <td className="border border-gray-600 px-3 py-2">
-                      {order.customerDetails?.type === "dinein" ? `Table - ${order.customerDetails.tableNo || "?"}` : "Takeaway"}
+                    <td className="border border-gray-300 dark:border-gray-600 px-3 py-2">
+                      {order.customerDetails?.type === "dinein"
+                        ? `Table - ${order.customerDetails.tableNo || "?"}`
+                        : "Takeaway"}
                     </td>
-                    <td className="border border-gray-600 px-3 py-2 text-right">
+                    <td className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-right">
                       Rp {order.bills?.totalWithTax?.toLocaleString("id-ID") || 0}
                     </td>
-                    <td className="border border-gray-600 px-3 py-2 text-center">
-                      {order.paymentMethod}
-                    </td>
+                    <td className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-center">{order.paymentMethod}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
 
             {/* Total */}
-            <div className="mt-2 text-right text-white font-semibold">
+            <div className="mt-2 text-right font-semibold text-gray-900 dark:text-white">
               Total Nominal Halaman: Rp {totalAmount.toLocaleString("id-ID")}
             </div>
 
-    
+            {/* Footer */}
             <div className="flex flex-col sm:flex-row justify-between items-center gap-3 mt-4">
-              <div className="text-gray-400 text-sm">
+              <div className="text-gray-500 dark:text-gray-400 text-sm">
                 {filteredOrders.length > 0 && (
                   <span>
-                    Menampilkan <b>{indexOfFirstItem + 1}</b>–<b>{Math.min(indexOfLastItem, filteredOrders.length)}</b>{" "}
+                    Menampilkan <b>{indexOfFirstItem + 1}</b>–
+                    <b>{Math.min(indexOfLastItem, filteredOrders.length)}</b>{" "}
                     dari <b>{filteredOrders.length}</b> orders
                   </span>
                 )}
               </div>
 
               {/* Items per page */}
-              <div className="flex items-center gap-2 text-gray-300">
+              <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300 text-sm">
                 <label htmlFor="itemsPerPage">Tampilkan</label>
                 <select
                   id="itemsPerPage"
@@ -195,7 +201,7 @@ const RecentOrders = () => {
                     setItemsPerPage(Number(e.target.value));
                     setCurrentPage(1);
                   }}
-                  className="bg-[#333] text-white border border-gray-600 rounded px-2 py-1"
+                  className="rounded-md border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-[#333] px-2 py-1 text-gray-900 dark:text-white"
                 >
                   <option value={5}>5</option>
                   <option value={10}>10</option>
@@ -205,48 +211,48 @@ const RecentOrders = () => {
                 <span>per halaman</span>
               </div>
 
-              {/* Pagination buttons */}
+              {/* Pagination */}
               <div className="flex items-center gap-1">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                disabled={currentPage === 1}
-                                onClick={() => setCurrentPage((prev) => prev - 1)}
-                              >
-                                Prev
-                              </Button>
-              
-                              {getPagination().map((page, idx) =>
-                                page === "..." ? (
-                                  <span key={idx} className="px-2 text-gray-400">
-                                    ...
-                                  </span>
-                                ) : (
-                                  <Button
-                                    key={page}
-                                    size="sm"
-                                    variant={currentPage === page ? "default" : "outline"}
-                                    className={`${
-                                      currentPage === page
-                                        ? "bg-green-600 text-white"
-                                        : "bg-[#333] text-gray-300 hover:bg-gray-700"
-                                    }`}
-                                    onClick={() => setCurrentPage(page)}
-                                  >
-                                    {page}
-                                  </Button>
-                                )
-                              )}
-              
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                disabled={currentPage === totalPages}
-                                onClick={() => setCurrentPage((prev) => prev + 1)}
-                              >
-                                Next
-                              </Button>
-                            </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage((prev) => prev - 1)}
+                >
+                  Prev
+                </Button>
+
+                {getPagination().map((page, idx) =>
+                  page === "..." ? (
+                    <span key={idx} className="px-2 text-gray-400">
+                      ...
+                    </span>
+                  ) : (
+                    <Button
+                      key={page}
+                      size="sm"
+                      variant={currentPage === page ? "default" : "outline"}
+                      className={`${
+                        currentPage === page
+                          ? "bg-green-600 text-white"
+                          : "bg-gray-200 dark:bg-[#333] text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-700"
+                      }`}
+                      onClick={() => setCurrentPage(page)}
+                    >
+                      {page}
+                    </Button>
+                  )
+                )}
+
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={currentPage === totalPages}
+                  onClick={() => setCurrentPage((prev) => prev + 1)}
+                >
+                  Next
+                </Button>
+              </div>
             </div>
           </div>
         )}

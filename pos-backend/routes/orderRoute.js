@@ -1,16 +1,28 @@
 const express = require("express");
-const {addOrder, getOrderById, getOrders, updateOrder} = require("../controllers/orderController");
-const { getPopularDishes } = require('../controllers/orderController');
+const {
+  addOrder,
+  getOrderById,
+  getOrders,
+  updateOrder,
+  getPopularDishes,
+  getOrderMetrics,
+  getProfitPerDish,
+} = require("../controllers/orderController");
 const { isVerifiedUser } = require("../middlewares/tokenVerification");
+
 const router = express.Router();
 
 router.get("/popular", isVerifiedUser, getPopularDishes);
+router.get("/metrics", isVerifiedUser, getOrderMetrics);
 
-router.route("/").post(isVerifiedUser, addOrder);
-router.route("/").get(isVerifiedUser, getOrders);
-router.route("/:id").get(isVerifiedUser, getOrderById);
-router.route("/:id").put(isVerifiedUser, updateOrder);
+router.route("/")
+  .post(isVerifiedUser, addOrder)
+  .get(isVerifiedUser, getOrders);
 
+router.route("/:id")
+  .get(isVerifiedUser, getOrderById)
+  .put(isVerifiedUser, updateOrder);
 
+router.get("/profit-per-dish", isVerifiedUser, getProfitPerDish);
 
 module.exports = router;

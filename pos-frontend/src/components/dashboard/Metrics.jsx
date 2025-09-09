@@ -13,7 +13,10 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-const formatRupiah = (num) => `Rp ${num.toLocaleString("id-ID")}`;
+const formatRupiah = (num) => {
+  if (typeof num !== "number") return "-";
+  return `Rp ${num.toLocaleString("id-ID")}`;
+};
 
 const Metrics = () => {
   const [summary, setSummary] = useState(null);
@@ -29,7 +32,7 @@ const Metrics = () => {
       );
       setSummary(res.data?.data || null);
     } catch (err) {
-      console.error("Gagal ambil data dashboard:", err);
+      console.error("❌ Gagal ambil data dashboard:", err);
     } finally {
       setLoading(false);
     }
@@ -143,7 +146,7 @@ const Metrics = () => {
           <h3 className="text-lg font-semibold mb-4">Profit Per Dish</h3>
 
           <ResponsiveContainer width="100%" height={400}>
-            <BarChart data={summary.profitPerDish}>
+            <BarChart data={summary.profitPerDish.sort((a, b) => b.profit - a.profit)}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="dish" />
               <YAxis />
@@ -164,26 +167,32 @@ const Metrics = () => {
                   <th className="p-2">Terjual</th>
                   <th className="p-2">Revenue</th>
                   <th className="p-2">Profit</th>
+                  <th className="p-2">% Margin</th>
                 </tr>
               </thead>
               <tbody>
                 {summary.profitPerDish
                   .sort((a, b) => b.profit - a.profit)
-                  .map((d, idx) => (
-                    <tr
-                      key={idx}
-                      className="border-b hover:bg-gray-50 dark:hover:bg-gray-700"
-                    >
-                      <td className="p-2">{d.dish}</td>
-                      <td className="p-2">{formatRupiah(d.price)}</td>
-                      <td className="p-2">{formatRupiah(d.hpp)}</td>
-                      <td className="p-2">{d.totalSold}</td>
-                      <td className="p-2">{formatRupiah(d.revenue)}</td>
-                      <td className="p-2 font-semibold text-green-600">
-                        {formatRupiah(d.profit)}
-                      </td>
-                    </tr>
-                  ))}
+                  .map((d, idx) => {
+                    const margin =
+                      d.revenue > 0 ? ((d.profit / d.revenue) * 100).toFixed(1) : 0;
+                    return (
+                      <tr
+                        key={idx}
+                        className="border-b hover:bg-gray-50 dark:hover:bg-gray-700"
+                      >
+                        <td className="p-2">{d.dish}</td>
+                        <td className="p-2">{formatRupiah(d.price)}</td>
+                        <td className="p-2">{formatRupiah(d.hpp)}</td>
+                        <td className="p-2">{d.totalSold}</td>
+                        <td className="p-2">{formatRupiah(d.revenue)}</td>
+                        <td className="p-2 font-semibold text-green-600">
+                          {formatRupiah(d.profit)}
+                        </td>
+                        <td className="p-2">{margin}%</td>
+                      </tr>
+                    );
+                  })}
               </tbody>
             </table>
           </div>
