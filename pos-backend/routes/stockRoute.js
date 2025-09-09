@@ -21,6 +21,10 @@ router.get("/summary", controller.getStockSummary);
 // Per produk
 router.get("/summary/:productId", controller.getStockSummaryByProduct);
 
+//Adjustment
+router.post("/adjustment", createStockAdjustment);
+
+
 // =====================
 // History routes
 // =====================

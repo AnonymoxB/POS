@@ -36,6 +36,7 @@ import {
   ContactRound,
   Wheat,
   ChartNoAxesCombinedIcon,
+  PencilRuler
 } from "lucide-react";
 import ProfitPerDish from "../components/dashboard/ProfitPerDish";
 
@@ -72,7 +73,11 @@ const tabGroups = [
   },
   {
     group: "Inventory",
-    items: [{ name: "Stock", icon: Boxes }],
+    items: [
+      { name: "Stock", icon: Boxes },
+      { name: "Stock Adjustment", icon: PencilRuler}
+    ],
+    
   },
 ];
 
@@ -197,6 +202,7 @@ const Dashboard = () => {
         {activeTab === "Dish BOM" && <DishBOMPage />}
         {activeTab === "Expenses" && <Expense />}
         {activeTab === "Profit per Dish" && <ProfitPerDish/>}
+
       </div>
 
       {/* Modals */}

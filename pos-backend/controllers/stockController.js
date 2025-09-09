@@ -127,6 +127,7 @@ exports.getStockSummary = async (req, res) => {
       .populate("defaultUnit", "short conversion");
 
     const result = [];
+    
 
     for (const product of products) {
       // Hitung saldo awal (sebelum periode)
@@ -433,6 +434,55 @@ exports.exportStockSummaryByProduct = async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 };
+
+// ===========================
+// Adjustment Stock)
+// ===========================
+
+exports.createStockAdjustment = async (req, res) => {
+  try {
+    const { productId, qty, unitId, type, note } = req.body;
+
+    if (!["IN", "OUT"].includes(type)) {
+      return res.status(400).json({ success: false, message: "Type must be IN or OUT" });
+    }
+
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.status(404).json({ success: false, message: "Product not found" });
+    }
+
+    const unit = await Unit.findById(unitId);
+    if (!unit) {
+      return res.status(400).json({ success: false, message: "Invalid unit" });
+    }
+
+    let qtyBase = qty;
+    let unitBase = unit._id;
+
+    // Konversi ke baseUnit jika unit bukan base
+    if (unit.baseUnit) {
+      qtyBase = qty * unit.conversion;
+      unitBase = unit.baseUnit;
+    }
+
+    const adjustment = await StockTransaction.create({
+      product: product._id,
+      qty,
+      unit: unit._id,
+      qtyBase,
+      unitBase,
+      type,
+      note: note || "Stock Adjustment",
+    });
+
+    res.status(201).json({ success: true, data: adjustment });
+  } catch (err) {
+    console.error("🔥 createStockAdjustment Error:", err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
 
 // ===========================
 // Export Riwayat Stok per Produk (Excel)

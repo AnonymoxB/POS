@@ -150,6 +150,10 @@ export const getAllStockSummary = () => api.get("/api/stock/summary");
 export const getStockHistoryByProduct = (productId) =>
   api.get(`api/stock/history/${productId}`);
 
+export const createStockAdjustment = (data) =>
+  api.post("api/stock/adjustment", data);
+
+
   // Export Excel
 export const exportStock = async (type, productId) => {
   const res = await api.get("api/stock/export", {

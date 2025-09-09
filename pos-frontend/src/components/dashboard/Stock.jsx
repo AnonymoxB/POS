@@ -443,7 +443,7 @@ export default function Stock() {
                         <td className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-right">{item.openingBalance}</td>
                         <td className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-right">{item.totalIn}</td>
                         <td className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-right">{item.totalOut}</td>
-                        <td className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-right">{item.balance}</td>
+                        <td className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-right">{item.closingBalance.toFixed(2)}</td>
                         <td className="border border-gray-300 dark:border-gray-600 px-3 py-2">{item.unitShort}</td>
                       </tr>
                     ))}
