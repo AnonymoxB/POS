@@ -39,6 +39,7 @@ import {
   PencilRuler
 } from "lucide-react";
 import ProfitPerDish from "../components/dashboard/ProfitPerDish";
+import AdjustmentStock from "../components/dashboard/AdjustmentStock";
 
 // Grup tab
 const tabGroups = [
@@ -202,6 +203,7 @@ const Dashboard = () => {
         {activeTab === "Dish BOM" && <DishBOMPage />}
         {activeTab === "Expenses" && <Expense />}
         {activeTab === "Profit per Dish" && <ProfitPerDish/>}
+        {activeTab === "Adjustment Stock" && <AdjustmentStock/>}
 
       </div>
 

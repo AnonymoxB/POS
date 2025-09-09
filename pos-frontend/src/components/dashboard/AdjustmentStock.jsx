@@ -6,7 +6,7 @@ import {
   createStockTransaction,
   getProducts,
   getUnits,
-} from "../https";
+} from "../../https";
 import {
   Card,
   CardContent,
