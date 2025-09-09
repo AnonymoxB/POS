@@ -425,6 +425,7 @@ export default function Stock() {
                     <tr className="bg-gray-200 dark:bg-[#333] text-gray-700 dark:text-gray-300">
                       <th className="border border-gray-300 dark:border-gray-600 px-3 py-2">#</th>
                       <th className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-left">Produk</th>
+                      <th className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-right">Awal (base)</th>
                       <th className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-right">Masuk (base)</th>
                       <th className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-right">Keluar (base)</th>
                       <th className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-right">Saldo</th>
@@ -439,6 +440,7 @@ export default function Stock() {
                       >
                         <td className="border border-gray-300 dark:border-gray-600 px-3 py-2">{sumFirst + idx + 1}</td>
                         <td className="border border-gray-300 dark:border-gray-600 px-3 py-2">{item.productName}</td>
+                        <td className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-right">{item.openingBalance}</td>
                         <td className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-right">{item.totalIn}</td>
                         <td className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-right">{item.totalOut}</td>
                         <td className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-right">{item.balance}</td>

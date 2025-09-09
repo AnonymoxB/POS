@@ -113,76 +113,77 @@ exports.deleteStockTransaction = async (req, res) => {
 =========================== */
 
 
-// Summary stok per produk (semua produk)
+// Summary stok per produk (semua produk + opening balance)
 exports.getStockSummary = async (req, res) => {
   try {
-    const summary = await StockTransaction.aggregate([
-      {
-        $group: {
-          _id: "$product",
-          totalIn: {
-            $sum: { $cond: [{ $eq: ["$type", "IN"] }, "$qtyBase", 0] },
-          },
-          totalOut: {
-            $sum: { $cond: [{ $eq: ["$type", "OUT"] }, "$qtyBase", 0] },
-          },
-        },
-      },
-      {
-        $lookup: {
-          from: "products",
-          localField: "_id",
-          foreignField: "_id",
-          as: "product",
-        },
-      },
-      { $unwind: "$product" },
-      {
-        $lookup: {
-          from: "units",
-          localField: "product.defaultUnit",
-          foreignField: "_id",
-          as: "defaultUnit",
-        },
-      },
-      { $unwind: { path: "$defaultUnit", preserveNullAndEmptyArrays: true } },
-      {
-        $lookup: {
-          from: "units",
-          localField: "product.baseUnit",
-          foreignField: "_id",
-          as: "baseUnit",
-        },
-      },
-      { $unwind: { path: "$baseUnit", preserveNullAndEmptyArrays: true } },
-      {
-        $project: {
-          productId: "$_id",
-          productName: "$product.name",
-          totalIn: 1,
-          totalOut: 1,
-          balanceBase: { $subtract: ["$totalIn", "$totalOut"] },
-          balance: {
-            $divide: [
-              { $subtract: ["$totalIn", "$totalOut"] },
-              { $ifNull: ["$defaultUnit.conversion", 1] },
-            ],
-          },
-          conversion: { $ifNull: ["$defaultUnit.conversion", 1] }, // ✅ Tambah conversion
-          unitShort: {
-            $ifNull: ["$defaultUnit.short", "$baseUnit.short"],
-          },
-          baseUnitShort: "$baseUnit.short", // ✅ Tambah base unit
-        },
-      },
-    ]);
+    const { startDate, endDate } = req.query;
+    const match = {};
+    if (startDate && endDate) {
+      match.createdAt = { $gte: new Date(startDate), $lte: new Date(endDate) };
+    }
 
-    res.json({ success: true, data: summary });
+    // Ambil semua produk
+    const products = await Product.find().populate("defaultUnit", "short conversion").populate("baseUnit", "short");
+
+    const result = [];
+
+    for (const product of products) {
+      // Hitung saldo awal (sebelum periode)
+      let openingMatch = { product: product._id };
+      if (startDate) {
+        openingMatch.createdAt = { $lt: new Date(startDate) };
+      }
+
+      const openingAgg = await StockTransaction.aggregate([
+        { $match: openingMatch },
+        {
+          $group: {
+            _id: "$product",
+            totalIn: { $sum: { $cond: [{ $eq: ["$type", "IN"] }, "$qtyBase", 0] } },
+            totalOut: { $sum: { $cond: [{ $eq: ["$type", "OUT"] }, "$qtyBase", 0] } },
+          },
+        },
+      ]);
+
+      const openingBalance = openingAgg.length
+        ? openingAgg[0].totalIn - openingAgg[0].totalOut
+        : 0;
+
+      // Hitung transaksi dalam periode
+      const trxAgg = await StockTransaction.aggregate([
+        { $match: { ...match, product: product._id } },
+        {
+          $group: {
+            _id: "$product",
+            totalIn: { $sum: { $cond: [{ $eq: ["$type", "IN"] }, "$qtyBase", 0] } },
+            totalOut: { $sum: { $cond: [{ $eq: ["$type", "OUT"] }, "$qtyBase", 0] } },
+          },
+        },
+      ]);
+
+      const totalIn = trxAgg.length ? trxAgg[0].totalIn : 0;
+      const totalOut = trxAgg.length ? trxAgg[0].totalOut : 0;
+      const closingBalance = openingBalance + totalIn - totalOut;
+
+      result.push({
+        productId: product._id,
+        productName: product.name,
+        openingBalance,
+        totalIn,
+        totalOut,
+        closingBalance,
+        unitShort: product.defaultUnit?.short || product.baseUnit?.short,
+        baseUnitShort: product.baseUnit?.short,
+      });
+    }
+
+    res.json({ success: true, data: result });
   } catch (err) {
     console.error("🔥 getStockSummary Error:", err);
     res.status(500).json({ success: false, message: err.message });
   }
 };
+
 
 
 
