@@ -203,7 +203,7 @@ const Dashboard = () => {
         {activeTab === "Dish BOM" && <DishBOMPage />}
         {activeTab === "Expenses" && <Expense />}
         {activeTab === "Profit per Dish" && <ProfitPerDish/>}
-        {activeTab === "Adjustment Stock" && <AdjustmentStock/>}
+        {activeTab === "Stock Adjustment" && <AdjustmentStock/>}
 
       </div>
 

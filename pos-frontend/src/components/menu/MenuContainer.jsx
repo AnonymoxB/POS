@@ -133,12 +133,12 @@ const MenuContainer = () => {
       <hr className="border-gray-300 dark:border-gray-700 border-t-2 mt-4" />
 
       {/* Dishes */}
-      <div className="flex-1 overflow-y-auto px-2 sm:px-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 py-4">
+      <div className="overflow-x-auto py-4 px-2 sm:px-4">
+        <div className="flex flex-row gap-4 w-max min-w-full">
           {filteredDishes.map((dish) => (
             <div
               key={dish._id}
-              className="flex flex-col justify-between p-3 sm:p-4 rounded-lg bg-white dark:bg-[#1a1a1a] hover:bg-gray-100 dark:hover:bg-[#2a2a2a] transition-all duration-200 w-full shadow-sm"
+              className="flex flex-col justify-between p-3 sm:p-4 rounded-lg bg-white dark:bg-[#1a1a1a] hover:bg-gray-100 dark:hover:bg-[#2a2a2a] transition-all duration-200 w-[220px] shadow-sm flex-shrink-0"
             >
               <div className="flex items-start justify-between w-full">
                 <h1 className="text-gray-900 dark:text-white text-sm sm:text-base md:text-lg font-semibold">
@@ -184,6 +184,7 @@ const MenuContainer = () => {
           ))}
         </div>
       </div>
+
     </>
   );
 };
