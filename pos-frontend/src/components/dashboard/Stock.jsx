@@ -147,7 +147,6 @@ export default function Stock() {
   const { data: txData, isLoading: txLoading } = useQuery({
     queryKey: ["stockTransactions"],
     queryFn: getStockTransactions,
-    onError: (err) => console.error(err),
   });
   const transactions = Array.isArray(txData?.data?.data) ? txData.data.data : [];
 
@@ -159,13 +158,14 @@ export default function Stock() {
     [transactions]
   );
 
-  // --- Summary ---
+  // --- Summary (per produk) ---
   const { data: summaryData, isLoading: summaryLoading } = useQuery({
     queryKey: ["stockSummary"],
     queryFn: getStockSummary,
-    onError: (err) => console.error(err),
   });
-  const summaryRows = Array.isArray(summaryData?.data?.data) ? summaryData.data.data : [];
+  const summaryRows = Array.isArray(summaryData?.data?.data)
+    ? summaryData.data.data
+    : [];
 
   // --- Summary by product ---
   const { data: summaryByProductData, isLoading: summaryByProductLoading } =
@@ -173,7 +173,6 @@ export default function Stock() {
       queryKey: ["summaryByProduct", selectedProduct],
       queryFn: () => getStockSummaryByProduct(selectedProduct),
       enabled: !!selectedProduct,
-      onError: (err) => console.error(err),
     });
 
   // --- History ---
@@ -181,17 +180,19 @@ export default function Stock() {
     queryKey: ["historyByProduct", selectedProduct],
     queryFn: () => getStockHistoryByProduct(selectedProduct),
     enabled: !!selectedProduct,
-    onError: (err) => console.error(err),
   });
-  const historyRows = Array.isArray(historyData?.data?.data) ? historyData.data.data : [];
+  const historyRows = Array.isArray(historyData?.data?.data)
+    ? historyData.data.data
+    : [];
 
-  // --- All Summary ---
+  // --- All Summary (total semua) ---
   const { data: allSummaryData, isLoading: allSummaryLoading } = useQuery({
     queryKey: ["allSummary"],
     queryFn: getAllStockSummary,
-    onError: (err) => console.error(err),
   });
-  const allSummaryRows = Array.isArray(allSummaryData?.data?.data) ? allSummaryData.data.data : [];
+  const allSummaryRows = Array.isArray(allSummaryData?.data?.data)
+    ? allSummaryData.data.data
+    : [];
 
   // Filters
   const filteredTx = useMemo(() => {
@@ -203,7 +204,13 @@ export default function Stock() {
       const unit = t.unit?.short?.toLowerCase() || "";
       const note = t.note?.toLowerCase() || "";
       const date = new Date(t.createdAt).toLocaleString("id-ID").toLowerCase();
-      return product.includes(q) || type.includes(q) || unit.includes(q) || note.includes(q) || date.includes(q);
+      return (
+        product.includes(q) ||
+        type.includes(q) ||
+        unit.includes(q) ||
+        note.includes(q) ||
+        date.includes(q)
+      );
     });
   }, [transactions, searchTx]);
 
@@ -253,8 +260,6 @@ export default function Stock() {
     totalPages: histTotalPages,
   } = usePagination(filteredHistory, histItemsPerPage);
 
-  const numberFormatter = new Intl.NumberFormat("id-ID", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
-
   const tabs = [
     { key: "transactions", label: "Transaksi" },
     { key: "summary", label: "Ringkasan Stok" },
@@ -273,7 +278,11 @@ export default function Stock() {
               key={tab.key}
               variant={activeTab === tab.key ? "default" : "outline"}
               onClick={() => setActiveTab(tab.key)}
-              className={activeTab === tab.key ? "bg-green-600 hover:bg-green-700 text-white" : ""}
+              className={
+                activeTab === tab.key
+                  ? "bg-green-600 hover:bg-green-700 text-white"
+                  : ""
+              }
             >
               {tab.label}
             </Button>
@@ -298,6 +307,7 @@ export default function Stock() {
 
             {activeTab === "summaryByProduct" && selectedProduct && (
               <Button asChild className="bg-green-600 hover:bg-green-700">
+                {/* Route export summary per produk */}
                 <a href={`/api/stock/summary/export/${selectedProduct}`}>
                   <FileSpreadsheet size={18} className="mr-2" /> Export Ringkasan
                 </a>
@@ -306,6 +316,7 @@ export default function Stock() {
 
             {activeTab === "history" && selectedProduct && (
               <Button asChild className="bg-green-600 hover:bg-green-700">
+                {/* Route export history per produk */}
                 <a href={`/api/stock/history/export/${selectedProduct}`}>
                   <FileSpreadsheet size={18} className="mr-2" /> Export Riwayat
                 </a>
@@ -364,9 +375,7 @@ export default function Stock() {
                         >
                           {s.type}
                         </td>
-                        <td className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-right">
-                          {numberFormatter.format(s.qty)}
-                        </td>
+                        <td className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-right">{s.qty}</td>
                         <td className="border border-gray-300 dark:border-gray-600 px-3 py-2">{s.unit?.short}</td>
                         <td className="border border-gray-300 dark:border-gray-600 px-3 py-2">{s.note || "-"}</td>
                       </tr>
@@ -424,26 +433,18 @@ export default function Stock() {
                     </tr>
                   </thead>
                   <tbody>
-                    {sumItems.map((r, idx) => (
+                    {sumItems.map((item, idx) => (
                       <tr
-                        key={r.productId}
+                        key={item.productId}
                         className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-[#2a2a2a]"
                       >
-                        <td className="border border-gray-300 dark:border-gray-600 px-3 py-2">{idx + 1 + (sumPage - 1) * sumItemsPerPage}</td>
-                        <td className="border border-gray-300 dark:border-gray-600 px-3 py-2">{r.productName}</td>
-                        <td className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-right">
-                          {numberFormatter.format(r.beginQty)}
-                        </td>
-                        <td className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-right">
-                          {numberFormatter.format(r.qtyIn)}
-                        </td>
-                        <td className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-right">
-                          {numberFormatter.format(r.qtyOut)}
-                        </td>
-                        <td className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-right">
-                          {numberFormatter.format(r.balance)}
-                        </td>
-                        <td className="border border-gray-300 dark:border-gray-600 px-3 py-2">{r.unit}</td>
+                        <td className="border border-gray-300 dark:border-gray-600 px-3 py-2">{sumFirst + idx + 1}</td>
+                        <td className="border border-gray-300 dark:border-gray-600 px-3 py-2">{item.productName}</td>
+                        <td className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-right">{item.openingBalance}</td>
+                        <td className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-right">{item.totalIn}</td>
+                        <td className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-right">{item.totalOut}</td>
+                        <td className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-right">{item.closingBalance.toFixed(2)}</td>
+                        <td className="border border-gray-300 dark:border-gray-600 px-3 py-2">{item.unitShort}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -467,39 +468,30 @@ export default function Stock() {
         {/* ========================= Ringkasan per Produk ========================= */}
         {activeTab === "summaryByProduct" && (
           <div>
-            {summaryByProductLoading ? (
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold">Ringkasan per Produk</h2>
+            </div>
+
+            {!selectedProduct ? (
+              <p className="text-gray-500 dark:text-gray-400">Silakan pilih produk</p>
+            ) : summaryByProductLoading ? (
               <p className="text-gray-500 dark:text-gray-400">Loading...</p>
-            ) : !selectedProduct ? (
-              <p className="text-gray-500 dark:text-gray-400">Pilih produk terlebih dahulu.</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse text-sm">
                   <thead>
                     <tr className="bg-gray-200 dark:bg-[#333] text-gray-700 dark:text-gray-300">
-                      <th className="border border-gray-300 dark:border-gray-600 px-3 py-2">Tanggal</th>
-                      <th className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-left">Tipe</th>
-                      <th className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-right">Qty</th>
+                      <th className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-left">Produk</th>
+                      <th className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-right">Saldo</th>
                       <th className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-left">Unit</th>
-                      <th className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-left">Catatan</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {summaryByProductData?.data?.data?.map((r) => (
-                      <tr
-                        key={r._id}
-                        className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-[#2a2a2a]"
-                      >
-                        <td className="border border-gray-300 dark:border-gray-600 px-3 py-2">
-                          {new Date(r.createdAt).toLocaleString("id-ID")}
-                        </td>
-                        <td className="border border-gray-300 dark:border-gray-600 px-3 py-2">{r.type}</td>
-                        <td className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-right">
-                          {numberFormatter.format(r.qty)}
-                        </td>
-                        <td className="border border-gray-300 dark:border-gray-600 px-3 py-2">{r.unit?.short}</td>
-                        <td className="border border-gray-300 dark:border-gray-600 px-3 py-2">{r.note || "-"}</td>
-                      </tr>
-                    ))}
+                    <tr className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-[#2a2a2a]">
+                      <td className="px-3 py-2">{summaryByProductData?.data?.product?.name}</td>
+                      <td className="px-3 py-2 text-right">{summaryByProductData?.data?.balance}</td>
+                      <td className="px-3 py-2">{summaryByProductData?.data?.unitShort}</td>
+                    </tr>
                   </tbody>
                 </table>
               </div>
@@ -510,10 +502,23 @@ export default function Stock() {
         {/* ========================= Riwayat Produk ========================= */}
         {activeTab === "history" && (
           <div>
-            {historyLoading ? (
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
+              <h2 className="text-xl font-bold">Riwayat Produk</h2>
+              <Input
+                placeholder="Cari riwayat..."
+                value={searchHist}
+                onChange={(e) => {
+                  setHistPage(1);
+                  setSearchHist(e.target.value);
+                }}
+                className="bg-gray-100 dark:bg-[#333] text-gray-900 dark:text-white"
+              />
+            </div>
+
+            {!selectedProduct ? (
+              <p className="text-gray-500 dark:text-gray-400">Silakan pilih produk</p>
+            ) : historyLoading ? (
               <p className="text-gray-500 dark:text-gray-400">Loading...</p>
-            ) : !selectedProduct ? (
-              <p className="text-gray-500 dark:text-gray-400">Pilih produk terlebih dahulu.</p>
             ) : filteredHistory.length === 0 ? (
               <p className="text-gray-500 dark:text-gray-400">Tidak ada data.</p>
             ) : (
@@ -521,7 +526,7 @@ export default function Stock() {
                 <table className="w-full border-collapse text-sm">
                   <thead>
                     <tr className="bg-gray-200 dark:bg-[#333] text-gray-700 dark:text-gray-300">
-                      <th className="border border-gray-300 dark:border-gray-600 px-3 py-2">Tanggal</th>
+                      <th className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-left">Tanggal</th>
                       <th className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-left">Tipe</th>
                       <th className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-right">Qty</th>
                       <th className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-left">Unit</th>
@@ -529,20 +534,22 @@ export default function Stock() {
                     </tr>
                   </thead>
                   <tbody>
-                    {histItems.map((r) => (
+                    {histItems.map((h) => (
                       <tr
-                        key={r._id}
+                        key={h._id}
                         className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-[#2a2a2a]"
                       >
-                        <td className="border border-gray-300 dark:border-gray-600 px-3 py-2">
-                          {new Date(r.createdAt).toLocaleString("id-ID")}
+                        <td className="px-3 py-2">{new Date(h.createdAt).toLocaleString("id-ID")}</td>
+                        <td
+                          className={`px-3 py-2 font-semibold ${
+                            h.type === "IN" ? "text-green-600" : "text-red-500"
+                          }`}
+                        >
+                          {h.type}
                         </td>
-                        <td className="border border-gray-300 dark:border-gray-600 px-3 py-2">{r.type}</td>
-                        <td className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-right">
-                          {numberFormatter.format(r.qty)}
-                        </td>
-                        <td className="border border-gray-300 dark:border-gray-600 px-3 py-2">{r.unit?.short}</td>
-                        <td className="border border-gray-300 dark:border-gray-600 px-3 py-2">{r.note || "-"}</td>
+                        <td className="px-3 py-2 text-right">{h.qty}</td>
+                        <td className="px-3 py-2">{h.unit?.short}</td>
+                        <td className="px-3 py-2">{h.note || "-"}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -566,6 +573,15 @@ export default function Stock() {
         {/* ========================= Total Semua Stok ========================= */}
         {activeTab === "allSummary" && (
           <div>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold">Total Semua Stok</h2>
+              <Button asChild className="bg-green-600 hover:bg-green-700">
+                <a href="/api/stock/export-summary">
+                  <FileSpreadsheet size={18} className="mr-2" /> Export
+                </a>
+              </Button>
+            </div>
+
             {allSummaryLoading ? (
               <p className="text-gray-500 dark:text-gray-400">Loading...</p>
             ) : allSummaryRows.length === 0 ? (
@@ -575,22 +591,20 @@ export default function Stock() {
                 <table className="w-full border-collapse text-sm">
                   <thead>
                     <tr className="bg-gray-200 dark:bg-[#333] text-gray-700 dark:text-gray-300">
-                      <th className="border border-gray-300 dark:border-gray-600 px-3 py-2">Produk</th>
+                      <th className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-left">Produk</th>
                       <th className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-right">Saldo</th>
-                      <th className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-left">Unit</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {allSummaryRows.map((r) => (
+                    {allSummaryRows.map((s) => (
                       <tr
-                        key={r.productId}
+                        key={s.productId}
                         className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-[#2a2a2a]"
                       >
-                        <td className="border border-gray-300 dark:border-gray-600 px-3 py-2">{r.productName}</td>
-                        <td className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-right">
-                          {numberFormatter.format(r.balance)}
+                        <td className="px-3 py-2">{s.productName}</td>
+                        <td className="px-3 py-2 text-right">
+                          {s.balance} {s.unitShort} ({s.balanceBase} {s.baseUnitShort})
                         </td>
-                        <td className="border border-gray-300 dark:border-gray-600 px-3 py-2">{r.unit}</td>
                       </tr>
                     ))}
                   </tbody>
