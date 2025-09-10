@@ -117,63 +117,40 @@ exports.deleteStockTransaction = async (req, res) => {
 exports.getStockSummary = async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
-    const match = {};
+    const matchDate = {};
     if (startDate && endDate) {
-      match.createdAt = { $gte: new Date(startDate), $lte: new Date(endDate) };
+      matchDate.createdAt = { $gte: new Date(startDate), $lte: new Date(endDate) };
     }
 
-    // Ambil semua produk + default unit
-    const products = await Product.find()
-      .populate("defaultUnit", "short conversion");
+    const products = await Product.find().populate("defaultUnit", "short conversion");
 
     const result = [];
-    
 
     for (const product of products) {
-      // Hitung saldo awal (sebelum periode)
-      let openingMatch = { product: product._id };
-      if (startDate) {
-        openingMatch.createdAt = { $lt: new Date(startDate) };
-      }
+      // Ambil semua transaksi produk (sesuai filter tanggal jika ada)
+      const trx = await StockTransaction.find({
+        product: product._id,
+        ...matchDate,
+      });
 
-      const openingAgg = await StockTransaction.aggregate([
-        { $match: openingMatch },
-        {
-          $group: {
-            _id: "$product",
-            totalIn: { $sum: { $cond: [{ $eq: ["$type", "IN"] }, "$qtyBase", 0] } },
-            totalOut: { $sum: { $cond: [{ $eq: ["$type", "OUT"] }, "$qtyBase", 0] } },
-          },
-        },
-      ]);
+      // Hitung total IN & OUT
+      let totalIn = 0;
+      let totalOut = 0;
+      trx.forEach((t) => {
+        if (t.type === "IN") totalIn += t.qtyBase;
+        if (t.type === "OUT") totalOut += t.qtyBase;
+      });
 
-      const openingBalance = openingAgg.length
-        ? openingAgg[0].totalIn - openingAgg[0].totalOut
-        : 0;
-
-      // Hitung transaksi dalam periode
-      const trxAgg = await StockTransaction.aggregate([
-        { $match: { ...match, product: product._id } },
-        {
-          $group: {
-            _id: "$product",
-            totalIn: { $sum: { $cond: [{ $eq: ["$type", "IN"] }, "$qtyBase", 0] } },
-            totalOut: { $sum: { $cond: [{ $eq: ["$type", "OUT"] }, "$qtyBase", 0] } },
-          },
-        },
-      ]);
-
-      const totalIn = trxAgg.length ? trxAgg[0].totalIn : 0;
-      const totalOut = trxAgg.length ? trxAgg[0].totalOut : 0;
-      const closingBalance = openingBalance + totalIn - totalOut;
+      const balanceBase = totalIn - totalOut;
+      const balance = balanceBase / (product.defaultUnit?.conversion || 1);
 
       result.push({
         productId: product._id,
         productName: product.name,
-        openingBalance,
         totalIn,
         totalOut,
-        closingBalance,
+        balance,
+        balanceBase,
         unitShort: product.defaultUnit?.short || "-",
       });
     }
@@ -195,27 +172,22 @@ exports.getStockSummaryByProduct = async (req, res) => {
     const { productId } = req.params;
     const { start, end } = req.query;
 
-    const match = { product: new mongoose.Types.ObjectId(productId) };
+    const matchDate = { product: new mongoose.Types.ObjectId(productId) };
     if (start && end) {
-      match.createdAt = { $gte: new Date(start), $lte: new Date(end) };
+      matchDate.createdAt = { $gte: new Date(start), $lte: new Date(end) };
     }
 
-    const summary = await StockTransaction.aggregate([
-      { $match: match },
-      {
-        $group: {
-          _id: "$type",
-          totalQty: { $sum: "$qtyBase" },
-        },
-      },
-    ]);
+    // Ambil semua transaksi produk (sesuai filter tanggal jika ada)
+    const transactions = await StockTransaction.find(matchDate);
 
-    const result = { IN: 0, OUT: 0 };
-    summary.forEach((s) => {
-      result[s._id] = s.totalQty;
+    let totalIn = 0;
+    let totalOut = 0;
+
+    transactions.forEach((t) => {
+      if (t.type === "IN") totalIn += t.qtyBase;
+      if (t.type === "OUT") totalOut += t.qtyBase;
     });
 
-    // ambil info produk & unit
     const product = await Product.findById(productId)
       .populate("defaultUnit", "short conversion")
       .populate("baseUnit", "short");
@@ -224,16 +196,15 @@ exports.getStockSummaryByProduct = async (req, res) => {
       return res.status(404).json({ success: false, message: "Product not found" });
     }
 
-    const balanceBase = result.IN - result.OUT;
-    const balance =
-      balanceBase / (product.defaultUnit?.conversion || 1);
+    const balanceBase = totalIn - totalOut;
+    const balance = balanceBase / (product.defaultUnit?.conversion || 1);
 
     res.json({
       success: true,
       data: {
         product: { _id: product._id, name: product.name },
-        totalIn: result.IN,
-        totalOut: result.OUT,
+        totalIn,
+        totalOut,
         balance,
         balanceBase,
         unitShort: product.defaultUnit?.short,
