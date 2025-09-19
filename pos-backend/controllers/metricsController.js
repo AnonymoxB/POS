@@ -172,7 +172,6 @@ exports.getMetrics = async (req, res) => {
       .catch(() => []);
 
     const profitPerDish = (dishes || []).map((dish) => {
-      // HPP (biaya produksi per porsi)
       const hpp = (dish.bom || []).reduce((sum, bom) => {
         const productPrice = bom.product?.purchasePrice || 0;
         const qty = bom.qtyBase ?? bom.qty ?? 0;
@@ -201,6 +200,36 @@ exports.getMetrics = async (req, res) => {
         profit,
       };
     });
+
+    // ==================== RECENT ORDERS ====================
+    const recentOrders = await Order.find()
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .select("_id bills.totalWithTax")
+      .catch(() => []);
+
+    // ==================== POPULAR DISHES ====================
+    const popularDishes = await Order.aggregate([
+      { $unwind: "$items" },
+      {
+        $group: {
+          _id: "$items.dishId",
+          sold: { $sum: "$items.qty" },
+        },
+      },
+      { $sort: { sold: -1 } },
+      { $limit: 5 },
+      {
+        $lookup: {
+          from: "dishes",
+          localField: "_id",
+          foreignField: "_id",
+          as: "dish",
+        },
+      },
+      { $unwind: "$dish" },
+      { $project: { name: "$dish.name", sold: 1 } },
+    ]).catch(() => []);
 
     // ==================== RESPONSE ====================
     const categories = await Product.distinct("category").catch(() => []);
@@ -257,6 +286,11 @@ exports.getMetrics = async (req, res) => {
           category: item.category,
         })),
         categories: ["all", ...(categories || [])],
+        recentOrders: (recentOrders || []).map((o) => ({
+          id: o._id,
+          total: o.bills?.totalWithTax || 0,
+        })),
+        popularDishes,
       },
     });
   } catch (error) {
