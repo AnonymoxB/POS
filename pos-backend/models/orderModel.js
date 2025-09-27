@@ -15,6 +15,12 @@ const orderSchema = new mongoose.Schema({
     unique: true,
     },
 
+    customerName: {
+        type: String,
+        required: true,
+        trim: true
+    },
+
     bills: {
         total: { type: Number, required: true},
         totalWithTax: { type: Number, required: true},
